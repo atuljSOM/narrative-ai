@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>{{ brand }} — Action Briefing</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .muted { color: #666; font-size: 12px; }
+    .card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius: 999px; font-size: 12px; margin-left: 8px; }
+    ul { margin: 6px 0 6px 18px; }
+    details { margin-top: 8px; }
+    h2 { margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <h1>{{ brand }} — Action Briefing</h1>
+  <div class="muted">
+    Window: {{ aligned.window_days }}d (Recent {{ aligned.recent_start }}→{{ aligned.recent_end }} vs Prior {{ aligned.prior_start }}→{{ aligned.prior_end }})
+  </div>
+
+    <!-- ===== KPI STRIP (Recent vs Prior) ===== -->
+  <style>
+    .kpi-grid { display:grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap:12px; margin:14px 0 20px; }
+    .kpi { border:1px solid #eee; border-radius:10px; padding:10px 12px; }
+    .kpi .label { font-size:12px; color:#666; }
+    .kpi .value { font-size:22px; font-weight:600; line-height:1.2; margin-top:2px; }
+    .kpi .sub { font-size:12px; color:#666; margin-top:4px; }
+    .delta-pos { color:#137333; }   /* green */
+    .delta-neg { color:#b00020; }   /* red */
+  </style>
+
+  {% set recent_n = aligned.recent_n or 0 %}
+  {% set prior_n  = aligned.prior_n  or 0 %}
+  {% set rr_r = aligned.recent_repeat_rate or 0.0 %}
+  {% set rr_p = aligned.prior_repeat_rate  or 0.0 %}
+  {% set rr_d = rr_r - rr_p %}
+
+  {% set aov_r = aligned.recent_aov or 0.0 %}
+  {% set aov_p = aligned.prior_aov  or 0.0 %}
+  {% set aov_d = aov_r - aov_p %}
+  {% set aov_d_pct = (aov_r and aov_p) and ((aov_r - aov_p) / (aov_p if aov_p != 0 else 1)) or 0.0 %}
+
+  {% set dr_r = aligned.recent_discount_rate or 0.0 %}
+  {% set dr_p = aligned.prior_discount_rate  or 0.0 %}
+  {% set dr_d = dr_r - dr_p %}
+
+  <div class="kpi-grid">
+    <!-- Orders -->
+    <div class="kpi">
+      <div class="label">Orders</div>
+      <div class="value">{{ recent_n }}</div>
+      <div class="sub">
+        Prior: {{ prior_n }}
+        {% set ord_d = recent_n - prior_n %}
+        {% if ord_d >= 0 %}
+          <span class="delta-pos">▲ +{{ ord_d }}</span>
+        {% else %}
+          <span class="delta-neg">▼ {{ ord_d }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Repeat share -->
+    <div class="kpi">
+      <div class="label">Repeat share</div>
+      <div class="value">{{ (rr_r*100)|round(1) }}%</div>
+      <div class="sub">
+        Prior: {{ (rr_p*100)|round(1) }}%
+        {% if rr_d >= 0 %}
+          <span class="delta-pos">▲ +{{ (rr_d*100)|round(1) }} pts</span>
+        {% else %}
+          <span class="delta-neg">▼ {{ (rr_d*100)|round(1) }} pts</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- AOV -->
+    <div class="kpi">
+      <div class="label">AOV</div>
+      <div class="value">${{ aov_r|round(2) }}</div>
+      <div class="sub">
+        Prior: ${{ aov_p|round(2) }}
+        {% if aov_d >= 0 %}
+          <span class="delta-pos">▲ +${{ aov_d|round(2) }} ({{ (aov_d_pct*100)|round(1) }}%)</span>
+        {% else %}
+          <span class="delta-neg">▼ ${{ aov_d|round(2) }} ({{ (aov_d_pct*100)|round(1) }}%)</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Discount rate -->
+    <div class="kpi">
+      <div class="label">Discount rate</div>
+      <div class="value">{{ (dr_r*100)|round(1) }}%</div>
+      <div class="sub">
+        Prior: {{ (dr_p*100)|round(1) }}%
+        {% if dr_d <= 0 %}
+          <!-- Lower discount rate is good -->
+         <span class="delta-pos">▲ {{ ((dr_d|abs)*100)|round(1) }} pts better</span>
+        {% else %}
+          <span class="delta-neg">▼ +{{ (dr_d*100)|round(1) }} pts higher</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <!-- ===== /KPI STRIP ===== -->
+
+
+  <h2>Top Actions ({{ outputs.actions|length }})</h2>
+  {% if outputs.actions|length == 0 %}<p>No Top Actions passed. See Pilot below.</p>{% endif %}
+  {% for a in outputs.actions %}
+  <div class="card">
+    <div><strong>{{ a.title }}</strong>
+      <span class="pill">Priority P{{ loop.index }}</span>
+      <span class="pill">Confidence: {{ a.confidence_label }}</span>
+    </div>
+    <p><strong>Do this:</strong> {{ a.do_this or 'Run the play as configured.' }}</p>
+    {% if a.targeting %}<p><strong>Targeting:</strong> {{ a.targeting }}</p>{% endif %}
+    <p><strong>How to launch:</strong></p>
+    <ul>
+      {% for step in (a.how_to_launch or []) %}<li>{{ step }}</li>{% endfor %}
+    </ul>
+    {% if a.offer %}<p><strong>Offer:</strong> {{ a.offer }}</p>{% endif %}
+    {% if a.channels or a.cadence %}
+    <p><strong>Channels & cadence:</strong> {{ (a.channels or [])|join(', ') }}{% if a.cadence %}; {{ a.cadence }}{% endif %}</p>
+    {% endif %}
+    <p><strong>Expected 14d GP:</strong> ${{ a.expected_range[0]|round(0) }}–${{ a.expected_range[1]|round(0) }}</p>
+    <p><strong>Assets:</strong> CSV: {{ a.attachment }}{% if outputs.copy_assets and outputs.copy_assets.get(a.play_id) %}; Copy: {{ outputs.copy_assets[a.play_id]|map('string')|list|join(', ') }}{% endif %}</p>
+    <details><summary>View evidence</summary>
+      <div class="muted">
+        Δ={{ (a.effect_abs*100)|round(1) }} pts/%, n={{ a.n }}.
+        {% if a.ci_low is not none and a.ci_high is not none %}
+          CI [{{ (a.ci_low*100)|round(1) }}, {{ (a.ci_high*100)|round(1) }}]%
+        {% else %}
+          p={{ a.p|round(4) }}, q={{ a.q|round(4) }}
+        {% endif %}
+        · Decision rule: min N, significance (q≤α or CI excludes 0), effect floor, financial floor.
+      </div>
+    </details>
+  </div>
+  {% endfor %}
+
+  {% if outputs.pilot_actions|length > 0 %}
+  <h2>Pilot Actions ({{ outputs.pilot_actions|length }})</h2>
+  {% for p in outputs.pilot_actions %}
+  <div class="card">
+    <div><strong>{{ p.title }} (Pilot)</strong>
+      <span class="pill">Audience: {{ (p.pilot_audience_fraction*100)|round(0) }}%</span>
+      <span class="pill">Budget cap: ${{ p.pilot_budget_cap|round(0) }}</span>
+      <span class="pill">Confidence: {{ p.confidence_label }}</span>
+    </div>
+    <p><strong>Do this:</strong> {{ p.do_this or 'Run a capped pilot.' }}</p>
+    {% if p.targeting %}<p><strong>Targeting:</strong> {{ p.targeting }}</p>{% endif %}
+    <p><strong>How to launch:</strong></p>
+    <ul>
+      {% for step in (p.how_to_launch or []) %}<li>{{ step }}</li>{% endfor %}
+    </ul>
+    {% if p.offer %}<p><strong>Offer:</strong> {{ p.offer }}</p>{% endif %}
+    {% if p.channels or p.cadence %}
+    <p><strong>Channels & cadence:</strong> {{ (p.channels or [])|join(', ') }}{% if p.cadence %}; {{ p.cadence }}{% endif %}</p>
+    {% endif %}
+    <p><strong>Expected 14d GP:</strong> ${{ p.expected_range[0]|round(0) }}–${{ p.expected_range[1]|round(0) }}</p>
+    <p><strong>n_needed:</strong> {{ p.n_needed }} to confirm effect at 80% power. <strong>Graduation rule:</strong> {{ p.decision_rule or 'CI excludes 0 or q≤α by day 14.' }}</p>
+    <p><strong>Assets:</strong> CSV: {{ p.attachment }}{% if outputs.copy_assets and outputs.copy_assets.get(p.play_id) %}; Copy: {{ outputs.copy_assets[p.play_id]|map('string')|list|join(', ') }}{% endif %}</p>
+    <details><summary>View evidence</summary>
+      <div class="muted">
+        Δ={{ (p.effect_abs*100)|round(1) }} pts/%, n={{ p.n }}.
+        {% if p.ci_low is not none and p.ci_high is not none %}
+          CI [{{ (p.ci_low*100)|round(1) }}, {{ (p.ci_high*100)|round(1) }}]%
+        {% else %}
+          p={{ p.p|round(4) }}, q={{ p.q|round(4) }}
+        {% endif %}
+      </div>
+    </details>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <h2>Watchlist</h2>
+  {% if outputs.watchlist|length == 0 %}<p>None.</p>{% endif %}
+  {% for w in outputs.watchlist %}
+  <div class="card"><strong>{{ w.title }}</strong> — {{ (w.reasons or w.failed)|join("; ") }}</div>
+  {% endfor %}
+
+  <h2>Backlog</h2>
+  {% if outputs.backlog|length == 0 %}<p>None.</p>{% endif %}
+  {% for b in outputs.backlog %}
+  <div class="card"><strong>{{ b.title }}</strong> — {{ b.reason or 'effort budget or prerequisites' }}</div>
+  {% endfor %}
+
+  <h2>Charts</h2>
+  <div class="muted">Repeat share: {{ outputs.charts.repeat_share }}</div>
+  <div class="muted">AOV: {{ outputs.charts.aov }}</div>
+  <div class="muted">Discount rate: {{ outputs.charts.discount_share }}</div>
+</body>
+</html>

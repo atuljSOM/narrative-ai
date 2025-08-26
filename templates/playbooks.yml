@@ -1,0 +1,102 @@
+
+playbooks:
+  - id: winback_21_45
+    title: Winback 21–45 days
+    category: lifecycle
+    triggers: [{segment: winback_21_45, metric: repeat_rate}]
+    prerequisites: []
+    effort: 2
+    risk: 2
+    cooldown_days: 14
+    do_this: "Launch a 2-step winback for customers idle 21–45 days."
+    targeting: "Include: last order 21–45d ago. Exclude: orders last 7d, unsubscribed, VIP discount abusers."
+    channels: ["email","sms"]
+    cadence: "Email Day 0, Reminder Day 3; SMS if unopened"
+    offer: "10% off with $50 min spend; expires in 7 days"
+    copy_snippets: ["winback_email_subjects.txt.j2","winback_email_body.txt.j2","winback_sms.txt.j2"]
+    assets: ["segment_winback_21_45.csv"]
+    how_to_launch:
+      - "Import segment CSV into Klaviyo."
+      - "Start 'Winback 21–45' flow: Email Day 0, Reminder Day 3."
+      - "Add SMS if Email unopened by Day 3."
+      - "Attach 10% off code with $50 min spend; 7-day expiry."
+    success_criteria: ["+1–2 pts repeat within 14 days", "Unsub rate < 0.4%"]
+    risks_mitigations: ["Over-discounting → enforce min spend & expiry"]
+    owner_suggested: "Lifecycle/CRM"
+    time_to_set_up_minutes: 30
+    holdout_plan: "Hold out 10% of segment; evaluate at Day 14."
+
+  - id: dormant_multibuyers_60_120
+    title: Dormant Multibuyers 60–120 days
+    category: lifecycle
+    triggers: [{segment: dormant_multibuyers_60_120, metric: repeat_rate}]
+    prerequisites: []
+    effort: 3
+    risk: 3
+    cooldown_days: 21
+    do_this: "Reactivate VIPs who bought multiple times but went quiet."
+    targeting: "Include: 2+ lifetime orders; last purchase 60–120d ago."
+    channels: ["email"]
+    cadence: "Email Day 0 (no discount), Day 4 follow-up with credit-style offer"
+    offer: "$15 credit on $75+ on step 2 only"
+    copy_snippets: ["dormant_email_subjects.txt.j2","dormant_email_body.txt.j2"]
+    assets: ["segment_dormant_multibuyers_60_120.csv"]
+    how_to_launch:
+      - "Import segment CSV into Klaviyo."
+      - "Send VIP-toned email (no discount) on Day 0."
+      - "Follow up Day 4 with credit-style offer."
+    success_criteria: ["+1–1.5 pts repeat", "Margin protected"]
+    risks_mitigations: ["Avoid training on discount: no code on step 1"]
+    owner_suggested: "Lifecycle/CRM"
+    time_to_set_up_minutes: 25
+    holdout_plan: "10% holdout; escalate only if lift evident."
+
+  - id: bestseller_amplify
+    title: Amplify Bestseller
+    category: merchandising
+    triggers: [{segment: bestseller_amplify, metric: aov}]
+    prerequisites: []
+    effort: 3
+    risk: 3
+    cooldown_days: 14
+    do_this: "Promote the current top seller with a simple bundle and hero placement."
+    targeting: "Past buyers of the top SKU; lookalike to all; exclude last 7d purchasers."
+    channels: ["email","site"]
+    cadence: "Email hero + site banner for 7 days"
+    offer: "Bundle: Buy 2 & save $X (auto-applied)"
+    copy_snippets: ["bestseller_email_subjects.txt.j2","bestseller_email_body.txt.j2"]
+    assets: ["segment_bestseller_amplify.csv"]
+    how_to_launch:
+      - "Create a bundle for the top SKU in Shopify."
+      - "Add site banner (7 days)."
+      - "Email hero block featuring the bundle."
+    success_criteria: ["+2–4% AOV in the period", "Bundle attach rate > 8%"]
+    risks_mitigations: ["Avoid cannibalization: exclude deep-discount stack"]
+    owner_suggested: "Merch + CRM"
+    time_to_set_up_minutes: 35
+    holdout_plan: "20% pilot audience; promote if CI excludes 0 at day 14."
+
+  - id: discount_hygiene
+    title: Discount Hygiene
+    category: pricing
+    triggers: [{segment: discount_hygiene, metric: discount_rate}]
+    prerequisites: []
+    effort: 2
+    risk: 2
+    cooldown_days: 7
+    do_this: "Cap discounts >25%, add $50 min spend, exclude top SKUs; test free-ship threshold."
+    targeting: "Customers with high discount propensity; sitewide guardrail."
+    channels: ["site","email"]
+    cadence: "Immediate policy change"
+    offer: "Cap 25%, min spend $50; free-ship threshold test vs % off"
+    copy_snippets: ["discount_policy_checklist.txt.j2"]
+    assets: ["segment_discount_hygiene.csv"]
+    how_to_launch:
+      - "Update discount settings in Shopify."
+      - "Sync to Klaviyo coupon blocks."
+      - "QA 2 recent receipts for policy adherence."
+    success_criteria: ["Lower promo leakage", "Stable conversion"]
+    risks_mitigations: ["Monitor conversion drop; roll back cap if needed"]
+    owner_suggested: "Growth Ops"
+    time_to_set_up_minutes: 15
+    holdout_plan: "Monitor for 7 days; compare against prior policy."
