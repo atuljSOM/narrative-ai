@@ -1,0 +1,989 @@
+Name,Created at,Cancelled at,Lineitem name,Lineitem quantity,Lineitem price,Lineitem discount,Financial Status,Fulfillment Status,Subtotal,Total Discount,Shipping,Taxes,Total,Currency,Customer Email,Billing Name,Shipping Province,Shipping Country
+#3742,2024-10-25 12:43:00,,Light Jacket 01,1,79.0,2.37,paid,fulfilled,154.0,4.71,0.0,10.25,159.54,USD,qvrbsswbcl301@brand.com,Customer 301,FL,United States
+#3812,2025-07-01 08:11:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,22.0,0.0,4.99,2.52,29.51,USD,eagaezujkp50@gmail.com,Customer 50,NSW,Australia
+#3915,2025-07-29 20:43:00,,Foam Cleanser F,3,21.0,0.0,paid,partial,63.0,0.0,0.0,4.54,67.54,USD,laeruxeli162@brand.com,Customer 162,TX,United States
+#3798,2025-07-02 23:15:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,7.11,86.11,USD,fpyjrg301@hotmail.com,Customer 301,TX,United States
+#3669,2025-02-04 10:21:00,,Hydra Cream B,1,49.0,10.86,paid,fulfilled,49.0,10.86,0.0,3.43,41.57,USD,vopoidjr289@brand.com,Customer 289,TX,United States
+#3939,2025-08-16 05:30:00,,Glow Oil L,3,35.0,0.0,paid,fulfilled,217.0,0.0,9.99,20.36,247.35,USD,dwuhutopcg301@yahoo.com,Customer 301,CA,United States
+#3776,2024-12-15 02:57:00,,Leggings 01,1,49.0,3.49,paid,fulfilled,49.0,3.49,9.99,11.04,66.54,USD,cxmolpu200@gmail.com,Customer 200,ENG,United Kingdom
+#3679,2025-08-12 04:09:00,,Classic Tee 01,2,22.0,0.0,paid,partial,66.0,0.0,6.99,6.47,79.46,USD,krglht301@brand.com,Customer 301,TX,United States
+#3653,2025-02-04 21:03:00,,Socks 3-Pack,1,14.0,0.0,paid,unfulfilled,124.0,0.0,0.0,14.0,138.0,USD,epqmcjir326@yahoo.com,Customer 326,VIC,Australia
+#3968,2025-06-16 02:08:00,,Classic Tee 01,2,22.0,0.0,paid,partial,44.0,0.0,0.0,8.69,52.69,USD,fnuwyqzsh53@hotmail.com,Customer 53,ENG,United Kingdom
+#3828,2025-02-15 11:35:00,,Revive Mask M,1,29.0,6.11,paid,partial,78.0,16.83,4.99,11.68,77.84,USD,aupkgzpr301@yahoo.com,Customer 301,VIC,Australia
+#3878,2025-01-02 02:20:00,2025-01-13 02:20:00,Hoodie 01,1,55.0,3.51,refunded,fulfilled,140.0,9.63,0.0,8.99,0.0,USD,xqjcqtdfs301@yahoo.com,Customer 301,IL,United States
+#3657,2025-08-08 02:49:00,,Cap 01,1,19.0,0.0,paid,fulfilled,19.0,0.0,0.0,1.24,20.24,USD,hjdnou200@yahoo.com,Customer 200,IL,United States
+#3676,2025-05-31 20:06:00,,Shorts 01,1,35.0,0.0,paid,unfulfilled,152.0,0.0,0.0,9.38,161.38,USD,gpnkii301@hotmail.com,Customer 301,NY,United States
+#4143,2025-05-28 02:02:00,,Revive Mask M,3,29.0,0.0,paid,fulfilled,166.0,0.0,4.99,15.0,185.99,USD,phqkgorcd301@yahoo.com,Customer 301,CA,United States
+#4001,2025-02-03 20:16:00,,Foam Cleanser F,2,21.0,0.0,partially_refunded,fulfilled,42.0,0.0,4.99,3.54,39.21,USD,sgeghlq301@hotmail.com,Customer 301,TX,United States
+#3928,2024-12-16 19:15:00,,Socks 3-Pack,1,14.0,2.07,paid,fulfilled,118.0,16.44,0.0,9.4,110.96,USD,swvvsnjp301@hotmail.com,Customer 301,FL,United States
+#4096,2025-01-24 15:32:00,,Hydra Cream B,2,49.0,0.0,paid,fulfilled,98.0,0.0,4.99,8.56,111.55,USD,nrjjmylx167@gmail.com,Customer 167,ON,Canada
+#3661,2024-11-29 14:42:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,5.68,84.68,USD,umbtfrrk301@hotmail.com,Customer 301,BC,Canada
+#4114,2024-10-02 09:41:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,98.0,0.0,4.99,6.95,109.94,USD,moonejtyda289@hotmail.com,Customer 289,FL,United States
+#3734,2025-01-04 15:15:00,,Revive Mask M,1,29.0,0.0,partially_refunded,fulfilled,99.0,0.0,6.99,6.62,98.35,USD,zhoynxvd289@brand.com,Customer 289,TX,United States
+#4136,2025-07-16 12:12:00,,Revive Mask M,1,29.0,2.1,paid,fulfilled,29.0,2.1,0.0,1.94,28.84,USD,mhczomxnga167@brand.com,Customer 167,BC,Canada
+#4120,2024-12-04 00:11:00,,Revive Mask M,3,29.0,0.0,paid,fulfilled,87.0,0.0,0.0,6.55,93.55,USD,slykco301@gmail.com,Customer 301,WA,United States
+#3914,2024-11-06 10:55:00,,Shorts 01,1,35.0,0.0,partially_refunded,fulfilled,35.0,0.0,6.99,4.57,37.67,USD,frmgiwoya326@brand.com,Customer 326,VIC,Australia
+#3939,2025-08-16 05:30:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,217.0,0.0,9.99,20.36,247.35,USD,cweuhtrdm301@brand.com,Customer 301,CA,United States
+#4008,2025-02-28 04:05:00,,Repair Eye Gel G,1,45.0,3.21,paid,fulfilled,70.0,5.04,4.99,10.73,80.68,USD,lxcqccdba229@yahoo.com,Customer 229,ENG,United Kingdom
+#4148,2025-07-18 03:12:00,,Socks 3-Pack,1,14.0,0.95,paid,fulfilled,64.0,4.67,0.0,4.03,63.36,USD,bqbcoz301@yahoo.com,Customer 301,NY,United States
+#3990,2025-01-28 11:28:00,,Classic Tee 01,2,22.0,0.0,refunded,unfulfilled,44.0,0.0,0.0,3.49,0.0,USD,izqher301@yahoo.com,Customer 301,TX,United States
+#3884,2025-08-03 20:12:00,,Revive Mask M,4,29.0,0.0,paid,fulfilled,116.0,0.0,0.0,8.28,124.28,USD,ctwjfmm167@brand.com,Customer 167,WA,United States
+#4091,2024-11-15 18:04:00,,Starter Kit C,1,79.0,0.0,paid,unfulfilled,189.0,0.0,4.99,14.12,208.11,USD,zwrdmgt200@brand.com,Customer 200,IL,United States
+#4097,2025-07-05 04:22:00,,Hydra Cream B,1,49.0,0.0,paid,unfulfilled,49.0,0.0,0.0,4.08,53.08,USD,upjqxwbv200@yahoo.com,Customer 200,ON,Canada
+#4033,2024-09-14 09:18:00,,Cap 01,2,19.0,0.0,paid,fulfilled,38.0,0.0,9.99,2.95,50.94,USD,vamqmjqija301@yahoo.com,Customer 301,IL,United States
+#3985,2025-03-25 14:17:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,68.0,0.0,0.0,11.27,79.27,USD,xlgflje301@hotmail.com,Customer 301,NSW,Australia
+#3980,2024-10-26 02:38:00,,Premium Tee 02,1,28.0,2.82,paid,partial,107.0,11.54,0.0,15.4,110.86,USD,fmtvujkvaa301@hotmail.com,Customer 301,NSW,Australia
+#4027,2024-10-29 16:07:00,,Premium Tee 02,2,28.0,0.0,paid,fulfilled,70.0,0.0,0.0,9.3,79.3,USD,icxudu301@hotmail.com,Customer 301,VIC,Australia
+#4037,2024-09-27 01:47:00,,Glow Oil L,1,35.0,3.85,paid,unfulfilled,60.0,5.98,0.0,4.06,58.08,USD,gdngtwzgv301@yahoo.com,Customer 301,CA,United States
+#3842,2025-02-24 02:04:00,,Light Jacket 01,1,79.0,14.58,paid,fulfilled,79.0,14.58,0.0,8.82,73.24,USD,rxjchwkz326@gmail.com,Customer 326,VIC,Australia
+#4188,2025-05-04 05:41:00,,Glow Oil L,1,35.0,0.0,refunded,unfulfilled,35.0,0.0,4.99,3.56,0.0,USD,ywiohi301@gmail.com,Customer 301,QC,Canada
+#3992,2024-08-31 02:12:00,,Clarifying Toner X,1,25.0,8.62,paid,fulfilled,283.0,79.89,0.0,13.76,216.87,USD,bkunxwlot301@hotmail.com,Customer 301,ON,Canada
+#4105,2025-02-28 19:39:00,,Premium Tee 02,1,28.0,0.0,paid,unfulfilled,28.0,0.0,0.0,1.73,29.73,USD,ljqaec301@brand.com,Customer 301,CA,United States
+#4206,2024-11-01 16:34:00,,Hoodie 01,1,55.0,3.47,paid,fulfilled,55.0,3.47,0.0,3.39,54.92,USD,gjfydks301@yahoo.com,Customer 301,NY,United States
+#3632,2025-01-04 06:26:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,134.0,0.0,9.99,9.95,153.94,USD,mxvclhauqg301@brand.com,Customer 301,QC,Canada
+#3637,2025-04-01 08:49:00,,Light Jacket 01,3,79.0,0.0,paid,fulfilled,237.0,0.0,9.99,16.76,263.75,USD,iwshikkhdk301@brand.com,Customer 301,TX,United States
+#4162,2024-09-03 08:56:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,169.0,0.0,0.0,26.43,195.43,USD,tnkenddm301@hotmail.com,Customer 301,NSW,Australia
+#3627,2025-02-09 16:55:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,232.0,0.0,0.0,19.43,251.43,USD,bwycmbt200@yahoo.com,Customer 200,TX,United States
+#3721,2024-11-16 17:46:00,,Hoodie 01,2,55.0,10.9,paid,fulfilled,257.0,25.38,0.0,38.3,269.92,USD,egvkxitd301@gmail.com,Customer 301,ENG,United Kingdom
+#3929,2025-06-29 20:19:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,129.0,0.0,6.99,9.93,145.92,USD,ruimtgrvuf200@brand.com,Customer 200,FL,United States
+#4004,2024-10-02 19:39:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,138.0,0.0,0.0,10.81,148.81,USD,sqjbklgmxj200@gmail.com,Customer 200,IL,United States
+#4058,2025-08-20 21:40:00,,Socks 3-Pack,2,14.0,1.08,paid,fulfilled,28.0,1.08,9.99,3.3,40.21,USD,vvmiqveuqf230@gmail.com,Customer 230,NY,United States
+#3803,2024-12-21 22:45:00,,Hoodie 01,1,55.0,7.55,paid,fulfilled,221.0,31.07,4.99,16.19,211.11,USD,depvrki301@gmail.com,Customer 301,BC,Canada
+#3698,2025-02-25 17:51:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,114.0,0.0,6.99,9.96,130.95,USD,fbmnsujvgo301@gmail.com,Customer 301,IL,United States
+#3781,2024-10-30 03:29:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,158.0,0.0,0.0,10.95,168.95,USD,vvitps301@hotmail.com,Customer 301,BC,Canada
+#4179,2025-05-09 17:21:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,142.0,0.0,4.99,13.36,160.35,USD,pqtzgkh301@yahoo.com,Customer 301,QC,Canada
+#3903,2024-11-09 15:29:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,14.0,0.0,4.99,1.48,20.47,USD,hsjnjddh301@brand.com,Customer 301,WA,United States
+#3879,2025-04-20 03:50:00,,Repair Eye Gel G,1,45.0,0.0,paid,unfulfilled,70.0,0.0,4.99,5.73,80.72,USD,cpqbfi200@brand.com,Customer 200,TX,United States
+#4154,2025-07-03 15:53:00,,Glow Oil L,2,35.0,0.0,paid,fulfilled,112.0,0.0,4.99,10.05,127.04,USD,icjxem301@hotmail.com,Customer 301,WA,United States
+#4189,2025-06-26 07:09:00,,Hydra Cream B,2,49.0,19.2,paid,fulfilled,98.0,19.2,4.99,15.73,99.52,USD,nuwcxp167@yahoo.com,Customer 167,NSW,Australia
+#3830,2025-01-17 09:48:00,,Repair Eye Gel G,1,45.0,6.61,paid,fulfilled,45.0,6.61,0.0,2.79,41.18,USD,omooimwp301@yahoo.com,Customer 301,CA,United States
+#3739,2025-02-14 23:08:00,,Socks 3-Pack,2,14.0,3.25,paid,unfulfilled,83.0,11.14,0.0,6.94,78.8,USD,qgpshyaw326@hotmail.com,Customer 326,NSW,Australia
+#3976,2024-09-03 19:54:00,,Socks 3-Pack,1,14.0,2.42,paid,unfulfilled,49.0,7.81,0.0,2.75,43.94,USD,wkqkwuql301@brand.com,Customer 301,ON,Canada
+#3876,2024-09-19 22:04:00,,Clarifying Toner X,1,25.0,3.42,paid,fulfilled,53.0,6.69,4.99,4.03,55.33,USD,suamqaakdi200@brand.com,Customer 200,FL,United States
+#3766,2025-05-15 10:32:00,,Cap 01,1,19.0,1.62,paid,fulfilled,188.0,15.74,0.0,21.86,194.12,USD,rffwkxjp301@brand.com,Customer 301,VIC,Australia
+#4172,2024-10-03 03:14:00,,Cap 01,2,19.0,0.0,paid,fulfilled,297.0,0.0,6.99,19.05,323.04,USD,ucwtpusjr301@yahoo.com,Customer 301,ON,Canada
+#3777,2025-03-07 00:08:00,,Light Jacket 01,1,79.0,0.0,paid,partial,79.0,0.0,0.0,10.62,89.62,USD,ckbgisrto301@yahoo.com,Customer 301,ENG,United Kingdom
+#3840,2025-03-20 15:40:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,130.0,0.0,0.0,24.27,154.27,USD,asclafnf301@hotmail.com,Customer 301,ENG,United Kingdom
+#3643,2025-03-03 06:39:00,,Cap 01,1,19.0,0.0,paid,unfulfilled,137.0,0.0,4.99,25.41,167.4,USD,prclwegil289@hotmail.com,Customer 289,NSW,Australia
+#4147,2025-02-10 06:09:00,,Repair Eye Gel G,1,45.0,0.0,paid,partial,369.0,0.0,6.99,27.89,403.88,USD,ewwuilqw301@yahoo.com,Customer 301,QC,Canada
+#3912,2025-01-30 14:22:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,4.99,3.47,43.46,USD,jryzndldm301@yahoo.com,Customer 301,ENG,United Kingdom
+#3997,2025-05-21 04:44:00,,Radiance Serum A,1,39.0,6.27,paid,fulfilled,146.0,21.37,6.99,11.82,143.44,USD,kiklbv301@hotmail.com,Customer 301,FL,United States
+#3655,2025-04-19 01:58:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,188.0,0.0,6.99,17.15,212.14,USD,jwkimxjzuq167@yahoo.com,Customer 167,ON,Canada
+#3900,2024-10-22 18:02:00,,Light Jacket 01,2,79.0,37.88,paid,unfulfilled,523.0,118.76,6.99,34.17,445.4,USD,aagyvmq229@hotmail.com,Customer 229,QC,Canada
+#3655,2025-04-19 01:58:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,188.0,0.0,6.99,17.15,212.14,USD,zdzicvcxa167@yahoo.com,Customer 167,ON,Canada
+#3971,2024-11-28 16:58:00,,Hoodie 01,1,55.0,7.16,paid,fulfilled,55.0,7.16,6.99,9.6,64.43,USD,gmjhxsf301@yahoo.com,Customer 301,NSW,Australia
+#3865,2025-05-24 22:17:00,,Hoodie 01,2,55.0,0.0,paid,fulfilled,259.0,0.0,9.99,19.27,288.26,USD,bxzaozch301@gmail.com,Customer 301,BC,Canada
+#3824,2025-05-18 23:32:00,,Repair Eye Gel G,2,45.0,13.17,paid,fulfilled,125.0,17.9,0.0,7.01,114.11,USD,htupuoewl200@yahoo.com,Customer 200,FL,United States
+#3765,2024-08-29 13:56:00,,Premium Tee 02,2,28.0,0.0,paid,fulfilled,214.0,0.0,0.0,27.74,241.74,USD,ihihry200@hotmail.com,Customer 200,NSW,Australia
+#4148,2025-07-18 03:12:00,,Clarifying Toner X,2,25.0,3.72,paid,fulfilled,64.0,4.67,0.0,4.03,63.36,USD,tirxxezsja301@brand.com,Customer 301,NY,United States
+#4090,2025-03-15 20:06:00,2025-04-09 20:06:00,Premium Tee 02,2,28.0,0.0,refunded,fulfilled,56.0,0.0,9.99,4.51,0.0,USD,nedchtl326@hotmail.com,Customer 326,CA,United States
+#3758,2025-04-21 00:35:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,74.0,0.0,0.0,6.39,80.39,USD,yexecfess301@hotmail.com,Customer 301,TX,United States
+#4109,2025-02-07 20:37:00,,Radiance Serum A,3,39.0,34.55,paid,unfulfilled,226.0,70.24,6.99,16.09,178.84,USD,scmfjmuw289@yahoo.com,Customer 289,VIC,Australia
+#3786,2025-06-29 07:50:00,,Clarifying Toner X,1,25.0,5.0,paid,unfulfilled,179.0,37.88,6.99,12.88,160.99,USD,nsidjmo301@brand.com,Customer 301,BC,Canada
+#3865,2025-05-24 22:17:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,259.0,0.0,9.99,19.27,288.26,USD,lpqsklf301@yahoo.com,Customer 301,BC,Canada
+#3653,2025-02-04 21:03:00,,Classic Tee 01,1,22.0,0.0,paid,unfulfilled,124.0,0.0,0.0,14.0,138.0,USD,iakfvcy326@yahoo.com,Customer 326,VIC,Australia
+#4158,2024-09-30 17:28:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,54.0,0.0,0.0,10.43,64.43,USD,vptxqdefli301@yahoo.com,Customer 301,NSW,Australia
+#3725,2025-03-08 16:14:00,,Revive Mask M,3,29.0,0.0,paid,unfulfilled,166.0,0.0,6.99,14.48,187.47,USD,ubzmknxro301@hotmail.com,Customer 301,BC,Canada
+#3980,2024-10-26 02:38:00,,Light Jacket 01,1,79.0,8.72,paid,partial,107.0,11.54,0.0,15.4,110.86,USD,cwxmxqs301@brand.com,Customer 301,NSW,Australia
+#4080,2024-10-13 15:54:00,,Starter Kit C,2,79.0,0.0,paid,fulfilled,187.0,0.0,0.0,17.14,204.14,USD,hpwwbxktii289@yahoo.com,Customer 289,ON,Canada
+#3929,2025-06-29 20:19:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,129.0,0.0,6.99,9.93,145.92,USD,ewywfyyq200@yahoo.com,Customer 200,FL,United States
+#3831,2025-06-15 12:12:00,,Repair Eye Gel G,2,45.0,0.0,paid,fulfilled,90.0,0.0,6.99,7.54,104.53,USD,jaqjeawugs301@brand.com,Customer 301,NY,United States
+#3970,2025-04-08 03:23:00,,Foam Cleanser F,1,21.0,0.0,paid,partial,21.0,0.0,6.99,2.06,30.05,USD,djfatt301@hotmail.com,Customer 301,WA,United States
+#3762,2025-05-05 14:55:00,,Hoodie 01,1,55.0,12.26,paid,partial,370.0,73.97,6.99,25.09,328.11,USD,hkqefvtt289@hotmail.com,Customer 289,ENG,United Kingdom
+#4122,2024-12-05 15:48:00,,Foam Cleanser F,1,21.0,0.0,refunded,fulfilled,21.0,0.0,6.99,2.04,0.0,USD,tdalrzdwx200@brand.com,Customer 200,TX,United States
+#3845,2025-02-16 18:56:00,,Leggings 01,1,49.0,0.0,paid,partial,49.0,0.0,6.99,4.09,60.08,USD,yhtvqtded301@gmail.com,Customer 301,NY,United States
+#4123,2024-12-23 20:50:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,78.0,0.0,0.0,7.19,85.19,USD,xxpqzbtj301@brand.com,Customer 301,ON,Canada
+#4212,2025-06-06 22:12:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,104.0,0.0,6.99,6.67,117.66,USD,xckqqt301@yahoo.com,Customer 301,QC,Canada
+#3942,2024-08-27 02:55:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,217.0,0.0,0.0,17.88,234.88,USD,vwocudkdx230@brand.com,Customer 230,TX,United States
+#3668,2025-04-07 16:45:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,67.0,0.0,4.99,8.95,80.94,USD,ucrwow301@brand.com,Customer 301,NSW,Australia
+#4008,2025-02-28 04:05:00,,Clarifying Toner X,1,25.0,1.83,paid,fulfilled,70.0,5.04,4.99,10.73,80.68,USD,lvebet229@hotmail.com,Customer 229,ENG,United Kingdom
+#3711,2025-07-09 04:01:00,,Clarifying Toner X,2,25.0,5.76,paid,fulfilled,50.0,5.76,0.0,2.67,46.91,USD,arpyxg301@gmail.com,Customer 301,WA,United States
+#3944,2024-12-23 02:45:00,,Leggings 01,1,49.0,0.0,paid,partial,77.0,0.0,9.99,13.49,100.48,USD,snkibxk301@brand.com,Customer 301,ENG,United Kingdom
+#4041,2025-03-18 17:40:00,,Hoodie 01,1,55.0,0.0,paid,partial,55.0,0.0,4.99,4.39,64.38,USD,pxresy301@gmail.com,Customer 301,NY,United States
+#3823,2025-01-10 16:28:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,79.0,0.0,4.99,5.04,89.03,USD,pltwlqn301@hotmail.com,Customer 301,NY,United States
+#3946,2025-07-01 19:53:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,0.0,3.68,52.68,USD,vrtuuvqht301@brand.com,Customer 301,IL,United States
+#3973,2025-01-19 21:19:00,,Shorts 01,1,35.0,7.39,paid,partial,93.0,19.95,4.99,14.04,92.08,USD,prwalrqwiv301@brand.com,Customer 301,ENG,United Kingdom
+#4076,2024-12-25 03:16:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,0.0,3.59,31.59,USD,tyfaandwcf301@hotmail.com,Customer 301,NSW,Australia
+#3760,2025-05-08 04:34:00,,Starter Kit C,2,79.0,0.0,paid,unfulfilled,570.0,0.0,0.0,39.19,609.19,USD,vktfbknz301@brand.com,Customer 301,BC,Canada
+#3979,2025-04-01 10:48:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,60.0,0.0,0.0,4.06,64.06,USD,izqfbemrm246@hotmail.com,Customer 246,QC,Canada
+#3804,2025-08-19 02:02:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,45.0,0.0,4.99,3.9,53.89,USD,aboeqbobg301@yahoo.com,Customer 301,BC,Canada
+#3870,2025-05-16 14:22:00,,Repair Eye Gel G,1,45.0,8.68,paid,partial,115.0,22.98,6.99,6.69,105.7,USD,zzpvvtkj301@brand.com,Customer 301,FL,United States
+#3899,2025-07-25 15:16:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,0.0,4.44,53.44,USD,huzlxdpcf289@brand.com,Customer 289,BC,Canada
+#3994,2025-07-31 17:52:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,208.0,0.0,6.99,18.99,233.98,USD,wnrbsxxk289@gmail.com,Customer 289,TX,United States
+#3697,2024-11-16 19:14:00,,Glow Oil L,2,35.0,23.35,paid,unfulfilled,171.0,68.28,0.0,9.73,112.45,USD,fnnbdim301@brand.com,Customer 301,ON,Canada
+#4143,2025-05-28 02:02:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,166.0,0.0,4.99,15.0,185.99,USD,lcqpbqwiaf301@hotmail.com,Customer 301,CA,United States
+#3986,2024-09-03 06:10:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,77.0,0.0,6.99,5.56,89.55,USD,szzttxa301@hotmail.com,Customer 301,QC,Canada
+#4217,2025-06-02 03:13:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,154.0,0.0,9.99,15.51,179.5,USD,nriowydo301@hotmail.com,Customer 301,WA,United States
+#4013,2024-09-20 17:21:00,,Shorts 01,2,35.0,0.0,paid,partial,70.0,0.0,6.99,6.66,83.65,USD,duhrow301@yahoo.com,Customer 301,NSW,Australia
+#3650,2025-01-18 17:32:00,,Clarifying Toner X,2,25.0,11.27,paid,fulfilled,75.0,17.2,0.0,3.85,61.65,USD,krmahh301@brand.com,Customer 301,TX,United States
+#4141,2024-11-23 17:43:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,49.0,0.0,9.99,4.83,63.82,USD,npjqdnfp326@hotmail.com,Customer 326,IL,United States
+#4159,2024-11-23 16:45:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,35.0,0.0,6.99,3.38,45.37,USD,uaiojlmyk301@gmail.com,Customer 301,TX,United States
+#3875,2025-08-15 23:05:00,,Clarifying Toner X,1,25.0,0.0,paid,partial,104.0,0.0,4.99,11.39,120.38,USD,qxhlxu50@hotmail.com,Customer 50,ENG,United Kingdom
+#3688,2025-03-28 05:21:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,112.0,0.0,4.99,9.36,126.35,USD,bqjury301@yahoo.com,Customer 301,WA,United States
+#3634,2025-05-28 08:06:00,,Hoodie 01,2,55.0,6.79,paid,partial,110.0,6.79,4.99,8.18,116.38,USD,uwkqeywz200@yahoo.com,Customer 200,FL,United States
+#3658,2025-05-19 05:39:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,56.0,0.0,0.0,8.41,64.41,USD,hzrlhzwcjj200@hotmail.com,Customer 200,NSW,Australia
+#3927,2024-09-12 20:19:00,,Radiance Serum A,1,39.0,2.98,paid,fulfilled,88.0,6.59,6.99,11.79,100.19,USD,rugoiy301@hotmail.com,Customer 301,NSW,Australia
+#3645,2025-07-09 06:59:00,,Shorts 01,2,35.0,3.03,paid,partial,105.0,4.13,0.0,16.23,117.1,USD,bqakmljx301@brand.com,Customer 301,NSW,Australia
+#4155,2025-06-24 19:20:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,56.0,0.0,0.0,6.14,62.14,USD,tdiyzitule301@gmail.com,Customer 301,ENG,United Kingdom
+#4107,2025-08-11 23:13:00,,Cap 01,2,19.0,0.0,refunded,fulfilled,38.0,0.0,0.0,3.42,0.0,USD,bwzbowyn301@brand.com,Customer 301,IL,United States
+#3995,2025-08-03 17:10:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,51.0,0.0,9.99,5.3,66.29,USD,mhevped200@brand.com,Customer 200,TX,United States
+#4112,2025-04-04 05:48:00,,Clarifying Toner X,1,25.0,5.84,paid,partial,274.0,73.56,0.0,12.66,213.1,USD,tfjvdzsq301@brand.com,Customer 301,FL,United States
+#4180,2025-02-27 23:59:00,,Glow Oil L,2,35.0,4.57,paid,fulfilled,235.0,18.01,6.99,18.62,242.6,USD,utfninc200@hotmail.com,Customer 200,BC,Canada
+#3977,2025-02-04 05:22:00,,Premium Tee 02,3,28.0,13.04,paid,partial,84.0,13.04,0.0,7.87,78.83,USD,lifcpb68@yahoo.com,Customer 68,NSW,Australia
+#3764,2025-02-01 11:50:00,,Hoodie 01,1,55.0,9.76,paid,fulfilled,55.0,9.76,0.0,5.74,50.98,USD,wlfhnqpaz200@hotmail.com,Customer 200,ENG,United Kingdom
+#4104,2025-07-18 04:26:00,,Hydra Cream B,1,49.0,11.47,paid,fulfilled,49.0,11.47,9.99,4.0,51.52,USD,iguxucwsj200@brand.com,Customer 200,VIC,Australia
+#3745,2024-12-17 13:12:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,212.0,0.0,0.0,35.2,247.2,USD,arwscngm229@gmail.com,Customer 229,NSW,Australia
+#3820,2025-02-04 01:56:00,,Clarifying Toner X,3,25.0,0.0,paid,partial,442.0,0.0,6.99,47.65,496.64,USD,nimgwbcefg301@gmail.com,Customer 301,ENG,United Kingdom
+#4064,2024-09-02 08:26:00,,Cap 01,1,19.0,2.93,paid,fulfilled,19.0,2.93,9.99,1.6,27.66,USD,qqtgva301@gmail.com,Customer 301,IL,United States
+#3790,2025-03-20 07:33:00,,Glow Oil L,1,35.0,6.98,paid,fulfilled,35.0,6.98,0.0,5.48,33.5,USD,nueokjw230@hotmail.com,Customer 230,ENG,United Kingdom
+#4197,2025-06-21 08:00:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,104.0,0.0,0.0,7.6,111.6,USD,amtdkots289@yahoo.com,Customer 289,FL,United States
+#4162,2024-09-03 08:56:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,169.0,0.0,0.0,26.43,195.43,USD,zrgvvtnl301@gmail.com,Customer 301,NSW,Australia
+#4182,2024-10-20 22:28:00,,Radiance Serum A,1,39.0,0.0,refunded,fulfilled,39.0,0.0,9.99,4.12,0.0,USD,zjuzta301@yahoo.com,Customer 301,ON,Canada
+#3767,2025-03-17 09:45:00,,Radiance Serum A,1,39.0,0.0,paid,partial,39.0,0.0,4.99,3.17,47.16,USD,ybxnwjhbwd301@yahoo.com,Customer 301,BC,Canada
+#3784,2024-09-07 02:50:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,14.0,0.0,4.99,3.0,21.99,USD,lpnzatolp326@yahoo.com,Customer 326,VIC,Australia
+#3653,2025-02-04 21:03:00,,Premium Tee 02,1,28.0,0.0,paid,unfulfilled,124.0,0.0,0.0,14.0,138.0,USD,kmrktacg326@gmail.com,Customer 326,VIC,Australia
+#4213,2025-08-19 10:50:00,,Repair Eye Gel G,3,45.0,0.0,partially_refunded,fulfilled,135.0,0.0,0.0,22.78,124.61,USD,xtyicpxso301@yahoo.com,Customer 301,ENG,United Kingdom
+#3869,2025-05-19 04:46:00,,Hoodie 01,2,55.0,6.18,paid,fulfilled,347.0,23.36,4.99,58.59,387.22,USD,wacepdlv229@hotmail.com,Customer 229,NSW,Australia
+#4168,2025-01-15 22:47:00,,Light Jacket 01,1,79.0,24.76,paid,fulfilled,79.0,24.76,0.0,4.46,58.7,USD,jhiraqejlz301@gmail.com,Customer 301,QC,Canada
+#3973,2025-01-19 21:19:00,,Revive Mask M,2,29.0,12.55,paid,partial,93.0,19.95,4.99,14.04,92.08,USD,dnmnbsbx301@brand.com,Customer 301,ENG,United Kingdom
+#3974,2025-04-16 12:31:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,78.0,0.0,4.99,6.1,89.09,USD,bqalauyv301@yahoo.com,Customer 301,ON,Canada
+#3718,2024-11-10 14:16:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,79.0,0.0,9.99,7.78,96.77,USD,awyrtkvgsa301@brand.com,Customer 301,QC,Canada
+#3785,2025-03-20 10:57:00,,Leggings 01,2,49.0,0.0,paid,fulfilled,98.0,0.0,0.0,6.13,104.13,USD,rpiwkpsgk349@hotmail.com,Customer 349,NY,United States
+#4154,2025-07-03 15:53:00,,Foam Cleanser F,2,21.0,0.0,paid,fulfilled,112.0,0.0,4.99,10.05,127.04,USD,ejeotl301@brand.com,Customer 301,WA,United States
+#3744,2025-02-01 08:14:00,,Socks 3-Pack,2,14.0,0.0,partially_refunded,fulfilled,125.0,0.0,4.99,9.66,100.7,USD,vodrbfnb301@brand.com,Customer 301,CA,United States
+#3740,2024-10-17 14:19:00,,Classic Tee 01,1,22.0,0.0,refunded,fulfilled,22.0,0.0,6.99,4.57,0.0,USD,quugkgqb301@gmail.com,Customer 301,NSW,Australia
+#3806,2025-01-22 20:26:00,,Revive Mask M,3,29.0,11.58,paid,partial,87.0,11.58,0.0,5.76,81.18,USD,uvergsi301@brand.com,Customer 301,NY,United States
+#3735,2024-11-04 01:29:00,,Socks 3-Pack,1,14.0,0.0,paid,unfulfilled,14.0,0.0,0.0,0.85,14.85,USD,gsvtrmp229@hotmail.com,Customer 229,IL,United States
+#3680,2025-04-08 07:31:00,,Repair Eye Gel G,1,45.0,3.14,paid,fulfilled,159.0,11.54,6.99,12.23,166.68,USD,xdlyfljab229@hotmail.com,Customer 229,FL,United States
+#4172,2024-10-03 03:14:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,297.0,0.0,6.99,19.05,323.04,USD,ufcqbxm301@yahoo.com,Customer 301,ON,Canada
+#4158,2024-09-30 17:28:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,54.0,0.0,0.0,10.43,64.43,USD,dirmgyekn301@gmail.com,Customer 301,NSW,Australia
+#3810,2025-05-05 12:31:00,,Hoodie 01,1,55.0,0.0,refunded,fulfilled,169.0,0.0,0.0,33.18,0.0,USD,uycnuuprb167@brand.com,Customer 167,NSW,Australia
+#3750,2025-06-04 11:05:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,136.0,0.0,0.0,8.83,144.83,USD,dfxnquuzu301@hotmail.com,Customer 301,FL,United States
+#4184,2025-06-14 23:14:00,,Hydra Cream B,1,49.0,0.0,paid,partial,74.0,0.0,6.99,7.11,88.1,USD,mzbrrxmhpj229@gmail.com,Customer 229,TX,United States
+#3799,2024-10-02 17:25:00,,Glow Oil L,2,35.0,2.32,paid,fulfilled,70.0,2.32,4.99,4.55,77.22,USD,rsdovyeius301@brand.com,Customer 301,FL,United States
+#4183,2025-06-17 22:17:00,,Starter Kit C,1,79.0,10.07,paid,fulfilled,79.0,10.07,6.99,7.66,83.58,USD,iuioff200@brand.com,Customer 200,ENG,United Kingdom
+#4075,2025-03-25 01:05:00,,Foam Cleanser F,1,21.0,0.0,paid,partial,66.0,0.0,0.0,4.94,70.94,USD,mqfkxq301@brand.com,Customer 301,FL,United States
+#3994,2025-07-31 17:52:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,208.0,0.0,6.99,18.99,233.98,USD,bctilgnm289@gmail.com,Customer 289,TX,United States
+#3850,2025-08-09 05:31:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,212.0,0.0,0.0,14.13,226.13,USD,ialxxwciq200@yahoo.com,Customer 200,QC,Canada
+#3880,2024-12-01 16:39:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.63,37.63,USD,olybcwpu301@gmail.com,Customer 301,NY,United States
+#3697,2024-11-16 19:14:00,,Light Jacket 01,1,79.0,35.48,paid,unfulfilled,171.0,68.28,0.0,9.73,112.45,USD,pnipezt301@hotmail.com,Customer 301,ON,Canada
+#3820,2025-02-04 01:56:00,,Clarifying Toner X,2,25.0,0.0,paid,partial,442.0,0.0,6.99,47.65,496.64,USD,oqeujrmtxj301@hotmail.com,Customer 301,ENG,United Kingdom
+#3863,2025-01-21 08:17:00,,Glow Oil L,2,35.0,12.94,paid,fulfilled,91.0,16.49,6.99,7.18,88.68,USD,piclikprpv229@hotmail.com,Customer 229,BC,Canada
+#4054,2024-10-21 20:48:00,,Revive Mask M,2,29.0,4.26,paid,fulfilled,58.0,4.26,6.99,5.04,65.77,USD,oyxbjwwv301@hotmail.com,Customer 301,CA,United States
+#4070,2024-09-04 14:20:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,144.0,0.0,6.99,11.75,162.74,USD,hhvdmz301@brand.com,Customer 301,BC,Canada
+#4078,2025-04-20 20:37:00,,Hoodie 01,3,55.0,63.64,paid,unfulfilled,209.0,79.94,0.0,8.03,137.09,USD,qplojqbe289@gmail.com,Customer 289,IL,United States
+#4043,2024-12-16 17:38:00,,Hoodie 01,2,55.0,0.0,paid,partial,110.0,0.0,0.0,9.04,119.04,USD,bkynapsdb301@gmail.com,Customer 301,BC,Canada
+#3942,2024-08-27 02:55:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,217.0,0.0,0.0,17.88,234.88,USD,vseamd230@yahoo.com,Customer 230,TX,United States
+#3941,2024-12-10 03:10:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,109.0,0.0,6.99,10.5,126.49,USD,zweetpwc289@gmail.com,Customer 289,TX,United States
+#4134,2025-07-14 14:49:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,142.0,0.0,4.99,11.05,158.04,USD,uxiftyaa301@gmail.com,Customer 301,TX,United States
+#4083,2025-02-09 10:47:00,,Revive Mask M,2,29.0,0.0,paid,partial,107.0,0.0,6.99,16.86,130.85,USD,zywgucybip301@brand.com,Customer 301,NSW,Australia
+#4015,2025-02-11 15:11:00,,Socks 3-Pack,1,14.0,2.73,paid,partial,122.0,25.43,4.99,8.9,110.46,USD,jstjqowv301@yahoo.com,Customer 301,WA,United States
+#3663,2024-12-26 14:49:00,,Hoodie 01,1,55.0,9.78,paid,unfulfilled,308.0,54.49,4.99,21.05,279.55,USD,dyhmcx301@yahoo.com,Customer 301,FL,United States
+#3636,2025-07-25 10:00:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,6.99,2.8,30.79,USD,lzdxebln301@yahoo.com,Customer 301,NSW,Australia
+#4157,2024-10-16 10:52:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.78,37.78,USD,xvslkbmt289@gmail.com,Customer 289,WA,United States
+#4016,2025-03-26 10:14:00,,Hydra Cream B,1,49.0,2.46,paid,fulfilled,133.0,7.52,0.0,24.48,149.96,USD,inrhwoqfhz289@gmail.com,Customer 289,NSW,Australia
+#3892,2024-09-13 17:25:00,,Socks 3-Pack,2,14.0,0.0,paid,fulfilled,73.0,0.0,4.99,5.7,83.69,USD,xljrszwewc301@brand.com,Customer 301,QC,Canada
+#4003,2025-08-01 14:13:00,,Clarifying Toner X,1,25.0,0.0,paid,partial,53.0,0.0,6.99,3.68,63.67,USD,ansmyy301@hotmail.com,Customer 301,IL,United States
+#3715,2025-04-03 05:21:00,,Revive Mask M,1,29.0,7.65,paid,fulfilled,29.0,7.65,9.99,3.39,34.73,USD,ihmqijwmus301@hotmail.com,Customer 301,ENG,United Kingdom
+#4098,2025-01-02 13:03:00,,Repair Eye Gel G,2,45.0,0.0,paid,fulfilled,90.0,0.0,6.99,7.97,104.96,USD,lbbvqichmi167@gmail.com,Customer 167,CA,United States
+#3901,2025-02-14 10:37:00,,Cap 01,2,19.0,0.0,paid,fulfilled,93.0,0.0,0.0,7.91,100.91,USD,mzpjmlgr301@gmail.com,Customer 301,BC,Canada
+#3878,2025-01-02 02:20:00,2025-01-13 02:20:00,Foam Cleanser F,1,21.0,1.13,refunded,fulfilled,140.0,9.63,0.0,8.99,0.0,USD,gbtmaxqgqa301@gmail.com,Customer 301,IL,United States
+#3655,2025-04-19 01:58:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,188.0,0.0,6.99,17.15,212.14,USD,prwlmitjyw167@yahoo.com,Customer 167,ON,Canada
+#3699,2025-06-06 15:42:00,,Revive Mask M,4,29.0,0.0,paid,fulfilled,276.0,0.0,4.99,20.09,301.08,USD,ylnorwru162@hotmail.com,Customer 162,QC,Canada
+#4000,2025-05-06 09:48:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,193.0,0.0,0.0,28.07,221.07,USD,gszlwd301@hotmail.com,Customer 301,NSW,Australia
+#4086,2025-02-23 08:02:00,,Hydra Cream B,4,49.0,45.12,partially_refunded,fulfilled,196.0,45.12,0.0,14.0,93.8,USD,klqfkblr301@gmail.com,Customer 301,QC,Canada
+#3879,2025-04-20 03:50:00,,Clarifying Toner X,1,25.0,0.0,paid,unfulfilled,70.0,0.0,4.99,5.73,80.72,USD,droizfbe200@gmail.com,Customer 200,TX,United States
+#4028,2025-07-25 16:02:00,,Light Jacket 01,2,79.0,13.2,paid,fulfilled,158.0,13.2,0.0,10.55,155.35,USD,udnwpu301@gmail.com,Customer 301,ON,Canada
+#3795,2025-03-08 19:42:00,,Foam Cleanser F,2,21.0,7.19,paid,fulfilled,80.0,12.23,4.99,6.36,79.12,USD,ycuhctlk289@gmail.com,Customer 289,FL,United States
+#4066,2025-07-28 18:19:00,,Cap 01,2,19.0,6.53,paid,fulfilled,57.0,10.1,6.99,4.57,58.46,USD,kbipftc326@brand.com,Customer 326,TX,United States
+#3753,2025-01-14 19:45:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,242.0,0.0,4.99,20.63,267.62,USD,wwyjyk301@gmail.com,Customer 301,FL,United States
+#4145,2024-09-28 12:32:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,7.02,86.02,USD,dewixbnlri167@gmail.com,Customer 167,FL,United States
+#3743,2024-11-26 22:51:00,,Leggings 01,2,49.0,35.47,paid,fulfilled,126.0,42.18,6.99,8.6,99.41,USD,uauhbs301@gmail.com,Customer 301,NY,United States
+#3787,2025-01-15 11:40:00,,Socks 3-Pack,1,14.0,0.99,paid,fulfilled,240.0,15.01,6.99,20.87,252.85,USD,jlqrof200@brand.com,Customer 200,NY,United States
+#3647,2025-06-10 13:19:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,22.0,0.0,0.0,2.42,24.42,USD,hgdfdntef301@brand.com,Customer 301,ENG,United Kingdom
+#4153,2024-09-01 14:18:00,,Light Jacket 01,3,79.0,0.0,paid,fulfilled,237.0,0.0,4.99,24.43,266.42,USD,cugmacre289@yahoo.com,Customer 289,ENG,United Kingdom
+#3753,2025-01-14 19:45:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,242.0,0.0,4.99,20.63,267.62,USD,mcgfnax301@yahoo.com,Customer 301,FL,United States
+#3940,2025-08-01 15:58:00,,Classic Tee 01,1,22.0,1.32,paid,unfulfilled,77.0,4.29,0.0,4.83,77.54,USD,nnkmsv301@hotmail.com,Customer 301,QC,Canada
+#4207,2024-10-15 18:42:00,,Hoodie 01,2,55.0,17.73,paid,fulfilled,145.0,26.22,0.0,8.46,127.24,USD,nnupgl229@gmail.com,Customer 229,NY,United States
+#4161,2024-10-09 02:39:00,,Light Jacket 01,3,79.0,0.0,paid,fulfilled,237.0,0.0,6.99,16.79,260.78,USD,fvslbhdm301@hotmail.com,Customer 301,WA,United States
+#3936,2025-05-10 02:26:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,9.99,2.62,33.61,USD,bjsmmvwdc301@hotmail.com,Customer 301,BC,Canada
+#3814,2025-02-12 23:31:00,,Light Jacket 01,1,79.0,0.0,partially_refunded,fulfilled,158.0,0.0,6.99,11.76,130.02,USD,xwmgjufsu301@brand.com,Customer 301,QC,Canada
+#4217,2025-06-02 03:13:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,154.0,0.0,9.99,15.51,179.5,USD,smsyzf301@brand.com,Customer 301,WA,United States
+#3763,2024-10-28 20:54:00,,Revive Mask M,1,29.0,0.0,paid,partial,29.0,0.0,0.0,3.41,32.41,USD,nwzrmdeuf349@hotmail.com,Customer 349,VIC,Australia
+#3963,2025-07-11 10:00:00,,Classic Tee 01,2,22.0,0.0,paid,fulfilled,44.0,0.0,6.99,7.62,58.61,USD,ntnarnzhfv167@brand.com,Customer 167,NSW,Australia
+#3639,2025-07-27 10:50:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,25.0,0.0,0.0,2.24,27.24,USD,ptlxosjkd200@gmail.com,Customer 200,FL,United States
+#3638,2025-04-28 06:43:00,,Premium Tee 02,2,28.0,7.13,paid,fulfilled,372.0,44.9,4.99,26.29,358.38,USD,hfupil301@yahoo.com,Customer 301,NY,United States
+#4118,2025-06-22 05:19:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,104.0,0.0,4.99,8.58,117.57,USD,jprdtqy230@yahoo.com,Customer 230,CA,United States
+#3730,2024-11-21 20:29:00,,Shorts 01,2,35.0,4.46,paid,fulfilled,134.0,9.61,0.0,9.59,133.98,USD,igdjdkp230@brand.com,Customer 230,FL,United States
+#3808,2024-09-24 01:28:00,,Premium Tee 02,1,28.0,2.69,paid,fulfilled,28.0,2.69,6.99,3.5,35.8,USD,ndmdpvxuqn200@hotmail.com,Customer 200,NSW,Australia
+#3916,2024-10-25 21:00:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,4.99,3.08,36.07,USD,romwnkmzqj301@hotmail.com,Customer 301,TX,United States
+#4208,2024-10-06 20:20:00,2024-10-21 20:20:00,Cap 01,1,19.0,0.0,refunded,fulfilled,47.0,0.0,4.99,4.56,0.0,USD,bcuvtxqir289@hotmail.com,Customer 289,ON,Canada
+#3802,2025-01-08 23:23:00,,Hoodie 01,1,55.0,4.13,paid,fulfilled,55.0,4.13,6.99,10.46,68.32,USD,leyrztm301@hotmail.com,Customer 301,NSW,Australia
+#3961,2024-09-07 03:54:00,,Socks 3-Pack,1,14.0,1.68,paid,partial,14.0,1.68,6.99,1.23,20.54,USD,tnlllwi301@brand.com,Customer 301,BC,Canada
+#3789,2025-07-20 07:13:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,39.0,0.0,4.99,2.75,46.74,USD,bypuqvh326@hotmail.com,Customer 326,IL,United States
+#3680,2025-04-08 07:31:00,,Shorts 01,1,35.0,3.31,paid,fulfilled,159.0,11.54,6.99,12.23,166.68,USD,dgqwocvwht229@hotmail.com,Customer 229,FL,United States
+#3773,2024-09-21 19:11:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.46,37.46,USD,xqlzgb229@yahoo.com,Customer 229,TX,United States
+#3662,2025-06-17 09:21:00,,Radiance Serum A,1,39.0,2.36,paid,fulfilled,39.0,2.36,4.99,2.87,44.5,USD,jtgjqjrmq230@hotmail.com,Customer 230,ON,Canada
+#3666,2025-06-12 09:58:00,,Hydra Cream B,1,49.0,15.53,paid,fulfilled,49.0,15.53,0.0,3.17,36.64,USD,uncnybuwn301@brand.com,Customer 301,QC,Canada
+#3865,2025-05-24 22:17:00,,Revive Mask M,2,29.0,0.0,paid,fulfilled,259.0,0.0,9.99,19.27,288.26,USD,xysxzppn301@yahoo.com,Customer 301,BC,Canada
+#3664,2025-06-15 13:15:00,,Revive Mask M,2,29.0,0.0,paid,fulfilled,58.0,0.0,0.0,4.17,62.17,USD,fvopvguuph301@yahoo.com,Customer 301,WA,United States
+#4002,2025-04-11 15:47:00,,Hydra Cream B,2,49.0,0.0,paid,partial,98.0,0.0,9.99,8.34,116.33,USD,jmkpleymt289@brand.com,Customer 289,BC,Canada
+#4117,2025-08-20 07:58:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,97.0,0.0,0.0,8.88,105.88,USD,diuikqmz200@gmail.com,Customer 200,NY,United States
+#3979,2025-04-01 10:48:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,60.0,0.0,0.0,4.06,64.06,USD,hznrdgvo246@gmail.com,Customer 246,QC,Canada
+#4169,2024-12-08 01:31:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,67.0,0.0,0.0,5.21,72.21,USD,ktkpijcxyt301@hotmail.com,Customer 301,IL,United States
+#3797,2025-05-17 15:44:00,,Premium Tee 02,1,28.0,4.3,paid,fulfilled,70.0,10.75,4.99,5.64,69.88,USD,htxikq301@yahoo.com,Customer 301,CA,United States
+#3925,2025-07-22 23:22:00,,Revive Mask M,1,29.0,2.71,paid,fulfilled,29.0,2.71,0.0,1.93,28.22,USD,ipktgkde301@hotmail.com,Customer 301,TX,United States
+#3841,2024-12-08 04:18:00,,Leggings 01,1,49.0,13.04,paid,fulfilled,49.0,13.04,0.0,4.55,40.51,USD,jxngbf301@hotmail.com,Customer 301,NSW,Australia
+#3621,2025-06-08 19:47:00,,Hydra Cream B,1,49.0,7.97,paid,unfulfilled,49.0,7.97,0.0,3.63,44.66,USD,wpusnzjo301@hotmail.com,Customer 301,WA,United States
+#3677,2025-03-03 14:09:00,,Starter Kit C,2,79.0,0.0,paid,fulfilled,282.0,0.0,0.0,25.09,307.09,USD,xoepnylvv326@gmail.com,Customer 326,BC,Canada
+#4088,2025-05-05 16:07:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,93.0,0.0,4.99,6.67,104.66,USD,wskkfvr200@brand.com,Customer 200,FL,United States
+#3892,2024-09-13 17:25:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,73.0,0.0,4.99,5.7,83.69,USD,hychsmw301@gmail.com,Customer 301,QC,Canada
+#3949,2025-07-27 03:09:00,,Socks 3-Pack,1,14.0,0.0,paid,partial,42.0,0.0,0.0,4.85,46.85,USD,yllvcc289@gmail.com,Customer 289,ENG,United Kingdom
+#3739,2025-02-14 23:08:00,,Hoodie 01,1,55.0,7.89,paid,unfulfilled,83.0,11.14,0.0,6.94,78.8,USD,ddsjlu326@yahoo.com,Customer 326,NSW,Australia
+#3772,2024-12-11 16:27:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,189.0,0.0,4.99,17.22,211.21,USD,puvzjke301@brand.com,Customer 301,VIC,Australia
+#3623,2024-12-02 04:14:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,0.0,6.74,55.74,USD,vufaigfy301@hotmail.com,Customer 301,VIC,Australia
+#3649,2025-04-29 23:02:00,,Starter Kit C,2,79.0,0.0,paid,fulfilled,272.0,0.0,6.99,26.29,305.28,USD,xhplobyct301@yahoo.com,Customer 301,BC,Canada
+#3928,2024-12-16 19:15:00,,Starter Kit C,1,79.0,11.52,paid,fulfilled,118.0,16.44,0.0,9.4,110.96,USD,wtkawvym301@brand.com,Customer 301,FL,United States
+#3800,2024-12-13 05:25:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,124.0,0.0,6.99,9.44,140.43,USD,tqsxwqvp230@yahoo.com,Customer 230,WA,United States
+#4218,2025-03-19 04:46:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,212.0,0.0,6.99,43.12,262.11,USD,vaysick301@brand.com,Customer 301,ENG,United Kingdom
+#3929,2025-06-29 20:19:00,,Socks 3-Pack,2,14.0,0.0,paid,fulfilled,129.0,0.0,6.99,9.93,145.92,USD,zfsekl200@hotmail.com,Customer 200,FL,United States
+#3881,2025-07-16 13:20:00,,Clarifying Toner X,1,25.0,4.58,paid,partial,64.0,10.68,0.0,4.22,57.54,USD,emyqujagdn301@gmail.com,Customer 301,TX,United States
+#3676,2025-05-31 20:06:00,,Premium Tee 02,3,28.0,0.0,paid,unfulfilled,152.0,0.0,0.0,9.38,161.38,USD,bqnfujy301@yahoo.com,Customer 301,NY,United States
+#3982,2025-06-05 20:54:00,,Radiance Serum A,4,39.0,0.0,refunded,fulfilled,175.0,0.0,4.99,14.6,0.0,USD,dwdens301@hotmail.com,Customer 301,IL,United States
+#3737,2025-04-26 11:27:00,,Radiance Serum A,1,39.0,7.14,paid,fulfilled,163.0,30.7,0.0,10.16,142.46,USD,khsgrs301@gmail.com,Customer 301,NY,United States
+#3787,2025-01-15 11:40:00,,Starter Kit C,1,79.0,4.89,paid,fulfilled,240.0,15.01,6.99,20.87,252.85,USD,btfwwlfqsj200@yahoo.com,Customer 200,NY,United States
+#4000,2025-05-06 09:48:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,193.0,0.0,0.0,28.07,221.07,USD,nzqhaw301@hotmail.com,Customer 301,NSW,Australia
+#4197,2025-06-21 08:00:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,104.0,0.0,0.0,7.6,111.6,USD,kendvrj289@gmail.com,Customer 289,FL,United States
+#3934,2025-03-10 02:03:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,0.0,1.68,22.68,USD,bdwvtyhw301@hotmail.com,Customer 301,QC,Canada
+#3820,2025-02-04 01:56:00,,Light Jacket 01,3,79.0,0.0,paid,partial,442.0,0.0,6.99,47.65,496.64,USD,fihgqhlw301@hotmail.com,Customer 301,ENG,United Kingdom
+#4137,2025-01-09 14:39:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,84.0,0.0,4.99,7.45,96.44,USD,wmgdqms301@yahoo.com,Customer 301,WA,United States
+#4060,2024-09-07 16:41:00,,Cap 01,1,19.0,0.0,paid,fulfilled,106.0,0.0,0.0,12.54,118.54,USD,ooubiyajhk229@yahoo.com,Customer 229,VIC,Australia
+#3948,2025-03-28 05:45:00,,Foam Cleanser F,2,21.0,1.66,paid,partial,42.0,1.66,4.99,3.22,48.55,USD,omzuuu230@hotmail.com,Customer 230,WA,United States
+#4057,2025-02-27 11:18:00,,Leggings 01,4,49.0,0.0,paid,fulfilled,422.0,0.0,0.0,26.14,448.14,USD,lqacbqpe301@yahoo.com,Customer 301,NY,United States
+#3834,2025-05-17 10:15:00,,Cap 01,2,19.0,0.0,paid,fulfilled,118.0,0.0,0.0,16.53,134.53,USD,vigojotjl200@brand.com,Customer 200,ENG,United Kingdom
+#3898,2025-04-26 05:49:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,22.0,0.0,0.0,4.16,26.16,USD,kslkaiil167@gmail.com,Customer 167,NSW,Australia
+#3686,2025-08-10 06:49:00,,Light Jacket 01,1,79.0,9.9,paid,fulfilled,101.0,13.39,4.99,8.61,101.21,USD,txkzmmynu301@brand.com,Customer 301,IL,United States
+#3826,2024-09-25 23:21:00,,Radiance Serum A,1,39.0,0.05,paid,fulfilled,355.0,0.42,0.0,26.24,380.82,USD,sgdmiiuzm301@gmail.com,Customer 301,QC,Canada
+#3760,2025-05-08 04:34:00,,Hoodie 01,1,55.0,0.0,paid,unfulfilled,570.0,0.0,0.0,39.19,609.19,USD,gxxbkkihlw301@brand.com,Customer 301,BC,Canada
+#3834,2025-05-17 10:15:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,118.0,0.0,0.0,16.53,134.53,USD,szpnzh200@hotmail.com,Customer 200,ENG,United Kingdom
+#3627,2025-02-09 16:55:00,,Socks 3-Pack,3,14.0,0.0,paid,fulfilled,232.0,0.0,0.0,19.43,251.43,USD,ounaiay200@hotmail.com,Customer 200,TX,United States
+#3733,2025-06-28 19:10:00,,Classic Tee 01,2,22.0,0.0,paid,fulfilled,44.0,0.0,9.99,5.07,59.06,USD,tqgwag301@gmail.com,Customer 301,BC,Canada
+#3982,2025-06-05 20:54:00,,Cap 01,1,19.0,0.0,refunded,fulfilled,175.0,0.0,4.99,14.6,0.0,USD,rxifljjen301@brand.com,Customer 301,IL,United States
+#3663,2024-12-26 14:49:00,,Leggings 01,2,49.0,19.23,paid,unfulfilled,308.0,54.49,4.99,21.05,279.55,USD,kedwlr301@gmail.com,Customer 301,FL,United States
+#3833,2025-03-08 22:15:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,149.0,0.0,4.99,27.89,181.88,USD,jpbyfm200@gmail.com,Customer 200,NSW,Australia
+#4050,2025-02-24 03:55:00,,Clarifying Toner X,1,25.0,0.0,paid,partial,79.0,0.0,0.0,13.01,92.01,USD,hmgogoa200@gmail.com,Customer 200,VIC,Australia
+#3992,2024-08-31 02:12:00,,Foam Cleanser F,1,21.0,5.06,paid,fulfilled,283.0,79.89,0.0,13.76,216.87,USD,kxfwiv301@brand.com,Customer 301,ON,Canada
+#3755,2024-12-28 19:34:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,0.0,5.74,54.74,USD,yykzza84@hotmail.com,Customer 84,ENG,United Kingdom
+#4117,2025-08-20 07:58:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,97.0,0.0,0.0,8.88,105.88,USD,bsggrwj200@gmail.com,Customer 200,NY,United States
+#3741,2024-10-19 22:29:00,,Clarifying Toner X,1,25.0,0.0,paid,unfulfilled,39.0,0.0,4.99,2.72,46.71,USD,oemzbpaf301@gmail.com,Customer 301,WA,United States
+#4052,2025-02-11 04:04:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,152.0,0.0,4.99,27.89,184.88,USD,jcxryvsb301@gmail.com,Customer 301,VIC,Australia
+#4077,2025-04-05 02:56:00,,Leggings 01,1,49.0,9.33,paid,fulfilled,49.0,9.33,9.99,4.2,53.86,USD,hfcsqmvl301@brand.com,Customer 301,TX,United States
+#4133,2025-07-10 23:55:00,,Foam Cleanser F,1,21.0,1.33,paid,fulfilled,21.0,1.33,0.0,1.5,21.17,USD,gbmfqblfw301@yahoo.com,Customer 301,ON,Canada
+#3747,2025-01-14 07:33:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,223.0,0.0,0.0,30.8,253.8,USD,mudavz229@yahoo.com,Customer 229,ENG,United Kingdom
+#4130,2025-02-18 05:44:00,,Classic Tee 01,3,22.0,0.0,paid,fulfilled,66.0,0.0,9.99,5.08,81.07,USD,vwrmqpoh301@yahoo.com,Customer 301,BC,Canada
+#4164,2024-10-19 02:10:00,,Premium Tee 02,2,28.0,13.17,paid,fulfilled,56.0,13.17,4.99,3.46,51.28,USD,sbofyhr301@yahoo.com,Customer 301,IL,United States
+#4095,2024-12-21 07:07:00,,Clarifying Toner X,1,25.0,0.0,paid,partial,170.0,0.0,0.0,15.25,185.25,USD,gkfhhyl200@yahoo.com,Customer 200,QC,Canada
+#4070,2024-09-04 14:20:00,,Repair Eye Gel G,2,45.0,0.0,paid,fulfilled,144.0,0.0,6.99,11.75,162.74,USD,supfferyj301@hotmail.com,Customer 301,BC,Canada
+#3904,2024-10-07 12:56:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,124.0,0.0,0.0,7.63,131.63,USD,uoryvss301@gmail.com,Customer 301,NY,United States
+#3824,2025-05-18 23:32:00,,Shorts 01,1,35.0,4.73,paid,fulfilled,125.0,17.9,0.0,7.01,114.11,USD,eantdhnr200@brand.com,Customer 200,FL,United States
+#3883,2025-01-19 03:42:00,,Cap 01,1,19.0,1.02,paid,fulfilled,19.0,1.02,0.0,1.63,19.61,USD,mdxspi301@yahoo.com,Customer 301,CA,United States
+#3796,2025-08-20 00:11:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,29.0,0.0,6.99,3.17,39.16,USD,hqhxzwqyaw301@yahoo.com,Customer 301,QC,Canada
+#3826,2024-09-25 23:21:00,,Starter Kit C,2,79.0,0.21,paid,fulfilled,355.0,0.42,0.0,26.24,380.82,USD,vdtgultal301@gmail.com,Customer 301,QC,Canada
+#3625,2024-09-06 21:36:00,,Shorts 01,1,35.0,2.84,paid,fulfilled,35.0,2.84,6.99,3.64,42.79,USD,qukbjzn229@gmail.com,Customer 229,TX,United States
+#3708,2025-01-14 07:08:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,6.99,3.53,45.52,USD,gafblsobx200@brand.com,Customer 200,VIC,Australia
+#3939,2025-08-16 05:30:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,217.0,0.0,9.99,20.36,247.35,USD,xpjcjflk301@hotmail.com,Customer 301,CA,United States
+#3867,2025-04-16 08:58:00,,Premium Tee 02,1,28.0,1.68,paid,fulfilled,28.0,1.68,6.99,2.47,35.78,USD,pzcsnw301@hotmail.com,Customer 301,CA,United States
+#4117,2025-08-20 07:58:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,97.0,0.0,0.0,8.88,105.88,USD,gcnccfovrb200@brand.com,Customer 200,NY,United States
+#4215,2024-08-27 16:39:00,,Revive Mask M,1,29.0,0.94,paid,fulfilled,121.0,3.47,0.0,9.0,126.53,USD,zwmloze349@yahoo.com,Customer 349,TX,United States
+#4208,2024-10-06 20:20:00,2024-10-21 20:20:00,Premium Tee 02,1,28.0,0.0,refunded,fulfilled,47.0,0.0,4.99,4.56,0.0,USD,tfczppjwr289@brand.com,Customer 289,ON,Canada
+#4171,2024-09-01 07:56:00,,Foam Cleanser F,2,21.0,0.0,paid,fulfilled,273.0,0.0,4.99,17.66,295.65,USD,pncokap200@yahoo.com,Customer 200,TX,United States
+#4186,2025-02-20 00:33:00,,Shorts 01,1,35.0,11.38,paid,fulfilled,35.0,11.38,0.0,1.72,25.34,USD,yjutfifj200@yahoo.com,Customer 200,NY,United States
+#4035,2024-11-20 12:38:00,,Glow Oil L,2,35.0,0.0,paid,fulfilled,70.0,0.0,0.0,4.85,74.85,USD,nhzrldt301@gmail.com,Customer 301,ON,Canada
+#4179,2025-05-09 17:21:00,,Cap 01,1,19.0,0.0,paid,fulfilled,142.0,0.0,4.99,13.36,160.35,USD,cfofmopwc301@brand.com,Customer 301,QC,Canada
+#3854,2025-01-10 14:31:00,,Light Jacket 01,3,79.0,6.06,paid,fulfilled,304.0,7.45,4.99,55.31,356.85,USD,ghfdmutfpk301@gmail.com,Customer 301,NSW,Australia
+#3931,2025-08-12 22:10:00,,Starter Kit C,1,79.0,12.34,paid,fulfilled,124.0,21.41,0.0,7.58,110.17,USD,pzhrkkd200@hotmail.com,Customer 200,IL,United States
+#3967,2025-06-16 08:58:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,101.0,0.0,0.0,6.27,107.27,USD,yqqebxhgr301@hotmail.com,Customer 301,ON,Canada
+#4172,2024-10-03 03:14:00,,Light Jacket 01,3,79.0,0.0,paid,fulfilled,297.0,0.0,6.99,19.05,323.04,USD,qnamshkvtj301@brand.com,Customer 301,ON,Canada
+#3872,2025-06-07 17:05:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,55.0,0.0,9.99,5.46,70.45,USD,pqhhugplr301@yahoo.com,Customer 301,QC,Canada
+#3919,2024-11-27 19:50:00,,Repair Eye Gel G,3,45.0,0.0,paid,fulfilled,135.0,0.0,0.0,10.11,145.11,USD,qhulof301@brand.com,Customer 301,QC,Canada
+#3748,2025-05-16 12:58:00,,Glow Oil L,1,35.0,0.78,paid,fulfilled,35.0,0.78,4.99,3.1,42.31,USD,pgvabx229@brand.com,Customer 229,ON,Canada
+#3950,2025-08-06 17:05:00,,Glow Oil L,2,35.0,13.04,paid,fulfilled,70.0,13.04,0.0,5.12,62.08,USD,lktgvin289@gmail.com,Customer 289,WA,United States
+#4059,2025-07-02 09:42:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,6.99,2.97,37.96,USD,gecfax200@yahoo.com,Customer 200,WA,United States
+#3741,2024-10-19 22:29:00,,Socks 3-Pack,1,14.0,0.0,paid,unfulfilled,39.0,0.0,4.99,2.72,46.71,USD,nqnkscnqh301@hotmail.com,Customer 301,WA,United States
+#3663,2024-12-26 14:49:00,,Hoodie 01,2,55.0,16.15,paid,unfulfilled,308.0,54.49,4.99,21.05,279.55,USD,lrtyktekc301@brand.com,Customer 301,FL,United States
+#3703,2025-01-23 22:56:00,,Premium Tee 02,2,28.0,0.0,paid,fulfilled,75.0,0.0,0.0,8.86,83.86,USD,zomywmfce301@brand.com,Customer 301,NSW,Australia
+#3793,2025-07-31 04:10:00,,Cap 01,1,19.0,0.0,paid,fulfilled,19.0,0.0,0.0,1.27,20.27,USD,cczunqfqfr167@gmail.com,Customer 167,IL,United States
+#4050,2025-02-24 03:55:00,,Shorts 01,1,35.0,0.0,paid,partial,79.0,0.0,0.0,13.01,92.01,USD,ocxkaf200@yahoo.com,Customer 200,VIC,Australia
+#3909,2025-02-27 07:52:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,100.0,0.0,4.99,7.3,112.29,USD,czdcdtsob200@hotmail.com,Customer 200,WA,United States
+#3813,2024-11-19 17:15:00,,Cap 01,1,19.0,0.0,paid,fulfilled,19.0,0.0,4.99,1.84,25.83,USD,xjzhpfyogk301@gmail.com,Customer 301,TX,United States
+#4016,2025-03-26 10:14:00,,Premium Tee 02,3,28.0,5.07,paid,fulfilled,133.0,7.52,0.0,24.48,149.96,USD,ivhfrdhtw289@gmail.com,Customer 289,NSW,Australia
+#3810,2025-05-05 12:31:00,,Starter Kit C,1,79.0,0.0,refunded,fulfilled,169.0,0.0,0.0,33.18,0.0,USD,mjoghistwr167@yahoo.com,Customer 167,NSW,Australia
+#3694,2025-05-30 23:09:00,,Leggings 01,1,49.0,7.15,paid,partial,49.0,7.15,0.0,7.29,49.14,USD,mnmiayn200@yahoo.com,Customer 200,NSW,Australia
+#3943,2024-10-08 01:29:00,,Radiance Serum A,2,39.0,2.85,paid,unfulfilled,78.0,2.85,0.0,5.29,80.44,USD,fovbaqs301@brand.com,Customer 301,BC,Canada
+#3800,2024-12-13 05:25:00,,Clarifying Toner X,3,25.0,0.0,paid,fulfilled,124.0,0.0,6.99,9.44,140.43,USD,lumcqchvx230@yahoo.com,Customer 230,WA,United States
+#3984,2025-06-26 05:25:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,6.99,2.87,44.86,USD,bntqnmmijs200@brand.com,Customer 200,TX,United States
+#3868,2024-08-26 05:41:00,,Classic Tee 01,2,22.0,6.53,paid,fulfilled,72.0,12.02,0.0,5.0,64.98,USD,roppxn289@gmail.com,Customer 289,TX,United States
+#3619,2025-02-22 05:39:00,,Starter Kit C,1,79.0,9.63,paid,fulfilled,79.0,9.63,0.0,12.61,81.98,USD,rxckaf301@gmail.com,Customer 301,ENG,United Kingdom
+#3803,2024-12-21 22:45:00,,Starter Kit C,1,79.0,12.71,paid,fulfilled,221.0,31.07,4.99,16.19,211.11,USD,pojjpxcg301@yahoo.com,Customer 301,BC,Canada
+#4194,2025-04-01 16:49:00,,Repair Eye Gel G,3,45.0,0.0,paid,fulfilled,135.0,0.0,0.0,11.62,146.62,USD,pdznpnefy301@hotmail.com,Customer 301,BC,Canada
+#3942,2024-08-27 02:55:00,,Radiance Serum A,3,39.0,0.0,paid,fulfilled,217.0,0.0,0.0,17.88,234.88,USD,shvqrzrucd230@yahoo.com,Customer 230,TX,United States
+#3814,2025-02-12 23:31:00,,Starter Kit C,1,79.0,0.0,partially_refunded,fulfilled,158.0,0.0,6.99,11.76,130.02,USD,wvoszout301@brand.com,Customer 301,QC,Canada
+#3932,2025-07-28 17:05:00,,Foam Cleanser F,1,21.0,0.0,refunded,fulfilled,21.0,0.0,0.0,3.02,0.0,USD,gcbigxzyzp200@gmail.com,Customer 200,ENG,United Kingdom
+#3890,2025-07-11 04:23:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,4.67,39.67,USD,tspofrqiy200@hotmail.com,Customer 200,ENG,United Kingdom
+#3829,2025-05-26 17:57:00,,Classic Tee 01,3,22.0,0.0,paid,fulfilled,66.0,0.0,0.0,10.34,76.34,USD,gzutulfrj301@yahoo.com,Customer 301,ENG,United Kingdom
+#3721,2024-11-16 17:46:00,,Hoodie 01,1,55.0,4.97,paid,fulfilled,257.0,25.38,0.0,38.3,269.92,USD,xfxrohyrho301@gmail.com,Customer 301,ENG,United Kingdom
+#3691,2025-02-10 21:15:00,,Light Jacket 01,3,79.0,0.0,paid,fulfilled,237.0,0.0,6.99,18.63,262.62,USD,uaojuop289@gmail.com,Customer 289,TX,United States
+#4012,2025-03-02 14:02:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,0.0,2.03,30.03,USD,ujyymrsckp301@yahoo.com,Customer 301,FL,United States
+#3857,2025-06-21 16:05:00,2025-06-26 16:05:00,Repair Eye Gel G,3,45.0,6.16,refunded,fulfilled,168.0,7.68,9.99,11.51,0.0,USD,bdvijnep301@yahoo.com,Customer 301,QC,Canada
+#4160,2025-04-08 00:37:00,,Leggings 01,1,49.0,3.11,paid,fulfilled,49.0,3.11,0.0,2.89,48.78,USD,nusvzcelt301@gmail.com,Customer 301,IL,United States
+#3671,2025-05-11 12:55:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,14.0,0.0,9.99,1.7,25.69,USD,pqayvgesii301@gmail.com,Customer 301,ON,Canada
+#4180,2025-02-27 23:59:00,,Hoodie 01,3,55.0,13.44,paid,fulfilled,235.0,18.01,6.99,18.62,242.6,USD,friekeerin200@brand.com,Customer 200,BC,Canada
+#3724,2025-03-13 10:10:00,,Starter Kit C,1,79.0,7.86,paid,fulfilled,238.0,21.23,0.0,19.96,236.73,USD,iyfizzhs301@brand.com,Customer 301,NY,United States
+#3772,2024-12-11 16:27:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,189.0,0.0,4.99,17.22,211.21,USD,qskxnqhu301@brand.com,Customer 301,VIC,Australia
+#4155,2025-06-24 19:20:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,56.0,0.0,0.0,6.14,62.14,USD,lhppeehps301@yahoo.com,Customer 301,ENG,United Kingdom
+#3656,2025-02-22 04:24:00,,Leggings 01,1,49.0,0.0,paid,unfulfilled,49.0,0.0,6.99,7.34,63.33,USD,abqxztlcqw301@brand.com,Customer 301,VIC,Australia
+#3786,2025-06-29 07:50:00,,Shorts 01,2,35.0,15.22,paid,unfulfilled,179.0,37.88,6.99,12.88,160.99,USD,hswsyqfqhi301@yahoo.com,Customer 301,BC,Canada
+#3693,2024-11-12 06:39:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,304.0,0.0,0.0,19.72,323.72,USD,pistwzdj301@gmail.com,Customer 301,QC,Canada
+#3791,2025-06-13 07:42:00,,Revive Mask M,2,29.0,5.22,paid,fulfilled,58.0,5.22,6.99,3.8,63.57,USD,motqcigqxg301@gmail.com,Customer 301,IL,United States
+#3878,2025-01-02 02:20:00,2025-01-13 02:20:00,Radiance Serum A,1,39.0,3.39,refunded,fulfilled,140.0,9.63,0.0,8.99,0.0,USD,kfrnyw301@yahoo.com,Customer 301,IL,United States
+#3809,2025-05-13 23:03:00,,Shorts 01,2,35.0,0.0,paid,partial,121.0,0.0,6.99,16.1,144.09,USD,rijeqgw301@brand.com,Customer 301,ENG,United Kingdom
+#3700,2025-06-07 10:17:00,,Starter Kit C,2,79.0,14.07,refunded,unfulfilled,158.0,14.07,0.0,8.91,0.0,USD,jlgmfo230@hotmail.com,Customer 230,NY,United States
+#3858,2025-07-19 22:39:00,,Glow Oil L,1,35.0,2.01,paid,fulfilled,60.0,3.07,0.0,4.66,61.59,USD,dwvyrdsl301@gmail.com,Customer 301,IL,United States
+#3966,2024-09-12 12:56:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,55.0,0.0,0.0,10.29,65.29,USD,qdolwnudoe301@yahoo.com,Customer 301,NSW,Australia
+#3696,2025-04-04 22:29:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,29.0,0.0,4.99,2.28,36.27,USD,klovqp301@yahoo.com,Customer 301,QC,Canada
+#3855,2025-06-02 10:11:00,,Shorts 01,3,35.0,6.39,paid,fulfilled,105.0,6.39,0.0,7.99,106.6,USD,rgbhotc301@hotmail.com,Customer 301,QC,Canada
+#3714,2025-01-28 01:11:00,,Shorts 01,2,35.0,24.78,paid,partial,70.0,24.78,4.99,3.16,53.37,USD,ffxhxfettt301@yahoo.com,Customer 301,FL,United States
+#3635,2025-08-07 14:34:00,,Shorts 01,2,35.0,4.93,paid,partial,158.0,12.13,0.0,9.24,155.11,USD,qkznycze326@hotmail.com,Customer 326,CA,United States
+#3953,2025-05-27 08:21:00,,Foam Cleanser F,1,21.0,0.0,paid,unfulfilled,21.0,0.0,0.0,1.69,22.69,USD,rqxbqs301@hotmail.com,Customer 301,NY,United States
+#3731,2024-12-22 23:44:00,,Hoodie 01,1,55.0,3.16,paid,fulfilled,55.0,3.16,4.99,4.93,61.76,USD,omdilbj301@gmail.com,Customer 301,BC,Canada
+#3839,2024-09-24 08:40:00,,Clarifying Toner X,1,25.0,8.17,paid,partial,25.0,8.17,0.0,1.36,18.19,USD,togklstmfk200@yahoo.com,Customer 200,NY,United States
+#4000,2025-05-06 09:48:00,,Repair Eye Gel G,2,45.0,0.0,paid,fulfilled,193.0,0.0,0.0,28.07,221.07,USD,goxrgrsp301@brand.com,Customer 301,NSW,Australia
+#3719,2025-01-16 09:09:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,55.0,0.0,9.99,8.12,73.11,USD,rankasnhn230@brand.com,Customer 230,NSW,Australia
+#3910,2025-01-09 17:27:00,,Light Jacket 01,1,79.0,0.0,paid,partial,79.0,0.0,0.0,5.58,84.58,USD,zmclrc301@yahoo.com,Customer 301,BC,Canada
+#3698,2025-02-25 17:51:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,114.0,0.0,6.99,9.96,130.95,USD,aidrkux301@gmail.com,Customer 301,IL,United States
+#3721,2024-11-16 17:46:00,,Socks 3-Pack,1,14.0,1.86,paid,fulfilled,257.0,25.38,0.0,38.3,269.92,USD,yiyptsk301@gmail.com,Customer 301,ENG,United Kingdom
+#3624,2025-07-24 06:09:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,9.99,2.68,33.67,USD,ddtotlpjz200@yahoo.com,Customer 200,BC,Canada
+#4003,2025-08-01 14:13:00,,Premium Tee 02,1,28.0,0.0,paid,partial,53.0,0.0,6.99,3.68,63.67,USD,jhhomisf301@yahoo.com,Customer 301,IL,United States
+#3891,2024-11-12 06:25:00,,Foam Cleanser F,1,21.0,0.0,paid,partial,66.0,0.0,0.0,5.57,71.57,USD,eobsfzgc200@brand.com,Customer 200,TX,United States
+#3659,2025-05-02 17:51:00,,Radiance Serum A,1,39.0,10.42,paid,unfulfilled,39.0,10.42,6.99,3.25,38.82,USD,hortbpmxh301@yahoo.com,Customer 301,IL,United States
+#4081,2025-03-29 02:17:00,,Premium Tee 02,2,28.0,10.68,paid,fulfilled,56.0,10.68,0.0,4.28,49.6,USD,zxhvkxxbqb200@gmail.com,Customer 200,FL,United States
+#4026,2025-01-13 11:40:00,,Foam Cleanser F,1,21.0,2.62,paid,fulfilled,21.0,2.62,0.0,1.11,19.49,USD,rydfqhqq301@hotmail.com,Customer 301,NY,United States
+#3754,2025-06-04 02:22:00,,Clarifying Toner X,2,25.0,13.8,paid,fulfilled,50.0,13.8,0.0,3.21,39.41,USD,uyqezsyuf200@yahoo.com,Customer 200,WA,United States
+#3701,2024-10-09 01:02:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,107.0,0.0,0.0,13.33,120.33,USD,fgcimrdzze200@brand.com,Customer 200,NSW,Australia
+#4093,2025-03-27 08:47:00,,Light Jacket 01,2,79.0,54.72,refunded,partial,214.0,73.68,0.0,12.31,0.0,USD,caydrnho301@yahoo.com,Customer 301,ON,Canada
+#3752,2025-03-16 18:12:00,,Glow Oil L,1,35.0,2.33,paid,fulfilled,35.0,2.33,6.99,2.72,42.38,USD,epusxas301@yahoo.com,Customer 301,ON,Canada
+#3745,2024-12-17 13:12:00,,Shorts 01,3,35.0,0.0,paid,fulfilled,212.0,0.0,0.0,35.2,247.2,USD,zutoudyao229@gmail.com,Customer 229,NSW,Australia
+#3888,2024-09-05 09:02:00,,Socks 3-Pack,3,14.0,0.0,paid,fulfilled,42.0,0.0,4.99,6.13,53.12,USD,ctskfjg301@gmail.com,Customer 301,ENG,United Kingdom
+#3940,2025-08-01 15:58:00,,Hoodie 01,1,55.0,2.97,paid,unfulfilled,77.0,4.29,0.0,4.83,77.54,USD,cuhzrhglo301@gmail.com,Customer 301,QC,Canada
+#3693,2024-11-12 06:39:00,,Classic Tee 01,2,22.0,0.0,paid,fulfilled,304.0,0.0,0.0,19.72,323.72,USD,gdldbywk301@yahoo.com,Customer 301,QC,Canada
+#4215,2024-08-27 16:39:00,,Socks 3-Pack,2,14.0,0.66,paid,fulfilled,121.0,3.47,0.0,9.0,126.53,USD,pqxztszugj349@yahoo.com,Customer 349,TX,United States
+#3851,2025-02-01 02:03:00,,Classic Tee 01,1,22.0,2.27,paid,fulfilled,22.0,2.27,0.0,1.57,21.3,USD,gpmkcpgoq200@yahoo.com,Customer 200,BC,Canada
+#3726,2024-09-01 15:58:00,,Premium Tee 02,1,28.0,0.0,partially_refunded,fulfilled,47.0,0.0,0.0,4.24,28.56,USD,rjqbzrk301@hotmail.com,Customer 301,QC,Canada
+#3644,2025-08-19 10:05:00,,Light Jacket 01,1,79.0,15.07,refunded,fulfilled,286.0,49.17,4.99,22.71,0.0,USD,mcymgjp301@gmail.com,Customer 301,ON,Canada
+#3985,2025-03-25 14:17:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,68.0,0.0,0.0,11.27,79.27,USD,mkuijegqj301@gmail.com,Customer 301,NSW,Australia
+#3680,2025-04-08 07:31:00,,Starter Kit C,1,79.0,5.1,paid,fulfilled,159.0,11.54,6.99,12.23,166.68,USD,roluunke229@yahoo.com,Customer 229,FL,United States
+#3972,2025-04-04 16:43:00,,Foam Cleanser F,1,21.0,0.0,partially_refunded,unfulfilled,21.0,0.0,6.99,4.01,21.83,USD,neftrpeptd162@yahoo.com,Customer 162,VIC,Australia
+#3650,2025-01-18 17:32:00,,Clarifying Toner X,1,25.0,5.93,paid,fulfilled,75.0,17.2,0.0,3.85,61.65,USD,ryuqry301@brand.com,Customer 301,TX,United States
+#3875,2025-08-15 23:05:00,,Starter Kit C,1,79.0,0.0,paid,partial,104.0,0.0,4.99,11.39,120.38,USD,ebujibyg50@brand.com,Customer 50,ENG,United Kingdom
+#3868,2024-08-26 05:41:00,,Premium Tee 02,1,28.0,5.49,paid,fulfilled,72.0,12.02,0.0,5.0,64.98,USD,lxoijzhes289@hotmail.com,Customer 289,TX,United States
+#3954,2024-12-23 02:56:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,6.99,8.34,64.33,USD,xahnxslf289@brand.com,Customer 289,VIC,Australia
+#4134,2025-07-14 14:49:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,142.0,0.0,4.99,11.05,158.04,USD,yajuij301@gmail.com,Customer 301,TX,United States
+#3633,2025-03-24 20:15:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,22.0,0.0,0.0,1.85,23.85,USD,ovpddix301@gmail.com,Customer 301,ON,Canada
+#3935,2025-02-28 00:22:00,,Cap 01,1,19.0,1.81,paid,fulfilled,19.0,1.81,0.0,1.25,18.44,USD,tdwrubdfa289@hotmail.com,Customer 289,ON,Canada
+#3931,2025-08-12 22:10:00,,Repair Eye Gel G,1,45.0,9.07,paid,fulfilled,124.0,21.41,0.0,7.58,110.17,USD,glgpqcmw200@brand.com,Customer 200,IL,United States
+#4109,2025-02-07 20:37:00,,Repair Eye Gel G,2,45.0,28.59,paid,unfulfilled,226.0,70.24,6.99,16.09,178.84,USD,yaufpj289@gmail.com,Customer 289,VIC,Australia
+#4037,2024-09-27 01:47:00,,Clarifying Toner X,1,25.0,2.13,paid,unfulfilled,60.0,5.98,0.0,4.06,58.08,USD,bvlpamh301@gmail.com,Customer 301,CA,United States
+#4173,2025-02-25 03:16:00,,Starter Kit C,3,79.0,0.0,paid,fulfilled,237.0,0.0,0.0,19.12,256.12,USD,soptdhfjj200@hotmail.com,Customer 200,WA,United States
+#3817,2024-12-12 20:54:00,,Premium Tee 02,1,28.0,3.71,paid,partial,28.0,3.71,4.99,2.46,31.74,USD,wmzxhfobum301@gmail.com,Customer 301,WA,United States
+#3648,2025-03-27 15:33:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,101.0,0.0,0.0,19.5,120.5,USD,osdwmw200@hotmail.com,Customer 200,NSW,Australia
+#3909,2025-02-27 07:52:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,100.0,0.0,4.99,7.3,112.29,USD,dhpizlohw200@yahoo.com,Customer 200,WA,United States
+#4110,2025-01-29 01:52:00,,Foam Cleanser F,3,21.0,0.0,paid,fulfilled,63.0,0.0,0.0,5.01,68.01,USD,lldlxzj200@yahoo.com,Customer 200,CA,United States
+#4171,2024-09-01 07:56:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,273.0,0.0,4.99,17.66,295.65,USD,sgmsfdba200@brand.com,Customer 200,TX,United States
+#3997,2025-05-21 04:44:00,,Radiance Serum A,1,39.0,4.92,paid,fulfilled,146.0,21.37,6.99,11.82,143.44,USD,bfhpzc301@yahoo.com,Customer 301,FL,United States
+#3766,2025-05-15 10:32:00,,Starter Kit C,1,79.0,6.96,paid,fulfilled,188.0,15.74,0.0,21.86,194.12,USD,nvvwecdg301@yahoo.com,Customer 301,VIC,Australia
+#3937,2024-09-24 06:33:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,6.99,3.79,59.78,USD,xppznokbtr301@hotmail.com,Customer 301,NY,United States
+#4049,2025-01-19 22:16:00,2025-02-14 22:16:00,Light Jacket 01,1,79.0,0.0,refunded,fulfilled,104.0,0.0,0.0,7.19,0.0,USD,eekpbbgx301@brand.com,Customer 301,BC,Canada
+#4030,2025-04-30 13:58:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,244.0,0.0,6.99,23.72,274.71,USD,dogxqju200@brand.com,Customer 200,NY,United States
+#3976,2024-09-03 19:54:00,,Glow Oil L,1,35.0,5.39,paid,unfulfilled,49.0,7.81,0.0,2.75,43.94,USD,bubplcb301@gmail.com,Customer 301,ON,Canada
+#3924,2024-12-27 22:04:00,,Radiance Serum A,2,39.0,0.0,paid,unfulfilled,113.0,0.0,6.99,9.46,129.45,USD,ctynvyy301@hotmail.com,Customer 301,BC,Canada
+#4218,2025-03-19 04:46:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,212.0,0.0,6.99,43.12,262.11,USD,jmweielgc301@hotmail.com,Customer 301,ENG,United Kingdom
+#3630,2025-08-17 11:09:00,,Leggings 01,3,49.0,0.0,paid,fulfilled,226.0,0.0,6.99,17.86,250.85,USD,yceprg301@gmail.com,Customer 301,BC,Canada
+#4051,2025-03-06 08:56:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,114.0,0.0,9.99,10.15,134.14,USD,rsxmzfyhb301@hotmail.com,Customer 301,NY,United States
+#3965,2025-05-22 01:06:00,,Light Jacket 01,1,79.0,8.72,paid,fulfilled,180.0,19.22,0.0,14.18,174.96,USD,eyrbye301@gmail.com,Customer 301,TX,United States
+#4106,2025-07-23 11:01:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,181.0,0.0,0.0,21.76,202.76,USD,tlnucay301@gmail.com,Customer 301,VIC,Australia
+#4021,2025-04-13 03:54:00,,Hoodie 01,2,55.0,0.0,paid,fulfilled,110.0,0.0,4.99,7.62,122.61,USD,qkagmry200@brand.com,Customer 200,QC,Canada
+#3833,2025-03-08 22:15:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,149.0,0.0,4.99,27.89,181.88,USD,vcfncg200@brand.com,Customer 200,NSW,Australia
+#3665,2024-12-11 07:42:00,,Starter Kit C,1,79.0,11.16,paid,unfulfilled,79.0,11.16,0.0,5.8,73.64,USD,djupag301@yahoo.com,Customer 301,QC,Canada
+#3653,2025-02-04 21:03:00,,Shorts 01,1,35.0,0.0,paid,unfulfilled,124.0,0.0,0.0,14.0,138.0,USD,wvawmbnqm326@brand.com,Customer 326,VIC,Australia
+#3865,2025-05-24 22:17:00,,Premium Tee 02,2,28.0,0.0,paid,fulfilled,259.0,0.0,9.99,19.27,288.26,USD,dovjkhwda301@gmail.com,Customer 301,BC,Canada
+#3771,2024-11-30 04:15:00,,Classic Tee 01,2,22.0,0.0,paid,fulfilled,330.0,0.0,0.0,22.19,352.19,USD,tpejqaw200@hotmail.com,Customer 200,WA,United States
+#3780,2024-09-20 06:13:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,94.0,0.0,4.99,7.02,106.01,USD,oacpqh301@yahoo.com,Customer 301,FL,United States
+#3828,2025-02-15 11:35:00,,Hydra Cream B,1,49.0,10.72,paid,partial,78.0,16.83,4.99,11.68,77.84,USD,ugmriztb301@hotmail.com,Customer 301,VIC,Australia
+#3825,2025-05-12 07:11:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,69.0,0.0,0.0,7.85,76.85,USD,vkwehqqhqe301@gmail.com,Customer 301,ENG,United Kingdom
+#3901,2025-02-14 10:37:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,93.0,0.0,0.0,7.91,100.91,USD,novebiwd301@yahoo.com,Customer 301,BC,Canada
+#3774,2025-06-17 21:35:00,,Glow Oil L,3,35.0,0.0,paid,partial,105.0,0.0,4.99,7.81,117.8,USD,tctbwrejl301@hotmail.com,Customer 301,IL,United States
+#3627,2025-02-09 16:55:00,,Premium Tee 02,2,28.0,0.0,paid,fulfilled,232.0,0.0,0.0,19.43,251.43,USD,krjxlgba200@yahoo.com,Customer 200,TX,United States
+#3724,2025-03-13 10:10:00,,Starter Kit C,1,79.0,6.68,paid,fulfilled,238.0,21.23,0.0,19.96,236.73,USD,uihujyfzet301@gmail.com,Customer 301,NY,United States
+#3833,2025-03-08 22:15:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,149.0,0.0,4.99,27.89,181.88,USD,froyoot200@hotmail.com,Customer 200,NSW,Australia
+#3900,2024-10-22 18:02:00,,Light Jacket 01,4,79.0,73.01,paid,unfulfilled,523.0,118.76,6.99,34.17,445.4,USD,aqhemo229@yahoo.com,Customer 229,QC,Canada
+#4055,2024-12-15 09:43:00,,Light Jacket 01,1,79.0,5.33,paid,fulfilled,79.0,5.33,9.99,7.1,90.76,USD,fftdsdt301@brand.com,Customer 301,QC,Canada
+#3746,2024-10-28 06:15:00,,Clarifying Toner X,2,25.0,0.0,paid,fulfilled,50.0,0.0,6.99,5.03,62.02,USD,pbrdhw301@brand.com,Customer 301,QC,Canada
+#3960,2025-01-31 23:59:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,149.0,0.0,0.0,9.03,158.03,USD,obbmil301@hotmail.com,Customer 301,TX,United States
+#4040,2025-05-25 21:58:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,158.0,0.0,9.99,14.0,181.99,USD,gmicrru162@yahoo.com,Customer 162,VIC,Australia
+#3907,2025-04-26 22:51:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,9.99,3.94,48.93,USD,pfradth200@hotmail.com,Customer 200,TX,United States
+#3918,2025-03-16 04:30:00,,Revive Mask M,3,29.0,0.0,paid,partial,87.0,0.0,0.0,8.03,95.03,USD,zkftcvci301@gmail.com,Customer 301,QC,Canada
+#4099,2025-06-05 05:26:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,104.0,0.0,0.0,13.45,117.45,USD,uqfbdw200@gmail.com,Customer 200,NSW,Australia
+#3985,2025-03-25 14:17:00,,Cap 01,1,19.0,0.0,paid,fulfilled,68.0,0.0,0.0,11.27,79.27,USD,odcljpmq301@brand.com,Customer 301,NSW,Australia
+#3721,2024-11-16 17:46:00,,Shorts 01,1,35.0,3.32,paid,fulfilled,257.0,25.38,0.0,38.3,269.92,USD,mjylrrcqu301@gmail.com,Customer 301,ENG,United Kingdom
+#4049,2025-01-19 22:16:00,2025-02-14 22:16:00,Clarifying Toner X,1,25.0,0.0,refunded,fulfilled,104.0,0.0,0.0,7.19,0.0,USD,sdtacj301@gmail.com,Customer 301,BC,Canada
+#3995,2025-08-03 17:10:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,51.0,0.0,9.99,5.3,66.29,USD,ctrdjfa200@yahoo.com,Customer 200,TX,United States
+#3969,2024-10-31 22:53:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,114.0,0.0,9.99,10.16,134.15,USD,nuqcavrrj162@brand.com,Customer 162,BC,Canada
+#4036,2025-02-02 00:48:00,,Revive Mask M,2,29.0,0.0,paid,fulfilled,87.0,0.0,0.0,11.22,98.22,USD,kiaryyzdm162@brand.com,Customer 162,ENG,United Kingdom
+#4155,2025-06-24 19:20:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,56.0,0.0,0.0,6.14,62.14,USD,pmkbygyy301@gmail.com,Customer 301,ENG,United Kingdom
+#3713,2024-10-24 17:51:00,,Premium Tee 02,1,28.0,2.85,paid,fulfilled,104.0,9.44,6.99,8.9,110.45,USD,fqxwcseg301@gmail.com,Customer 301,IL,United States
+#3760,2025-05-08 04:34:00,,Foam Cleanser F,1,21.0,0.0,paid,unfulfilled,570.0,0.0,0.0,39.19,609.19,USD,wmcxsnxurq301@gmail.com,Customer 301,BC,Canada
+#3999,2025-03-14 04:51:00,,Repair Eye Gel G,2,45.0,0.0,paid,fulfilled,90.0,0.0,4.99,15.9,110.89,USD,nsaatdg326@brand.com,Customer 326,NSW,Australia
+#4149,2024-12-12 07:27:00,,Hoodie 01,1,55.0,15.48,paid,fulfilled,55.0,15.48,0.0,6.38,45.9,USD,dgebprkqvy301@hotmail.com,Customer 301,VIC,Australia
+#4078,2025-04-20 20:37:00,,Cap 01,1,19.0,7.77,paid,unfulfilled,209.0,79.94,0.0,8.03,137.09,USD,gkpwynkcvl289@yahoo.com,Customer 289,IL,United States
+#3837,2024-12-16 13:44:00,,Foam Cleanser F,1,21.0,4.66,paid,fulfilled,21.0,4.66,6.99,1.78,25.11,USD,twyqqbn200@hotmail.com,Customer 200,ON,Canada
+#3859,2025-08-24 07:10:00,,Hoodie 01,1,55.0,12.64,paid,fulfilled,83.0,18.16,0.0,5.92,70.76,USD,xcttatqff162@hotmail.com,Customer 162,CA,United States
+#3660,2024-09-20 17:49:00,,Revive Mask M,1,29.0,2.34,paid,fulfilled,87.0,7.71,0.0,6.01,85.3,USD,qxqilpt301@gmail.com,Customer 301,WA,United States
+#3683,2024-10-26 18:52:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,39.0,0.0,0.0,3.64,42.64,USD,lcxpangdlp301@yahoo.com,Customer 301,TX,United States
+#4176,2025-02-24 16:41:00,,Revive Mask M,2,29.0,0.0,paid,fulfilled,83.0,0.0,4.99,7.89,95.88,USD,qjlxxv301@yahoo.com,Customer 301,IL,United States
+#4095,2024-12-21 07:07:00,,Hoodie 01,2,55.0,0.0,paid,partial,170.0,0.0,0.0,15.25,185.25,USD,dtlxhayg200@brand.com,Customer 200,QC,Canada
+#3847,2025-07-17 02:14:00,,Clarifying Toner X,1,25.0,7.72,paid,fulfilled,25.0,7.72,0.0,1.46,18.74,USD,tahktztby301@brand.com,Customer 301,NY,United States
+#3678,2025-01-25 14:25:00,,Glow Oil L,1,35.0,0.0,paid,partial,114.0,0.0,0.0,13.75,127.75,USD,pyijuvr301@gmail.com,Customer 301,VIC,Australia
+#3684,2025-02-14 16:43:00,,Hoodie 01,2,55.0,0.0,refunded,fulfilled,110.0,0.0,0.0,8.93,0.0,USD,bnnzokmq301@hotmail.com,Customer 301,NY,United States
+#3861,2025-01-15 15:05:00,,Starter Kit C,1,79.0,7.85,paid,fulfilled,79.0,7.85,0.0,6.74,77.89,USD,sruwlam301@hotmail.com,Customer 301,NSW,Australia
+#4112,2025-04-04 05:48:00,,Socks 3-Pack,2,14.0,6.04,paid,partial,274.0,73.56,0.0,12.66,213.1,USD,pxzdkrrb301@yahoo.com,Customer 301,FL,United States
+#3857,2025-06-21 16:05:00,2025-06-26 16:05:00,Socks 3-Pack,1,14.0,0.58,refunded,fulfilled,168.0,7.68,9.99,11.51,0.0,USD,duiwshcwjv301@hotmail.com,Customer 301,QC,Canada
+#3673,2025-07-15 22:43:00,,Premium Tee 02,2,28.0,0.0,refunded,fulfilled,56.0,0.0,6.99,9.54,0.0,USD,eqrhrml162@hotmail.com,Customer 162,NSW,Australia
+#3955,2025-04-28 05:13:00,,Foam Cleanser F,1,21.0,4.79,paid,fulfilled,21.0,4.79,0.0,2.17,18.38,USD,cnkswnof200@hotmail.com,Customer 200,VIC,Australia
+#3670,2025-07-31 06:46:00,,Radiance Serum A,1,39.0,0.0,paid,partial,39.0,0.0,0.0,3.36,42.36,USD,jpfrfcvj200@hotmail.com,Customer 200,ENG,United Kingdom
+#3816,2024-10-09 23:27:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,74.0,0.0,4.99,14.52,93.51,USD,gggfvvj301@gmail.com,Customer 301,ENG,United Kingdom
+#4215,2024-08-27 16:39:00,,Glow Oil L,1,35.0,1.12,paid,fulfilled,121.0,3.47,0.0,9.0,126.53,USD,afsfwlvd349@hotmail.com,Customer 349,TX,United States
+#4171,2024-09-01 07:56:00,,Foam Cleanser F,2,21.0,0.0,paid,fulfilled,273.0,0.0,4.99,17.66,295.65,USD,gpzuzncpi200@yahoo.com,Customer 200,TX,United States
+#4178,2024-11-29 01:18:00,,Classic Tee 01,1,22.0,0.0,paid,unfulfilled,22.0,0.0,0.0,1.8,23.8,USD,txxdhfg301@brand.com,Customer 301,IL,United States
+#4179,2025-05-09 17:21:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,142.0,0.0,4.99,13.36,160.35,USD,nnyhwgho301@hotmail.com,Customer 301,QC,Canada
+#3975,2024-10-30 10:23:00,,Light Jacket 01,2,79.0,17.84,paid,fulfilled,158.0,17.84,6.99,12.81,159.96,USD,ngbplcld301@gmail.com,Customer 301,FL,United States
+#3986,2024-09-03 06:10:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,77.0,0.0,6.99,5.56,89.55,USD,cbaffih301@hotmail.com,Customer 301,QC,Canada
+#3674,2024-11-20 19:01:00,,Foam Cleanser F,3,21.0,4.37,paid,fulfilled,112.0,7.42,0.0,8.06,112.64,USD,atejsn301@hotmail.com,Customer 301,QC,Canada
+#3627,2025-02-09 16:55:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,232.0,0.0,0.0,19.43,251.43,USD,ryenpzy200@yahoo.com,Customer 200,TX,United States
+#3850,2025-08-09 05:31:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,212.0,0.0,0.0,14.13,226.13,USD,obeiwwedt200@gmail.com,Customer 200,QC,Canada
+#3933,2025-08-14 15:19:00,,Premium Tee 02,1,28.0,2.95,paid,fulfilled,28.0,2.95,0.0,1.88,26.93,USD,rdxbeemim301@gmail.com,Customer 301,QC,Canada
+#3644,2025-08-19 10:05:00,,Socks 3-Pack,2,14.0,4.32,refunded,fulfilled,286.0,49.17,4.99,22.71,0.0,USD,pvgshr301@gmail.com,Customer 301,ON,Canada
+#3644,2025-08-19 10:05:00,,Foam Cleanser F,1,21.0,3.99,refunded,fulfilled,286.0,49.17,4.99,22.71,0.0,USD,zcairyk301@yahoo.com,Customer 301,ON,Canada
+#3810,2025-05-05 12:31:00,,Shorts 01,1,35.0,0.0,refunded,fulfilled,169.0,0.0,0.0,33.18,0.0,USD,uvmpcg167@hotmail.com,Customer 167,NSW,Australia
+#3717,2025-01-04 14:32:00,,Repair Eye Gel G,1,45.0,5.32,partially_refunded,fulfilled,45.0,5.32,4.99,3.88,32.96,USD,gvzqmeue229@brand.com,Customer 229,FL,United States
+#4205,2025-06-04 14:47:00,,Light Jacket 01,1,79.0,0.0,paid,partial,118.0,0.0,0.0,8.31,126.31,USD,xpybkdv200@yahoo.com,Customer 200,IL,United States
+#4144,2024-11-07 09:14:00,,Premium Tee 02,1,28.0,6.55,paid,fulfilled,28.0,6.55,0.0,1.73,23.18,USD,ptiuphuwrm301@yahoo.com,Customer 301,IL,United States
+#4135,2025-02-03 14:10:00,,Radiance Serum A,1,39.0,8.16,paid,fulfilled,157.0,43.84,4.99,9.96,128.11,USD,tufpii301@gmail.com,Customer 301,BC,Canada
+#4199,2024-12-05 22:30:00,,Clarifying Toner X,1,25.0,2.28,paid,fulfilled,25.0,2.28,4.99,2.63,30.34,USD,yrcmvodn301@yahoo.com,Customer 301,IL,United States
+#3677,2025-03-03 14:09:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,282.0,0.0,0.0,25.09,307.09,USD,bmajhqzcpj326@gmail.com,Customer 326,BC,Canada
+#3866,2025-04-28 08:34:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,213.0,0.0,0.0,12.87,225.87,USD,qkluple301@brand.com,Customer 301,BC,Canada
+#3723,2024-11-06 16:13:00,,Repair Eye Gel G,1,45.0,3.56,paid,fulfilled,45.0,3.56,4.99,4.02,50.45,USD,ccopuwaku162@yahoo.com,Customer 162,ON,Canada
+#3877,2025-06-22 19:59:00,,Shorts 01,1,35.0,16.84,paid,fulfilled,84.0,37.41,4.99,3.47,55.05,USD,rkqycnyc301@brand.com,Customer 301,QC,Canada
+#3860,2025-05-03 10:16:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,202.0,0.0,6.99,12.92,221.91,USD,ocusciqtm167@yahoo.com,Customer 167,WA,United States
+#4068,2024-09-15 20:44:00,,Glow Oil L,1,35.0,6.22,paid,fulfilled,35.0,6.22,6.99,3.25,39.02,USD,fymnuzl301@brand.com,Customer 301,ON,Canada
+#4170,2025-06-30 11:25:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,6.99,1.69,29.68,USD,thyewkavt229@yahoo.com,Customer 229,QC,Canada
+#4014,2025-04-16 16:17:00,,Classic Tee 01,1,22.0,8.23,paid,partial,67.0,21.39,0.0,4.17,49.78,USD,fgmxddns200@gmail.com,Customer 200,TX,United States
+#3722,2025-06-05 09:21:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,6.99,2.01,30.0,USD,ticaijh301@yahoo.com,Customer 301,NY,United States
+#3850,2025-08-09 05:31:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,212.0,0.0,0.0,14.13,226.13,USD,csqcss200@yahoo.com,Customer 200,QC,Canada
+#4025,2025-02-23 01:50:00,,Starter Kit C,1,79.0,4.0,paid,fulfilled,79.0,4.0,6.99,7.68,89.67,USD,pfjdqbg200@brand.com,Customer 200,NY,United States
+#4094,2024-11-06 20:39:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,49.0,0.0,0.0,3.57,52.57,USD,bhpbhlrag326@hotmail.com,Customer 326,IL,United States
+#4197,2025-06-21 08:00:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,104.0,0.0,0.0,7.6,111.6,USD,afkjvqa289@gmail.com,Customer 289,FL,United States
+#4031,2025-04-12 07:14:00,,Light Jacket 01,3,79.0,49.12,paid,fulfilled,258.0,52.3,0.0,15.35,221.05,USD,qbgcoc301@hotmail.com,Customer 301,TX,United States
+#3843,2025-06-17 15:10:00,,Socks 3-Pack,1,14.0,0.0,paid,unfulfilled,83.0,0.0,4.99,8.31,96.3,USD,osbxhmtar200@hotmail.com,Customer 200,BC,Canada
+#4195,2025-08-13 18:52:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,0.0,1.53,22.53,USD,ujgcla301@brand.com,Customer 301,WA,United States
+#3762,2025-05-05 14:55:00,,Starter Kit C,2,79.0,28.85,paid,partial,370.0,73.97,6.99,25.09,328.11,USD,vnqdajpe289@brand.com,Customer 289,ENG,United Kingdom
+#3938,2025-01-12 09:11:00,,Light Jacket 01,1,79.0,3.16,paid,fulfilled,79.0,3.16,0.0,11.17,87.01,USD,pyvdcvrl301@hotmail.com,Customer 301,VIC,Australia
+#3815,2024-11-15 11:09:00,,Classic Tee 01,1,22.0,6.23,paid,unfulfilled,22.0,6.23,6.99,1.95,24.71,USD,gcrvbymj162@hotmail.com,Customer 162,QC,Canada
+#4024,2025-03-07 23:56:00,,Classic Tee 01,2,22.0,0.0,paid,fulfilled,177.0,0.0,4.99,13.86,195.85,USD,liboqcgtcd289@hotmail.com,Customer 289,QC,Canada
+#3628,2025-01-12 17:29:00,,Revive Mask M,1,29.0,4.46,paid,fulfilled,237.0,35.3,9.99,17.58,229.27,USD,ucendemw301@gmail.com,Customer 301,CA,United States
+#3622,2025-06-15 13:46:00,,Hydra Cream B,1,49.0,1.61,paid,fulfilled,159.0,5.72,6.99,22.8,183.07,USD,wwjlve200@hotmail.com,Customer 200,ENG,United Kingdom
+#4147,2025-02-10 06:09:00,,Starter Kit C,1,79.0,0.0,paid,partial,369.0,0.0,6.99,27.89,403.88,USD,xpahmbsgqz301@gmail.com,Customer 301,QC,Canada
+#3809,2025-05-13 23:03:00,,Classic Tee 01,1,22.0,0.0,paid,partial,121.0,0.0,6.99,16.1,144.09,USD,juxvolgtx301@gmail.com,Customer 301,ENG,United Kingdom
+#4139,2025-02-27 14:59:00,,Light Jacket 01,2,79.0,15.6,paid,fulfilled,158.0,15.6,0.0,12.26,154.66,USD,snwzccsjt301@yahoo.com,Customer 301,WA,United States
+#3762,2025-05-05 14:55:00,,Revive Mask M,1,29.0,5.8,paid,partial,370.0,73.97,6.99,25.09,328.11,USD,fvvglxs289@hotmail.com,Customer 289,ENG,United Kingdom
+#4103,2025-04-22 13:50:00,,Classic Tee 01,2,22.0,7.53,paid,fulfilled,92.0,18.32,4.99,4.82,83.49,USD,spppvba301@yahoo.com,Customer 301,QC,Canada
+#4073,2025-07-17 01:48:00,,Foam Cleanser F,1,21.0,4.31,paid,fulfilled,182.0,27.57,9.99,14.6,179.02,USD,tdlqjg301@yahoo.com,Customer 301,VIC,Australia
+#4216,2025-08-24 18:43:00,,Classic Tee 01,2,22.0,0.0,paid,unfulfilled,93.0,0.0,0.0,7.77,100.77,USD,yeoobj301@yahoo.com,Customer 301,QC,Canada
+#3760,2025-05-08 04:34:00,,Repair Eye Gel G,4,45.0,0.0,paid,unfulfilled,570.0,0.0,0.0,39.19,609.19,USD,ezzvdlzlz301@yahoo.com,Customer 301,BC,Canada
+#3849,2025-01-04 20:04:00,,Cap 01,1,19.0,0.0,paid,fulfilled,64.0,0.0,6.99,5.52,76.51,USD,khvlkpbnd301@brand.com,Customer 301,BC,Canada
+#3745,2024-12-17 13:12:00,,Revive Mask M,2,29.0,0.0,paid,fulfilled,212.0,0.0,0.0,35.2,247.2,USD,scxxnsj229@gmail.com,Customer 229,NSW,Australia
+#3724,2025-03-13 10:10:00,,Hoodie 01,1,55.0,4.48,paid,fulfilled,238.0,21.23,0.0,19.96,236.73,USD,lkmbggq301@yahoo.com,Customer 301,NY,United States
+#4211,2025-04-22 18:28:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,35.0,0.0,4.99,3.28,43.27,USD,zglblzgu301@yahoo.com,Customer 301,IL,United States
+#3632,2025-01-04 06:26:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,134.0,0.0,9.99,9.95,153.94,USD,gxtehfi301@hotmail.com,Customer 301,QC,Canada
+#3826,2024-09-25 23:21:00,,Light Jacket 01,2,79.0,0.17,paid,fulfilled,355.0,0.42,0.0,26.24,380.82,USD,ctdgkoex301@hotmail.com,Customer 301,QC,Canada
+#4019,2025-07-21 03:00:00,,Socks 3-Pack,4,14.0,0.0,paid,fulfilled,56.0,0.0,0.0,8.87,64.87,USD,ledshdft301@gmail.com,Customer 301,NSW,Australia
+#4134,2025-07-14 14:49:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,142.0,0.0,4.99,11.05,158.04,USD,njfenw301@yahoo.com,Customer 301,TX,United States
+#3818,2025-04-14 19:00:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,63.0,0.0,4.99,5.88,73.87,USD,pgogmpjm200@yahoo.com,Customer 200,ON,Canada
+#3869,2025-05-19 04:46:00,,Starter Kit C,3,79.0,17.18,paid,fulfilled,347.0,23.36,4.99,58.59,387.22,USD,bzvqhcnwhd229@hotmail.com,Customer 229,NSW,Australia
+#3996,2024-09-27 07:58:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,14.0,0.0,6.99,1.31,22.3,USD,kibaut301@yahoo.com,Customer 301,CA,United States
+#4116,2025-06-26 03:43:00,,Repair Eye Gel G,2,45.0,0.0,refunded,partial,135.0,0.0,4.99,9.15,0.0,USD,mvfbyhpi301@gmail.com,Customer 301,BC,Canada
+#3737,2025-04-26 11:27:00,,Repair Eye Gel G,1,45.0,7.28,paid,fulfilled,163.0,30.7,0.0,10.16,142.46,USD,whwwcjc301@yahoo.com,Customer 301,NY,United States
+#4023,2025-01-19 22:13:00,,Hydra Cream B,2,49.0,12.38,paid,fulfilled,98.0,12.38,4.99,14.45,105.06,USD,mqlocbxue200@gmail.com,Customer 200,ENG,United Kingdom
+#3674,2024-11-20 19:01:00,,Hydra Cream B,1,49.0,3.05,paid,fulfilled,112.0,7.42,0.0,8.06,112.64,USD,mrbkpahfdg301@hotmail.com,Customer 301,QC,Canada
+#4112,2025-04-04 05:48:00,,Hydra Cream B,4,49.0,54.71,paid,partial,274.0,73.56,0.0,12.66,213.1,USD,svxwlhjow301@yahoo.com,Customer 301,FL,United States
+#3655,2025-04-19 01:58:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,188.0,0.0,6.99,17.15,212.14,USD,wzbugqkci167@brand.com,Customer 167,ON,Canada
+#3993,2025-08-25 11:38:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,35.0,0.0,6.99,2.54,44.53,USD,kvwkeqlk301@yahoo.com,Customer 301,BC,Canada
+#3780,2024-09-20 06:13:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,94.0,0.0,4.99,7.02,106.01,USD,wldmqc301@brand.com,Customer 301,FL,United States
+#4100,2024-10-27 03:46:00,,Repair Eye Gel G,1,45.0,0.0,refunded,fulfilled,45.0,0.0,6.99,4.1,0.0,USD,kyhmegwgp301@brand.com,Customer 301,TX,United States
+#3870,2025-05-16 14:22:00,,Shorts 01,2,35.0,14.3,paid,partial,115.0,22.98,6.99,6.69,105.7,USD,ftiqtde301@brand.com,Customer 301,FL,United States
+#3706,2025-03-29 23:31:00,,Shorts 01,1,35.0,3.19,paid,fulfilled,35.0,3.19,6.99,5.06,43.86,USD,nnjxcv200@yahoo.com,Customer 200,VIC,Australia
+#3660,2024-09-20 17:49:00,,Revive Mask M,2,29.0,5.37,paid,fulfilled,87.0,7.71,0.0,6.01,85.3,USD,ikfuwjnh301@yahoo.com,Customer 301,WA,United States
+#4060,2024-09-07 16:41:00,,Revive Mask M,3,29.0,0.0,paid,fulfilled,106.0,0.0,0.0,12.54,118.54,USD,tszscktc229@yahoo.com,Customer 229,VIC,Australia
+#3878,2025-01-02 02:20:00,2025-01-13 02:20:00,Clarifying Toner X,1,25.0,1.61,refunded,fulfilled,140.0,9.63,0.0,8.99,0.0,USD,kuqmzvzai301@hotmail.com,Customer 301,IL,United States
+#3728,2025-06-15 18:54:00,,Repair Eye Gel G,1,45.0,9.76,paid,fulfilled,45.0,9.76,4.99,2.8,43.03,USD,bbsaicuy301@yahoo.com,Customer 301,TX,United States
+#3771,2024-11-30 04:15:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,330.0,0.0,0.0,22.19,352.19,USD,zmtexvaf200@yahoo.com,Customer 200,WA,United States
+#3753,2025-01-14 19:45:00,,Shorts 01,2,35.0,0.0,paid,fulfilled,242.0,0.0,4.99,20.63,267.62,USD,ieuwbds301@yahoo.com,Customer 301,FL,United States
+#3904,2024-10-07 12:56:00,,Clarifying Toner X,3,25.0,0.0,paid,fulfilled,124.0,0.0,0.0,7.63,131.63,USD,lbvymijvx301@hotmail.com,Customer 301,NY,United States
+#3686,2025-08-10 06:49:00,,Classic Tee 01,1,22.0,3.49,paid,fulfilled,101.0,13.39,4.99,8.61,101.21,USD,aqhwbrhu301@brand.com,Customer 301,IL,United States
+#4108,2025-08-24 05:13:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,0.0,3.22,52.22,USD,yzqakfxbf301@hotmail.com,Customer 301,QC,Canada
+#3924,2024-12-27 22:04:00,,Shorts 01,1,35.0,0.0,paid,unfulfilled,113.0,0.0,6.99,9.46,129.45,USD,pwxkjrcy301@yahoo.com,Customer 301,BC,Canada
+#3945,2025-05-11 00:41:00,,Light Jacket 01,1,79.0,20.33,paid,fulfilled,79.0,20.33,0.0,8.39,67.06,USD,aheigfxip301@brand.com,Customer 301,NSW,Australia
+#4024,2025-03-07 23:56:00,,Shorts 01,2,35.0,0.0,paid,fulfilled,177.0,0.0,4.99,13.86,195.85,USD,tfrdws289@gmail.com,Customer 289,QC,Canada
+#3692,2025-06-04 16:24:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,207.0,0.0,4.99,14.84,226.83,USD,vbzqlriwu301@yahoo.com,Customer 301,ON,Canada
+#3685,2025-04-30 14:32:00,,Hydra Cream B,1,49.0,9.0,paid,fulfilled,84.0,15.68,0.0,4.28,72.6,USD,zmedsyafu301@gmail.com,Customer 301,CA,United States
+#3896,2025-06-05 00:53:00,,Glow Oil L,1,35.0,3.92,paid,unfulfilled,35.0,3.92,4.99,3.28,39.35,USD,ndaytyy230@yahoo.com,Customer 230,NY,United States
+#4191,2024-10-28 09:25:00,,Radiance Serum A,1,39.0,0.0,paid,partial,95.0,0.0,6.99,7.59,109.58,USD,uojwwdu301@yahoo.com,Customer 301,ON,Canada
+#3651,2024-12-11 16:49:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,55.0,0.0,9.99,4.69,69.68,USD,behtohd301@hotmail.com,Customer 301,FL,United States
+#4024,2025-03-07 23:56:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,177.0,0.0,4.99,13.86,195.85,USD,zezrgbyx289@hotmail.com,Customer 289,QC,Canada
+#4166,2025-05-30 21:51:00,,Radiance Serum A,1,39.0,6.41,paid,fulfilled,39.0,6.41,0.0,2.7,35.29,USD,psplkp200@brand.com,Customer 200,FL,United States
+#3834,2025-05-17 10:15:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,118.0,0.0,0.0,16.53,134.53,USD,nrnpyxozv200@brand.com,Customer 200,ENG,United Kingdom
+#3769,2025-06-11 23:51:00,,Shorts 01,3,35.0,9.94,paid,fulfilled,105.0,9.94,0.0,7.91,102.97,USD,mtcpqkz326@brand.com,Customer 326,FL,United States
+#3646,2025-04-13 03:40:00,,Starter Kit C,1,79.0,30.9,paid,partial,107.0,38.8,0.0,6.6,74.8,USD,gmpjawefu301@hotmail.com,Customer 301,NSW,Australia
+#3822,2024-09-04 10:34:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,83.0,0.0,0.0,6.28,89.28,USD,dvarwim301@hotmail.com,Customer 301,TX,United States
+#3732,2024-11-05 15:03:00,,Light Jacket 01,1,79.0,18.3,paid,fulfilled,93.0,22.25,4.99,4.79,80.53,USD,huoumnogoz301@gmail.com,Customer 301,FL,United States
+#4218,2025-03-19 04:46:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,212.0,0.0,6.99,43.12,262.11,USD,fjqclcgwb301@gmail.com,Customer 301,ENG,United Kingdom
+#4116,2025-06-26 03:43:00,,Repair Eye Gel G,1,45.0,0.0,refunded,partial,135.0,0.0,4.99,9.15,0.0,USD,ethwdqdqb301@gmail.com,Customer 301,BC,Canada
+#4063,2024-10-18 20:45:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,99.0,0.0,6.99,6.64,112.63,USD,zztlyyzm301@hotmail.com,Customer 301,WA,United States
+#3766,2025-05-15 10:32:00,,Repair Eye Gel G,2,45.0,7.15,paid,fulfilled,188.0,15.74,0.0,21.86,194.12,USD,pzvisr301@brand.com,Customer 301,VIC,Australia
+#3877,2025-06-22 19:59:00,,Leggings 01,1,49.0,20.57,paid,fulfilled,84.0,37.41,4.99,3.47,55.05,USD,vuuoayvmo301@hotmail.com,Customer 301,QC,Canada
+#4024,2025-03-07 23:56:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,177.0,0.0,4.99,13.86,195.85,USD,lpsnzjnfcv289@yahoo.com,Customer 289,QC,Canada
+#3795,2025-03-08 19:42:00,,Cap 01,2,19.0,5.04,paid,fulfilled,80.0,12.23,4.99,6.36,79.12,USD,larnqqtps289@gmail.com,Customer 289,FL,United States
+#3819,2025-06-09 23:22:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,3.11,38.11,USD,edofchglj200@yahoo.com,Customer 200,WA,United States
+#4200,2025-01-23 19:00:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,275.0,0.0,4.99,22.91,302.9,USD,zaqvgka301@brand.com,Customer 301,TX,United States
+#3703,2025-01-23 22:56:00,,Cap 01,1,19.0,0.0,paid,fulfilled,75.0,0.0,0.0,8.86,83.86,USD,saihrfpq301@brand.com,Customer 301,NSW,Australia
+#3690,2025-02-02 06:18:00,,Cap 01,2,19.0,0.0,paid,fulfilled,354.0,0.0,4.99,53.08,412.07,USD,sohhesse301@hotmail.com,Customer 301,NSW,Australia
+#4089,2025-02-20 04:33:00,,Glow Oil L,2,35.0,3.71,paid,fulfilled,128.0,7.39,0.0,11.96,132.57,USD,rwpzpmg200@gmail.com,Customer 200,ENG,United Kingdom
+#3648,2025-03-27 15:33:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,101.0,0.0,0.0,19.5,120.5,USD,vhjhsd200@gmail.com,Customer 200,NSW,Australia
+#3825,2025-05-12 07:11:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,69.0,0.0,0.0,7.85,76.85,USD,kgtxur301@hotmail.com,Customer 301,ENG,United Kingdom
+#4174,2025-05-27 07:33:00,,Clarifying Toner X,1,25.0,0.0,partially_refunded,fulfilled,80.0,0.0,4.99,11.37,55.34,USD,reudpwgfw200@hotmail.com,Customer 200,ENG,United Kingdom
+#3699,2025-06-06 15:42:00,,Glow Oil L,3,35.0,0.0,paid,fulfilled,276.0,0.0,4.99,20.09,301.08,USD,myhhyzusrm162@brand.com,Customer 162,QC,Canada
+#3894,2025-07-25 21:46:00,,Hoodie 01,2,55.0,0.0,paid,fulfilled,110.0,0.0,6.99,7.42,124.41,USD,psvlhdueg200@brand.com,Customer 200,WA,United States
+#3852,2024-11-20 05:53:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,74.0,0.0,0.0,6.83,80.83,USD,rvhxbk301@yahoo.com,Customer 301,NY,United States
+#4095,2024-12-21 07:07:00,,Shorts 01,1,35.0,0.0,paid,partial,170.0,0.0,0.0,15.25,185.25,USD,kxxxpelwu200@yahoo.com,Customer 200,QC,Canada
+#3805,2025-07-26 20:04:00,,Premium Tee 02,3,28.0,24.82,paid,fulfilled,84.0,24.82,4.99,5.47,69.64,USD,wsvyfp200@brand.com,Customer 200,ON,Canada
+#3631,2025-07-12 13:57:00,,Revive Mask M,1,29.0,6.14,paid,unfulfilled,85.0,18.08,0.0,12.0,78.92,USD,oigrigdqly301@gmail.com,Customer 301,NSW,Australia
+#4103,2025-04-22 13:50:00,,Cap 01,1,19.0,3.3,paid,fulfilled,92.0,18.32,4.99,4.82,83.49,USD,bvmzpesnr301@hotmail.com,Customer 301,QC,Canada
+#4092,2024-11-30 00:31:00,,Hydra Cream B,1,49.0,1.74,paid,fulfilled,49.0,1.74,9.99,9.66,66.91,USD,qzwrxlyng301@hotmail.com,Customer 301,ENG,United Kingdom
+#4103,2025-04-22 13:50:00,,Revive Mask M,1,29.0,7.49,paid,fulfilled,92.0,18.32,4.99,4.82,83.49,USD,rjsisuh301@hotmail.com,Customer 301,QC,Canada
+#3857,2025-06-21 16:05:00,2025-06-26 16:05:00,Cap 01,1,19.0,0.94,refunded,fulfilled,168.0,7.68,9.99,11.51,0.0,USD,vhsinf301@hotmail.com,Customer 301,QC,Canada
+#3939,2025-08-16 05:30:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,217.0,0.0,9.99,20.36,247.35,USD,pckjeqcnzr301@yahoo.com,Customer 301,CA,United States
+#4215,2024-08-27 16:39:00,,Revive Mask M,1,29.0,0.75,paid,fulfilled,121.0,3.47,0.0,9.0,126.53,USD,ocsivsup349@gmail.com,Customer 349,TX,United States
+#3643,2025-03-03 06:39:00,,Radiance Serum A,1,39.0,0.0,paid,unfulfilled,137.0,0.0,4.99,25.41,167.4,USD,flairkemd289@gmail.com,Customer 289,NSW,Australia
+#3721,2024-11-16 17:46:00,,Socks 3-Pack,1,14.0,1.85,paid,fulfilled,257.0,25.38,0.0,38.3,269.92,USD,ticgbpppzi301@hotmail.com,Customer 301,ENG,United Kingdom
+#3759,2024-08-29 13:43:00,,Revive Mask M,1,29.0,2.63,paid,fulfilled,29.0,2.63,0.0,2.2,28.57,USD,ombacvqmcf200@hotmail.com,Customer 200,IL,United States
+#4113,2025-02-06 10:26:00,,Repair Eye Gel G,1,45.0,0.0,paid,unfulfilled,45.0,0.0,0.0,2.93,47.93,USD,phzbwjaj301@brand.com,Customer 301,CA,United States
+#4209,2025-03-26 16:06:00,,Radiance Serum A,1,39.0,12.23,paid,unfulfilled,88.0,23.3,4.99,5.86,75.55,USD,mprcusovjn200@brand.com,Customer 200,TX,United States
+#4072,2025-04-02 07:40:00,,Cap 01,1,19.0,0.0,paid,fulfilled,112.0,0.0,6.99,8.51,127.5,USD,raxaauvnt301@hotmail.com,Customer 301,IL,United States
+#4132,2025-06-16 06:27:00,,Premium Tee 02,1,28.0,0.0,paid,partial,28.0,0.0,4.99,2.01,35.0,USD,hnxubu326@hotmail.com,Customer 326,BC,Canada
+#3707,2024-09-16 21:37:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,25.0,0.0,6.99,2.56,34.55,USD,dfpcnvlnl229@gmail.com,Customer 229,NY,United States
+#3782,2025-04-09 15:38:00,,Hydra Cream B,2,49.0,0.0,paid,fulfilled,98.0,0.0,4.99,7.6,110.59,USD,ivzhns301@gmail.com,Customer 301,TX,United States
+#3981,2025-07-25 00:54:00,,Clarifying Toner X,2,25.0,5.43,paid,fulfilled,50.0,5.43,0.0,3.0,47.57,USD,xjzfhfgewg289@yahoo.com,Customer 289,TX,United States
+#3962,2025-06-20 00:17:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.62,37.62,USD,tqwsousod301@gmail.com,Customer 301,ON,Canada
+#4067,2024-10-06 19:04:00,,Shorts 01,3,35.0,0.0,paid,fulfilled,184.0,0.0,0.0,13.12,197.12,USD,wyrhqcb301@brand.com,Customer 301,WA,United States
+#3630,2025-08-17 11:09:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,226.0,0.0,6.99,17.86,250.85,USD,rmefbtbibm301@yahoo.com,Customer 301,BC,Canada
+#3692,2025-06-04 16:24:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,207.0,0.0,4.99,14.84,226.83,USD,lxbddei301@yahoo.com,Customer 301,ON,Canada
+#3807,2024-09-29 09:27:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,29.0,0.0,0.0,2.53,31.53,USD,anxrvp200@yahoo.com,Customer 200,TX,United States
+#3762,2025-05-05 14:55:00,,Light Jacket 01,1,79.0,18.22,paid,partial,370.0,73.97,6.99,25.09,328.11,USD,neindw289@gmail.com,Customer 289,ENG,United Kingdom
+#4032,2025-04-23 22:50:00,,Socks 3-Pack,2,14.0,0.0,refunded,fulfilled,96.0,0.0,0.0,11.45,0.0,USD,bvnykjj301@gmail.com,Customer 301,NSW,Australia
+#4200,2025-01-23 19:00:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,275.0,0.0,4.99,22.91,302.9,USD,ferizrn301@hotmail.com,Customer 301,TX,United States
+#3730,2024-11-21 20:29:00,,Revive Mask M,1,29.0,2.15,paid,fulfilled,134.0,9.61,0.0,9.59,133.98,USD,unjfcr230@brand.com,Customer 230,FL,United States
+#3685,2025-04-30 14:32:00,,Glow Oil L,1,35.0,6.68,paid,fulfilled,84.0,15.68,0.0,4.28,72.6,USD,utibov301@yahoo.com,Customer 301,CA,United States
+#4038,2025-04-12 05:17:00,,Leggings 01,1,49.0,4.02,paid,fulfilled,49.0,4.02,4.99,4.5,54.47,USD,ewqddkh326@yahoo.com,Customer 326,TX,United States
+#3724,2025-03-13 10:10:00,,Clarifying Toner X,1,25.0,2.2,paid,fulfilled,238.0,21.23,0.0,19.96,236.73,USD,chyiquiiv301@yahoo.com,Customer 301,NY,United States
+#3792,2024-08-27 02:52:00,,Foam Cleanser F,1,21.0,1.74,paid,fulfilled,21.0,1.74,6.99,1.76,28.01,USD,kohxvj301@brand.com,Customer 301,WA,United States
+#4073,2025-07-17 01:48:00,,Shorts 01,3,35.0,14.5,paid,fulfilled,182.0,27.57,9.99,14.6,179.02,USD,fvsujgbc301@yahoo.com,Customer 301,VIC,Australia
+#4050,2025-02-24 03:55:00,,Cap 01,1,19.0,0.0,paid,partial,79.0,0.0,0.0,13.01,92.01,USD,azyctisfmo200@brand.com,Customer 200,VIC,Australia
+#4056,2024-10-06 12:51:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,49.0,0.0,4.99,5.29,59.28,USD,vwajccovd167@yahoo.com,Customer 167,ENG,United Kingdom
+#4031,2025-04-12 07:14:00,,Foam Cleanser F,1,21.0,3.18,paid,fulfilled,258.0,52.3,0.0,15.35,221.05,USD,yvayrydmrr301@gmail.com,Customer 301,TX,United States
+#4015,2025-02-11 15:11:00,,Shorts 01,2,35.0,13.99,paid,partial,122.0,25.43,4.99,8.9,110.46,USD,oabnwzijr301@yahoo.com,Customer 301,WA,United States
+#3927,2024-09-12 20:19:00,,Leggings 01,1,49.0,3.61,paid,fulfilled,88.0,6.59,6.99,11.79,100.19,USD,nglayy301@hotmail.com,Customer 301,NSW,Australia
+#4212,2025-06-06 22:12:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,104.0,0.0,6.99,6.67,117.66,USD,vwiqtvf301@hotmail.com,Customer 301,QC,Canada
+#3645,2025-07-09 06:59:00,,Glow Oil L,1,35.0,1.1,paid,partial,105.0,4.13,0.0,16.23,117.1,USD,ltzhvnm301@brand.com,Customer 301,NSW,Australia
+#4175,2025-03-31 13:16:00,,Clarifying Toner X,1,25.0,1.36,paid,unfulfilled,25.0,1.36,6.99,3.48,34.11,USD,njyqwmmj229@gmail.com,Customer 229,VIC,Australia
+#3710,2024-12-22 11:25:00,,Foam Cleanser F,1,21.0,6.8,paid,fulfilled,21.0,6.8,0.0,0.96,15.16,USD,vtzmslj301@yahoo.com,Customer 301,QC,Canada
+#4067,2024-10-06 19:04:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,184.0,0.0,0.0,13.12,197.12,USD,hswnrg301@gmail.com,Customer 301,WA,United States
+#3721,2024-11-16 17:46:00,,Revive Mask M,1,29.0,2.48,paid,fulfilled,257.0,25.38,0.0,38.3,269.92,USD,jmqscvqiz301@gmail.com,Customer 301,ENG,United Kingdom
+#3629,2024-09-18 04:04:00,,Hydra Cream B,2,49.0,4.77,paid,fulfilled,98.0,4.77,4.99,6.78,105.0,USD,vzywemfkbj230@brand.com,Customer 230,QC,Canada
+#3923,2024-10-06 15:05:00,,Light Jacket 01,1,79.0,11.79,paid,fulfilled,79.0,11.79,0.0,5.38,72.59,USD,fhauho301@gmail.com,Customer 301,QC,Canada
+#3646,2025-04-13 03:40:00,,Socks 3-Pack,1,14.0,4.1,paid,partial,107.0,38.8,0.0,6.6,74.8,USD,qmucfrhpm301@hotmail.com,Customer 301,NSW,Australia
+#4204,2025-04-10 11:02:00,,Radiance Serum A,2,39.0,19.88,paid,fulfilled,107.0,26.27,6.99,8.49,96.21,USD,erqwfyso229@brand.com,Customer 229,VIC,Australia
+#4119,2025-04-22 01:47:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,55.0,0.0,6.99,10.53,72.52,USD,twnbmnlgvh301@yahoo.com,Customer 301,NSW,Australia
+#3926,2025-03-04 17:48:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,14.0,0.0,0.0,1.02,15.02,USD,jyilrzwyjs289@hotmail.com,Customer 289,IL,United States
+#4032,2025-04-23 22:50:00,,Revive Mask M,1,29.0,0.0,refunded,fulfilled,96.0,0.0,0.0,11.45,0.0,USD,tgtyvwnppz301@yahoo.com,Customer 301,NSW,Australia
+#3900,2024-10-22 18:02:00,,Hydra Cream B,1,49.0,7.88,paid,unfulfilled,523.0,118.76,6.99,34.17,445.4,USD,ejobvvh229@brand.com,Customer 229,QC,Canada
+#3779,2024-08-27 19:49:00,,Socks 3-Pack,1,14.0,0.75,paid,fulfilled,14.0,0.75,6.99,1.85,22.09,USD,tiihno301@brand.com,Customer 301,BC,Canada
+#4052,2025-02-11 04:04:00,,Cap 01,4,19.0,0.0,paid,fulfilled,152.0,0.0,4.99,27.89,184.88,USD,uddluzv301@gmail.com,Customer 301,VIC,Australia
+#4083,2025-02-09 10:47:00,,Hydra Cream B,1,49.0,0.0,paid,partial,107.0,0.0,6.99,16.86,130.85,USD,cirleex301@hotmail.com,Customer 301,NSW,Australia
+#3747,2025-01-14 07:33:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,223.0,0.0,0.0,30.8,253.8,USD,uhspfwd229@yahoo.com,Customer 229,ENG,United Kingdom
+#3635,2025-08-07 14:34:00,,Clarifying Toner X,2,25.0,4.13,paid,partial,158.0,12.13,0.0,9.24,155.11,USD,gucwwfv326@brand.com,Customer 326,CA,United States
+#4088,2025-05-05 16:07:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,93.0,0.0,4.99,6.67,104.66,USD,cbgccxogn200@hotmail.com,Customer 200,FL,United States
+#3873,2025-07-21 23:29:00,,Shorts 01,1,35.0,6.99,paid,fulfilled,35.0,6.99,4.99,3.95,36.95,USD,iaabknr301@hotmail.com,Customer 301,NSW,Australia
+#4191,2024-10-28 09:25:00,,Premium Tee 02,2,28.0,0.0,paid,partial,95.0,0.0,6.99,7.59,109.58,USD,aidwpt301@brand.com,Customer 301,ON,Canada
+#3832,2024-09-22 20:34:00,,Repair Eye Gel G,1,45.0,3.22,paid,fulfilled,45.0,3.22,4.99,6.16,52.93,USD,hkicrbyeac289@yahoo.com,Customer 289,VIC,Australia
+#3749,2025-02-09 02:34:00,,Cap 01,1,19.0,0.5,paid,partial,19.0,0.5,6.99,1.97,27.46,USD,dybylsmj301@brand.com,Customer 301,TX,United States
+#3643,2025-03-03 06:39:00,,Light Jacket 01,1,79.0,0.0,paid,unfulfilled,137.0,0.0,4.99,25.41,167.4,USD,ajtwyktop289@yahoo.com,Customer 289,NSW,Australia
+#4200,2025-01-23 19:00:00,,Leggings 01,3,49.0,0.0,paid,fulfilled,275.0,0.0,4.99,22.91,302.9,USD,ijdtwtu301@gmail.com,Customer 301,TX,United States
+#3836,2025-02-05 19:41:00,,Leggings 01,1,49.0,0.0,partially_refunded,fulfilled,49.0,0.0,6.99,7.33,38.62,USD,phtocb200@hotmail.com,Customer 200,ENG,United Kingdom
+#3893,2024-10-04 03:50:00,,Classic Tee 01,1,22.0,0.0,partially_refunded,fulfilled,22.0,0.0,0.0,4.11,18.75,USD,ktaeauvn200@hotmail.com,Customer 200,VIC,Australia
+#4204,2025-04-10 11:02:00,,Revive Mask M,1,29.0,6.39,paid,fulfilled,107.0,26.27,6.99,8.49,96.21,USD,nuonbnos229@yahoo.com,Customer 229,VIC,Australia
+#4126,2024-11-01 21:08:00,,Repair Eye Gel G,1,45.0,0.0,refunded,fulfilled,108.0,0.0,0.0,20.42,0.0,USD,utfbeilt200@gmail.com,Customer 200,NSW,Australia
+#4044,2025-06-29 06:57:00,,Revive Mask M,1,29.0,0.0,paid,partial,29.0,0.0,6.99,3.84,39.83,USD,rwzetjukh162@yahoo.com,Customer 162,ENG,United Kingdom
+#4057,2025-02-27 11:18:00,,Leggings 01,3,49.0,0.0,paid,fulfilled,422.0,0.0,0.0,26.14,448.14,USD,klylsg301@hotmail.com,Customer 301,NY,United States
+#3732,2024-11-05 15:03:00,,Socks 3-Pack,1,14.0,3.95,paid,fulfilled,93.0,22.25,4.99,4.79,80.53,USD,kmsleoufa301@yahoo.com,Customer 301,FL,United States
+#4128,2025-03-10 14:55:00,,Radiance Serum A,1,39.0,0.0,paid,unfulfilled,39.0,0.0,0.0,3.77,42.77,USD,wffmmemdq301@gmail.com,Customer 301,VIC,Australia
+#4135,2025-02-03 14:10:00,,Starter Kit C,1,79.0,24.19,paid,fulfilled,157.0,43.84,4.99,9.96,128.11,USD,bstkav301@yahoo.com,Customer 301,BC,Canada
+#3917,2024-12-25 01:32:00,,Clarifying Toner X,1,25.0,1.3,paid,fulfilled,228.0,10.06,4.99,14.6,237.53,USD,wcenar230@brand.com,Customer 230,CA,United States
+#4203,2024-11-30 16:54:00,,Socks 3-Pack,2,14.0,0.0,paid,fulfilled,28.0,0.0,0.0,2.38,30.38,USD,djloyzze230@yahoo.com,Customer 230,BC,Canada
+#4114,2024-10-02 09:41:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,98.0,0.0,4.99,6.95,109.94,USD,fasqwuytuo289@hotmail.com,Customer 289,FL,United States
+#3969,2024-10-31 22:53:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,114.0,0.0,9.99,10.16,134.15,USD,qamxrkx162@brand.com,Customer 162,BC,Canada
+#4202,2024-10-03 14:15:00,,Shorts 01,2,35.0,0.0,paid,fulfilled,70.0,0.0,4.99,5.08,80.07,USD,rinbjq301@yahoo.com,Customer 301,BC,Canada
+#3713,2024-10-24 17:51:00,,Premium Tee 02,1,28.0,2.76,paid,fulfilled,104.0,9.44,6.99,8.9,110.45,USD,mwhsuxozod301@yahoo.com,Customer 301,IL,United States
+#4042,2025-05-22 00:04:00,,Glow Oil L,2,35.0,2.17,paid,unfulfilled,70.0,2.17,6.99,7.99,82.81,USD,nddksxt229@hotmail.com,Customer 229,NSW,Australia
+#3705,2025-07-13 17:52:00,2025-07-25 17:52:00,Cap 01,1,19.0,0.0,refunded,fulfilled,19.0,0.0,0.0,2.03,0.0,USD,fymlzjsxtu301@yahoo.com,Customer 301,VIC,Australia
+#4135,2025-02-03 14:10:00,,Radiance Serum A,1,39.0,11.49,paid,fulfilled,157.0,43.84,4.99,9.96,128.11,USD,atvjkvw301@gmail.com,Customer 301,BC,Canada
+#4040,2025-05-25 21:58:00,,Glow Oil L,2,35.0,0.0,paid,fulfilled,158.0,0.0,9.99,14.0,181.99,USD,jvtppghp162@gmail.com,Customer 162,VIC,Australia
+#4072,2025-04-02 07:40:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,112.0,0.0,6.99,8.51,127.5,USD,eolokqkb301@brand.com,Customer 301,IL,United States
+#3681,2024-08-27 18:39:00,,Glow Oil L,4,35.0,0.0,paid,fulfilled,140.0,0.0,0.0,11.78,151.78,USD,vqudhv301@yahoo.com,Customer 301,TX,United States
+#3747,2025-01-14 07:33:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,223.0,0.0,0.0,30.8,253.8,USD,kbhveywo229@yahoo.com,Customer 229,ENG,United Kingdom
+#4190,2025-04-22 10:04:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,0.0,2.94,23.94,USD,xzdieolut301@brand.com,Customer 301,VIC,Australia
+#3678,2025-01-25 14:25:00,,Glow Oil L,1,35.0,0.0,paid,partial,114.0,0.0,0.0,13.75,127.75,USD,srxwipdj301@brand.com,Customer 301,VIC,Australia
+#3864,2025-06-19 13:15:00,,Radiance Serum A,2,39.0,0.0,paid,fulfilled,78.0,0.0,0.0,9.69,87.69,USD,xxqaddn301@brand.com,Customer 301,VIC,Australia
+#3863,2025-01-21 08:17:00,,Foam Cleanser F,1,21.0,3.54,paid,fulfilled,91.0,16.49,6.99,7.18,88.68,USD,lzoisertsv229@gmail.com,Customer 229,BC,Canada
+#4071,2025-06-05 23:28:00,,Socks 3-Pack,3,14.0,0.0,paid,fulfilled,177.0,0.0,9.99,13.82,200.81,USD,lepojvrlh301@gmail.com,Customer 301,WA,United States
+#3974,2025-04-16 12:31:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,78.0,0.0,4.99,6.1,89.09,USD,zfryxf301@hotmail.com,Customer 301,ON,Canada
+#4165,2025-01-08 12:09:00,,Radiance Serum A,2,39.0,1.38,paid,fulfilled,78.0,1.38,0.0,14.58,91.2,USD,rhkakdg200@hotmail.com,Customer 200,VIC,Australia
+#3687,2025-01-30 01:34:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,8.52,87.52,USD,icrhplrj301@gmail.com,Customer 301,NSW,Australia
+#3649,2025-04-29 23:02:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,272.0,0.0,6.99,26.29,305.28,USD,zdtpuf301@brand.com,Customer 301,BC,Canada
+#3704,2024-11-18 11:54:00,,Foam Cleanser F,1,21.0,0.0,paid,partial,56.0,0.0,0.0,3.78,59.78,USD,qsbdhknx229@hotmail.com,Customer 229,QC,Canada
+#3854,2025-01-10 14:31:00,,Premium Tee 02,1,28.0,0.57,paid,fulfilled,304.0,7.45,4.99,55.31,356.85,USD,nzjdonqm301@yahoo.com,Customer 301,NSW,Australia
+#4185,2025-08-24 19:47:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,0.0,3.82,24.82,USD,poolior229@hotmail.com,Customer 229,ENG,United Kingdom
+#3738,2024-10-07 10:20:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,70.0,0.0,6.99,7.02,84.01,USD,naqlsq301@yahoo.com,Customer 301,BC,Canada
+#4017,2025-07-10 06:26:00,,Clarifying Toner X,2,25.0,0.0,paid,unfulfilled,50.0,0.0,6.99,5.17,62.16,USD,sbwemkz301@yahoo.com,Customer 301,WA,United States
+#4121,2025-04-09 16:04:00,,Revive Mask M,1,29.0,8.81,paid,unfulfilled,74.0,19.89,6.99,8.37,69.47,USD,ghickzoqux301@brand.com,Customer 301,VIC,Australia
+#4075,2025-03-25 01:05:00,,Repair Eye Gel G,1,45.0,0.0,paid,partial,66.0,0.0,0.0,4.94,70.94,USD,eaeopaz301@hotmail.com,Customer 301,FL,United States
+#3626,2025-03-08 11:36:00,,Hoodie 01,3,55.0,4.5,paid,fulfilled,165.0,4.5,4.99,14.95,180.44,USD,tiheassz162@yahoo.com,Customer 162,TX,United States
+#4102,2025-03-28 21:48:00,,Light Jacket 01,2,79.0,46.92,paid,fulfilled,213.0,66.24,4.99,14.34,166.09,USD,hqxqbxzmsh301@yahoo.com,Customer 301,IL,United States
+#3642,2025-06-30 15:28:00,,Revive Mask M,1,29.0,6.01,paid,fulfilled,29.0,6.01,0.0,1.66,24.65,USD,cdjdfkimbv167@brand.com,Customer 167,IL,United States
+#3881,2025-07-16 13:20:00,,Radiance Serum A,1,39.0,6.11,paid,partial,64.0,10.68,0.0,4.22,57.54,USD,xkuusfqnky301@gmail.com,Customer 301,TX,United States
+#4014,2025-04-16 16:17:00,,Repair Eye Gel G,1,45.0,13.17,paid,partial,67.0,21.39,0.0,4.17,49.78,USD,trclsey200@brand.com,Customer 200,TX,United States
+#3761,2024-10-15 02:15:00,,Hoodie 01,1,55.0,18.68,paid,fulfilled,55.0,18.68,0.0,4.33,40.65,USD,xigtxxavh200@hotmail.com,Customer 200,NSW,Australia
+#3794,2025-07-18 05:19:00,,Cap 01,1,19.0,0.0,paid,fulfilled,19.0,0.0,6.99,4.21,30.2,USD,qytdlicbu301@gmail.com,Customer 301,ENG,United Kingdom
+#4069,2025-06-04 09:42:00,,Shorts 01,1,35.0,0.0,paid,partial,35.0,0.0,4.99,2.93,42.92,USD,spdrvt200@hotmail.com,Customer 200,QC,Canada
+#3964,2025-06-05 04:33:00,,Premium Tee 02,1,28.0,6.01,paid,fulfilled,28.0,6.01,0.0,1.34,23.33,USD,myiean301@brand.com,Customer 301,QC,Canada
+#3997,2025-05-21 04:44:00,,Revive Mask M,1,29.0,4.02,paid,fulfilled,146.0,21.37,6.99,11.82,143.44,USD,fwuvee301@brand.com,Customer 301,FL,United States
+#4163,2025-02-20 10:23:00,,Clarifying Toner X,1,25.0,7.93,paid,fulfilled,104.0,26.51,4.99,5.35,87.83,USD,jzcytk200@gmail.com,Customer 200,CA,United States
+#4052,2025-02-11 04:04:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,152.0,0.0,4.99,27.89,184.88,USD,lsdidtjmmz301@hotmail.com,Customer 301,VIC,Australia
+#3765,2024-08-29 13:56:00,,Starter Kit C,2,79.0,0.0,paid,fulfilled,214.0,0.0,0.0,27.74,241.74,USD,dtxuupr200@yahoo.com,Customer 200,NSW,Australia
+#3989,2025-02-02 04:57:00,,Starter Kit C,2,79.0,11.45,paid,fulfilled,214.0,16.75,6.99,16.37,220.61,USD,uxdyiqppwz301@yahoo.com,Customer 301,NSW,Australia
+#3788,2024-11-18 05:18:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,4.83,83.83,USD,eenjlo301@yahoo.com,Customer 301,FL,United States
+#3860,2025-05-03 10:16:00,,Classic Tee 01,2,22.0,0.0,paid,fulfilled,202.0,0.0,6.99,12.92,221.91,USD,gbpildmrcb167@brand.com,Customer 167,WA,United States
+#3704,2024-11-18 11:54:00,,Glow Oil L,1,35.0,0.0,paid,partial,56.0,0.0,0.0,3.78,59.78,USD,myajlgi229@gmail.com,Customer 229,QC,Canada
+#4181,2024-11-30 06:47:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.14,37.14,USD,mwhdijtl289@brand.com,Customer 289,ON,Canada
+#4006,2024-11-19 09:25:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,207.0,0.0,9.99,33.01,250.0,USD,elrnnxptt301@gmail.com,Customer 301,NSW,Australia
+#4151,2025-02-13 19:57:00,,Clarifying Toner X,2,25.0,10.87,paid,fulfilled,50.0,10.87,0.0,6.35,45.48,USD,edifeweh301@brand.com,Customer 301,ENG,United Kingdom
+#3947,2024-12-04 12:04:00,,Clarifying Toner X,2,25.0,0.0,paid,fulfilled,50.0,0.0,4.99,4.59,59.58,USD,ymgozjgre301@gmail.com,Customer 301,FL,United States
+#4193,2024-10-04 22:48:00,,Foam Cleanser F,2,21.0,0.0,paid,fulfilled,42.0,0.0,0.0,3.36,45.36,USD,uawydya301@yahoo.com,Customer 301,NY,United States
+#3905,2025-06-14 09:11:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,39.0,0.0,6.99,3.94,49.93,USD,dsrhfzl200@gmail.com,Customer 200,IL,United States
+#3702,2024-09-02 09:58:00,,Foam Cleanser F,1,21.0,0.0,paid,unfulfilled,21.0,0.0,6.99,1.91,29.9,USD,zkmyzy301@gmail.com,Customer 301,NY,United States
+#3701,2024-10-09 01:02:00,,Revive Mask M,2,29.0,0.0,paid,fulfilled,107.0,0.0,0.0,13.33,120.33,USD,qthhbtqgt200@gmail.com,Customer 200,NSW,Australia
+#4053,2024-09-16 10:56:00,,Cap 01,1,19.0,5.07,paid,fulfilled,19.0,5.07,0.0,1.63,15.56,USD,mnnvkpkpst301@gmail.com,Customer 301,VIC,Australia
+#4176,2025-02-24 16:41:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,83.0,0.0,4.99,7.89,95.88,USD,jaqynhz301@gmail.com,Customer 301,IL,United States
+#4065,2025-08-21 03:34:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,6.99,2.99,37.98,USD,kmcmqxm301@gmail.com,Customer 301,NY,United States
+#4018,2024-12-10 12:48:00,,Foam Cleanser F,3,21.0,11.32,paid,unfulfilled,63.0,11.32,0.0,3.34,55.02,USD,ztknhsfwk162@yahoo.com,Customer 162,QC,Canada
+#3822,2024-09-04 10:34:00,,Cap 01,2,19.0,0.0,paid,fulfilled,83.0,0.0,0.0,6.28,89.28,USD,nzcqcykft301@brand.com,Customer 301,TX,United States
+#3889,2025-07-31 06:50:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,79.0,0.0,6.99,10.92,96.91,USD,taluwkujmq200@gmail.com,Customer 200,VIC,Australia
+#3809,2025-05-13 23:03:00,,Revive Mask M,1,29.0,0.0,paid,partial,121.0,0.0,6.99,16.1,144.09,USD,pogatann301@brand.com,Customer 301,ENG,United Kingdom
+#3726,2024-09-01 15:58:00,,Cap 01,1,19.0,0.0,partially_refunded,fulfilled,47.0,0.0,0.0,4.24,28.56,USD,ccftorfjm301@yahoo.com,Customer 301,QC,Canada
+#3690,2025-02-02 06:18:00,,Starter Kit C,4,79.0,0.0,paid,fulfilled,354.0,0.0,4.99,53.08,412.07,USD,dbeszv301@hotmail.com,Customer 301,NSW,Australia
+#4127,2025-02-07 13:31:00,,Cap 01,1,19.0,0.0,paid,fulfilled,19.0,0.0,0.0,1.75,20.75,USD,yuivrw200@gmail.com,Customer 200,WA,United States
+#3988,2024-10-21 01:43:00,,Premium Tee 02,1,28.0,6.8,paid,fulfilled,28.0,6.8,4.99,2.12,28.31,USD,sluieusfl301@gmail.com,Customer 301,QC,Canada
+#3699,2025-06-06 15:42:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,276.0,0.0,4.99,20.09,301.08,USD,oyshooxk162@hotmail.com,Customer 162,QC,Canada
+#4196,2024-12-29 09:13:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,114.0,0.0,6.99,8.45,129.44,USD,dgodes229@gmail.com,Customer 229,TX,United States
+#3734,2025-01-04 15:15:00,,Shorts 01,2,35.0,0.0,partially_refunded,fulfilled,99.0,0.0,6.99,6.62,98.35,USD,rwplquvuon289@yahoo.com,Customer 289,TX,United States
+#3989,2025-02-02 04:57:00,,Socks 3-Pack,4,14.0,5.3,paid,fulfilled,214.0,16.75,6.99,16.37,220.61,USD,vvikrkuni301@gmail.com,Customer 301,NSW,Australia
+#3775,2025-02-14 20:53:00,,Glow Oil L,1,35.0,1.27,paid,partial,35.0,1.27,0.0,2.26,35.99,USD,kzhkwu301@yahoo.com,Customer 301,TX,United States
+#3786,2025-06-29 07:50:00,,Premium Tee 02,3,28.0,17.66,paid,unfulfilled,179.0,37.88,6.99,12.88,160.99,USD,hwvnadrfte301@hotmail.com,Customer 301,BC,Canada
+#3852,2024-11-20 05:53:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,74.0,0.0,0.0,6.83,80.83,USD,rprpuel301@hotmail.com,Customer 301,NY,United States
+#3689,2025-07-02 13:18:00,,Premium Tee 02,1,28.0,5.12,paid,fulfilled,28.0,5.12,4.99,1.87,29.74,USD,ihyaenxdu301@brand.com,Customer 301,TX,United States
+#3725,2025-03-08 16:14:00,,Light Jacket 01,1,79.0,0.0,paid,unfulfilled,166.0,0.0,6.99,14.48,187.47,USD,vukmqg301@yahoo.com,Customer 301,BC,Canada
+#3736,2025-02-07 00:34:00,,Cap 01,1,19.0,0.0,paid,fulfilled,119.0,0.0,0.0,8.6,127.6,USD,odwuxtbq301@brand.com,Customer 301,ON,Canada
+#3874,2024-12-20 09:49:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,6.91,85.91,USD,cyrvyqsdwd167@yahoo.com,Customer 167,IL,United States
+#3760,2025-05-08 04:34:00,,Socks 3-Pack,1,14.0,0.0,paid,unfulfilled,570.0,0.0,0.0,39.19,609.19,USD,jlgmfgbtr301@gmail.com,Customer 301,BC,Canada
+#3860,2025-05-03 10:16:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,202.0,0.0,6.99,12.92,221.91,USD,eppvsqivs167@gmail.com,Customer 167,WA,United States
+#4085,2024-10-07 04:35:00,,Classic Tee 01,1,22.0,0.69,paid,fulfilled,161.0,5.91,9.99,13.69,178.77,USD,umctsjvg301@yahoo.com,Customer 301,QC,Canada
+#4078,2025-04-20 20:37:00,,Clarifying Toner X,1,25.0,8.52,paid,unfulfilled,209.0,79.94,0.0,8.03,137.09,USD,cupefsllp289@hotmail.com,Customer 289,IL,United States
+#4079,2024-11-15 01:31:00,,Revive Mask M,1,29.0,6.91,paid,fulfilled,29.0,6.91,0.0,1.97,24.06,USD,udiaimu289@yahoo.com,Customer 289,TX,United States
+#4150,2024-09-05 12:16:00,,Repair Eye Gel G,2,45.0,0.0,paid,fulfilled,139.0,0.0,6.99,10.35,156.34,USD,ufjcsgv301@yahoo.com,Customer 301,WA,United States
+#3693,2024-11-12 06:39:00,,Socks 3-Pack,2,14.0,0.0,paid,fulfilled,304.0,0.0,0.0,19.72,323.72,USD,bwcyugfoqa301@hotmail.com,Customer 301,QC,Canada
+#4004,2024-10-02 19:39:00,,Hoodie 01,2,55.0,0.0,paid,fulfilled,138.0,0.0,0.0,10.81,148.81,USD,zdyety200@hotmail.com,Customer 200,IL,United States
+#3854,2025-01-10 14:31:00,,Radiance Serum A,1,39.0,0.82,paid,fulfilled,304.0,7.45,4.99,55.31,356.85,USD,mryzhp301@hotmail.com,Customer 301,NSW,Australia
+#4171,2024-09-01 07:56:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,273.0,0.0,4.99,17.66,295.65,USD,mzaarwz200@brand.com,Customer 200,TX,United States
+#4080,2024-10-13 15:54:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,187.0,0.0,0.0,17.14,204.14,USD,umzkde289@hotmail.com,Customer 289,ON,Canada
+#4167,2025-01-08 00:27:00,,Radiance Serum A,1,39.0,7.45,paid,fulfilled,39.0,7.45,0.0,2.03,33.58,USD,vdwmnekk301@gmail.com,Customer 301,QC,Canada
+#3744,2025-02-01 08:14:00,,Revive Mask M,2,29.0,0.0,partially_refunded,fulfilled,125.0,0.0,4.99,9.66,100.7,USD,wwuicl301@hotmail.com,Customer 301,CA,United States
+#4006,2024-11-19 09:25:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,207.0,0.0,9.99,33.01,250.0,USD,quidty301@brand.com,Customer 301,NSW,Australia
+#4169,2024-12-08 01:31:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,67.0,0.0,0.0,5.21,72.21,USD,dpwcfzoeeu301@brand.com,Customer 301,IL,United States
+#4071,2025-06-05 23:28:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,177.0,0.0,9.99,13.82,200.81,USD,nurwfuocw301@gmail.com,Customer 301,WA,United States
+#4102,2025-03-28 21:48:00,,Hoodie 01,1,55.0,19.33,paid,fulfilled,213.0,66.24,4.99,14.34,166.09,USD,kscklalo301@gmail.com,Customer 301,IL,United States
+#4171,2024-09-01 07:56:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,273.0,0.0,4.99,17.66,295.65,USD,qryapuknfx200@brand.com,Customer 200,TX,United States
+#3997,2025-05-21 04:44:00,,Radiance Serum A,1,39.0,6.16,paid,fulfilled,146.0,21.37,6.99,11.82,143.44,USD,cioefoydfj301@yahoo.com,Customer 301,FL,United States
+#4118,2025-06-22 05:19:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,104.0,0.0,4.99,8.58,117.57,USD,pvnunp230@hotmail.com,Customer 230,CA,United States
+#4074,2025-05-20 12:37:00,,Light Jacket 01,2,79.0,17.62,paid,fulfilled,158.0,17.62,6.99,26.42,173.79,USD,lpchxc303@brand.com,Customer 303,VIC,Australia
+#3844,2025-06-08 01:29:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,100.0,0.0,4.99,9.45,114.44,USD,ofdouwisn301@yahoo.com,Customer 301,NY,United States
+#4205,2025-06-04 14:47:00,,Radiance Serum A,1,39.0,0.0,paid,partial,118.0,0.0,0.0,8.31,126.31,USD,xzxmdyago200@hotmail.com,Customer 200,IL,United States
+#3921,2025-08-23 06:35:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,22.0,0.0,4.99,4.01,31.0,USD,ysbfmgttv200@brand.com,Customer 200,VIC,Australia
+#3768,2025-06-06 18:04:00,,Cap 01,1,19.0,7.54,paid,fulfilled,19.0,7.54,9.99,2.78,24.23,USD,isumqeq301@gmail.com,Customer 301,NSW,Australia
+#4109,2025-02-07 20:37:00,,Cap 01,1,19.0,7.11,paid,unfulfilled,226.0,70.24,6.99,16.09,178.84,USD,xstazyppco289@yahoo.com,Customer 289,VIC,Australia
+#3876,2024-09-19 22:04:00,,Premium Tee 02,1,28.0,3.27,paid,fulfilled,53.0,6.69,4.99,4.03,55.33,USD,olpclga200@gmail.com,Customer 200,FL,United States
+#3911,2025-01-20 16:27:00,,Premium Tee 02,1,28.0,8.02,paid,fulfilled,28.0,8.02,0.0,2.17,22.15,USD,bzipzdv301@brand.com,Customer 301,ENG,United Kingdom
+#3682,2025-06-27 12:00:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,45.0,0.0,0.0,3.24,48.24,USD,afdypl289@hotmail.com,Customer 289,BC,Canada
+#4040,2025-05-25 21:58:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,158.0,0.0,9.99,14.0,181.99,USD,gxearihhp162@brand.com,Customer 162,VIC,Australia
+#3751,2025-06-01 16:07:00,,Glow Oil L,2,35.0,11.63,paid,fulfilled,98.0,17.02,0.0,5.79,86.77,USD,eifxubzn200@yahoo.com,Customer 200,BC,Canada
+#4138,2024-08-29 10:37:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,6.61,85.61,USD,varpwgfo200@brand.com,Customer 200,BC,Canada
+#3987,2024-10-05 05:26:00,,Shorts 01,2,35.0,0.0,paid,fulfilled,70.0,0.0,0.0,4.81,74.81,USD,vtarzywfs301@yahoo.com,Customer 301,WA,United States
+#4027,2024-10-29 16:07:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,70.0,0.0,0.0,9.3,79.3,USD,iujzghn301@brand.com,Customer 301,VIC,Australia
+#3835,2024-08-26 11:06:00,,Radiance Serum A,3,39.0,0.0,paid,unfulfilled,131.0,0.0,6.99,11.85,149.84,USD,ghoofci301@brand.com,Customer 301,FL,United States
+#4210,2024-11-27 14:55:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,77.0,0.0,6.99,10.23,94.22,USD,juwony301@brand.com,Customer 301,VIC,Australia
+#4187,2025-01-20 05:51:00,,Starter Kit C,1,79.0,17.59,paid,fulfilled,79.0,17.59,4.99,5.32,71.72,USD,dqluuv301@gmail.com,Customer 301,ENG,United Kingdom
+#3751,2025-06-01 16:07:00,,Premium Tee 02,1,28.0,5.4,paid,fulfilled,98.0,17.02,0.0,5.79,86.77,USD,crgvxbz200@yahoo.com,Customer 200,BC,Canada
+#4177,2025-07-10 22:00:00,,Repair Eye Gel G,1,45.0,0.0,paid,unfulfilled,45.0,0.0,4.99,4.06,54.05,USD,gtrqgrl301@gmail.com,Customer 301,CA,United States
+#4030,2025-04-30 13:58:00,,Hoodie 01,3,55.0,0.0,paid,fulfilled,244.0,0.0,6.99,23.72,274.71,USD,ezunhlywv200@hotmail.com,Customer 200,NY,United States
+#3803,2024-12-21 22:45:00,,Revive Mask M,2,29.0,7.75,paid,fulfilled,221.0,31.07,4.99,16.19,211.11,USD,kviuxawlfn301@hotmail.com,Customer 301,BC,Canada
+#4011,2025-05-20 04:13:00,,Glow Oil L,3,35.0,14.4,paid,unfulfilled,105.0,14.4,4.99,5.86,101.45,USD,nraqyiqwz301@hotmail.com,Customer 301,FL,United States
+#3858,2025-07-19 22:39:00,,Clarifying Toner X,1,25.0,1.05,paid,fulfilled,60.0,3.07,0.0,4.66,61.59,USD,xlamney301@hotmail.com,Customer 301,IL,United States
+#4156,2025-01-14 00:31:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,98.0,0.0,0.0,8.56,106.56,USD,cokfmjmg301@gmail.com,Customer 301,FL,United States
+#4051,2025-03-06 08:56:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,114.0,0.0,9.99,10.15,134.14,USD,jycbdl301@hotmail.com,Customer 301,NY,United States
+#3827,2025-06-25 12:46:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,45.0,0.0,4.99,3.15,53.14,USD,yestodmh229@hotmail.com,Customer 229,FL,United States
+#3762,2025-05-05 14:55:00,,Leggings 01,1,49.0,8.83,paid,partial,370.0,73.97,6.99,25.09,328.11,USD,oivgvcabwu289@yahoo.com,Customer 289,ENG,United Kingdom
+#4071,2025-06-05 23:28:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,177.0,0.0,9.99,13.82,200.81,USD,zxkvstaj301@yahoo.com,Customer 301,WA,United States
+#3998,2025-03-20 16:02:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,9.99,3.23,41.22,USD,rzsiqwiwm301@hotmail.com,Customer 301,TX,United States
+#4000,2025-05-06 09:48:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,193.0,0.0,0.0,28.07,221.07,USD,ilawbfqdfc301@yahoo.com,Customer 301,NSW,Australia
+#3778,2024-09-02 06:40:00,,Socks 3-Pack,1,14.0,0.61,paid,unfulfilled,14.0,0.61,4.99,2.05,20.43,USD,crgirkvozb200@yahoo.com,Customer 200,VIC,Australia
+#3838,2025-04-03 07:23:00,,Glow Oil L,1,35.0,4.14,paid,fulfilled,35.0,4.14,4.99,2.71,38.56,USD,btklpnf200@hotmail.com,Customer 200,NY,United States
+#3843,2025-06-17 15:10:00,,Classic Tee 01,2,22.0,0.0,paid,unfulfilled,83.0,0.0,4.99,8.31,96.3,USD,gznvqwxv200@gmail.com,Customer 200,BC,Canada
+#3747,2025-01-14 07:33:00,,Glow Oil L,2,35.0,0.0,paid,fulfilled,223.0,0.0,0.0,30.8,253.8,USD,cclidjulmw229@gmail.com,Customer 229,ENG,United Kingdom
+#4192,2025-04-19 21:13:00,,Radiance Serum A,2,39.0,14.3,paid,fulfilled,78.0,14.3,4.99,5.32,74.01,USD,uoyiif301@yahoo.com,Customer 301,TX,United States
+#4106,2025-07-23 11:01:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,181.0,0.0,0.0,21.76,202.76,USD,adauowi301@brand.com,Customer 301,VIC,Australia
+#3895,2025-02-11 03:57:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,109.0,0.0,0.0,9.69,118.69,USD,dzoljfs301@hotmail.com,Customer 301,IL,United States
+#3821,2024-12-06 21:54:00,,Light Jacket 01,1,79.0,0.0,paid,fulfilled,79.0,0.0,0.0,6.26,85.26,USD,wdggttf301@brand.com,Customer 301,QC,Canada
+#3917,2024-12-25 01:32:00,,Shorts 01,1,35.0,1.21,paid,fulfilled,228.0,10.06,4.99,14.6,237.53,USD,mvrehzfq230@gmail.com,Customer 230,CA,United States
+#4005,2025-01-10 04:52:00,,Clarifying Toner X,1,25.0,0.0,partially_refunded,fulfilled,25.0,0.0,4.99,3.11,21.5,USD,gpyvauq301@brand.com,Customer 301,VIC,Australia
+#4214,2024-12-12 03:16:00,,Hydra Cream B,1,49.0,4.22,paid,fulfilled,49.0,4.22,0.0,5.74,50.52,USD,xrwdijdkvt301@hotmail.com,Customer 301,ENG,United Kingdom
+#4174,2025-05-27 07:33:00,,Hoodie 01,1,55.0,0.0,partially_refunded,fulfilled,80.0,0.0,4.99,11.37,55.34,USD,pgstzkq200@yahoo.com,Customer 200,ENG,United Kingdom
+#4162,2024-09-03 08:56:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,169.0,0.0,0.0,26.43,195.43,USD,oejaiq301@gmail.com,Customer 301,NSW,Australia
+#3994,2025-07-31 17:52:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,208.0,0.0,6.99,18.99,233.98,USD,jtwkacxit289@brand.com,Customer 289,TX,United States
+#4129,2024-10-06 07:39:00,,Leggings 01,2,49.0,0.0,paid,unfulfilled,98.0,0.0,0.0,18.65,116.65,USD,mpsbrp301@yahoo.com,Customer 301,ENG,United Kingdom
+#4009,2025-02-07 12:16:00,,Shorts 01,3,35.0,0.0,paid,fulfilled,105.0,0.0,0.0,10.76,115.76,USD,tapzcnap301@hotmail.com,Customer 301,VIC,Australia
+#4123,2024-12-23 20:50:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,78.0,0.0,0.0,7.19,85.19,USD,qtltstspv301@gmail.com,Customer 301,ON,Canada
+#3952,2025-05-23 13:31:00,,Shorts 01,1,35.0,7.94,paid,unfulfilled,35.0,7.94,0.0,1.87,28.93,USD,lusnbi200@brand.com,Customer 200,QC,Canada
+#4196,2024-12-29 09:13:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,114.0,0.0,6.99,8.45,129.44,USD,yqfsqvwaz229@hotmail.com,Customer 229,TX,United States
+#3967,2025-06-16 08:58:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,101.0,0.0,0.0,6.27,107.27,USD,pnbtohk301@gmail.com,Customer 301,ON,Canada
+#3667,2024-10-28 22:37:00,,Radiance Serum A,1,39.0,5.92,paid,fulfilled,39.0,5.92,4.99,2.39,40.46,USD,lcslxiddq301@hotmail.com,Customer 301,CA,United States
+#3757,2024-11-29 16:58:00,,Cap 01,1,19.0,0.0,paid,partial,19.0,0.0,0.0,1.25,20.25,USD,cmwqrebvh301@hotmail.com,Customer 301,BC,Canada
+#4045,2025-05-29 06:19:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,29.0,0.0,4.99,5.58,39.57,USD,lsnhfsoebg301@gmail.com,Customer 301,NSW,Australia
+#3712,2025-06-25 16:46:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,45.0,0.0,4.99,3.56,53.55,USD,gblotu200@yahoo.com,Customer 200,CA,United States
+#3930,2024-08-28 13:59:00,,Clarifying Toner X,2,25.0,0.0,paid,fulfilled,50.0,0.0,4.99,4.48,59.47,USD,slxlrd230@yahoo.com,Customer 230,WA,United States
+#3641,2025-08-17 03:54:00,,Cap 01,2,19.0,0.0,paid,fulfilled,38.0,0.0,0.0,7.16,45.16,USD,lewltvhumg289@brand.com,Customer 289,ENG,United Kingdom
+#3941,2024-12-10 03:10:00,,Shorts 01,2,35.0,0.0,paid,fulfilled,109.0,0.0,6.99,10.5,126.49,USD,eekcwhplr289@hotmail.com,Customer 289,TX,United States
+#3720,2025-02-26 22:34:00,,Hydra Cream B,5,49.0,0.0,paid,partial,245.0,0.0,0.0,19.92,264.92,USD,gqgjucy326@brand.com,Customer 326,NY,United States
+#4015,2025-02-11 15:11:00,,Cap 01,2,19.0,8.71,paid,partial,122.0,25.43,4.99,8.9,110.46,USD,dcctytdj301@hotmail.com,Customer 301,WA,United States
+#4152,2025-06-25 16:14:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.42,37.42,USD,lqvavknfsj301@hotmail.com,Customer 301,BC,Canada
+#4131,2024-10-24 15:24:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,21.0,0.0,0.0,1.76,22.76,USD,rdmicss301@brand.com,Customer 301,IL,United States
+#4124,2024-12-05 06:43:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,118.0,0.0,0.0,10.53,128.53,USD,eshugmbnn200@brand.com,Customer 200,CA,United States
+#4184,2025-06-14 23:14:00,,Clarifying Toner X,1,25.0,0.0,paid,partial,74.0,0.0,6.99,7.11,88.1,USD,qhjycd229@gmail.com,Customer 229,TX,United States
+#4066,2025-07-28 18:19:00,,Cap 01,1,19.0,3.58,paid,fulfilled,57.0,10.1,6.99,4.57,58.46,USD,oydfoz326@brand.com,Customer 326,TX,United States
+#3675,2025-04-20 21:37:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,39.0,0.0,0.0,3.57,42.57,USD,wooskc301@gmail.com,Customer 301,ENG,United Kingdom
+#3958,2025-07-26 03:05:00,,Repair Eye Gel G,2,45.0,11.37,paid,partial,90.0,11.37,0.0,6.1,84.73,USD,vcbxmljnp229@brand.com,Customer 229,WA,United States
+#3756,2025-08-07 11:48:00,,Revive Mask M,1,29.0,5.28,paid,unfulfilled,57.0,11.11,9.99,8.57,64.45,USD,icjiqzv289@hotmail.com,Customer 289,NSW,Australia
+#4071,2025-06-05 23:28:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,177.0,0.0,9.99,13.82,200.81,USD,ucqqkm301@gmail.com,Customer 301,WA,United States
+#3965,2025-05-22 01:06:00,,Starter Kit C,1,79.0,8.11,paid,fulfilled,180.0,19.22,0.0,14.18,174.96,USD,nnyhiobaq301@gmail.com,Customer 301,TX,United States
+#4039,2025-03-23 01:37:00,,Radiance Serum A,1,39.0,6.19,paid,unfulfilled,39.0,6.19,0.0,2.47,35.28,USD,jnszfl301@gmail.com,Customer 301,ON,Canada
+#3886,2025-01-28 23:06:00,,Clarifying Toner X,2,25.0,0.0,paid,fulfilled,95.0,0.0,0.0,7.69,102.69,USD,pvhstgi301@yahoo.com,Customer 301,BC,Canada
+#3949,2025-07-27 03:09:00,,Premium Tee 02,1,28.0,0.0,paid,partial,42.0,0.0,0.0,4.85,46.85,USD,bcqwxehlnt289@gmail.com,Customer 289,ENG,United Kingdom
+#4146,2025-06-15 18:39:00,,Foam Cleanser F,2,21.0,0.0,paid,fulfilled,42.0,0.0,0.0,3.21,45.21,USD,jvicpfeqh301@yahoo.com,Customer 301,ON,Canada
+#3738,2024-10-07 10:20:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,70.0,0.0,6.99,7.02,84.01,USD,cjhjvw301@yahoo.com,Customer 301,BC,Canada
+#3849,2025-01-04 20:04:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,64.0,0.0,6.99,5.52,76.51,USD,nktonqb301@hotmail.com,Customer 301,BC,Canada
+#4101,2025-02-21 20:00:00,,Hydra Cream B,1,49.0,18.12,paid,partial,49.0,18.12,0.0,6.1,36.98,USD,evreto301@brand.com,Customer 301,NSW,Australia
+#3850,2025-08-09 05:31:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,212.0,0.0,0.0,14.13,226.13,USD,isyhexyat200@gmail.com,Customer 200,QC,Canada
+#4084,2024-12-05 22:20:00,,Cap 01,1,19.0,0.0,paid,fulfilled,19.0,0.0,4.99,2.26,26.25,USD,dwtxzk301@brand.com,Customer 301,NY,United States
+#4124,2024-12-05 06:43:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,118.0,0.0,0.0,10.53,128.53,USD,iiedvtzf200@hotmail.com,Customer 200,CA,United States
+#3744,2025-02-01 08:14:00,,Radiance Serum A,1,39.0,0.0,partially_refunded,fulfilled,125.0,0.0,4.99,9.66,100.7,USD,xeyausrfg301@hotmail.com,Customer 301,CA,United States
+#3622,2025-06-15 13:46:00,,Hoodie 01,2,55.0,4.11,paid,fulfilled,159.0,5.72,6.99,22.8,183.07,USD,rsrbqng200@brand.com,Customer 200,ENG,United Kingdom
+#4085,2024-10-07 04:35:00,,Premium Tee 02,3,28.0,2.66,paid,fulfilled,161.0,5.91,9.99,13.69,178.77,USD,bmfrmk301@brand.com,Customer 301,QC,Canada
+#4007,2024-11-13 09:28:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,158.0,0.0,6.99,15.0,179.99,USD,cukkhl229@yahoo.com,Customer 229,CA,United States
+#4156,2025-01-14 00:31:00,,Cap 01,1,19.0,0.0,paid,fulfilled,98.0,0.0,0.0,8.56,106.56,USD,wlseoua301@yahoo.com,Customer 301,FL,United States
+#3991,2025-07-30 11:01:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,0.0,4.3,32.3,USD,bzhgrbb200@gmail.com,Customer 200,ENG,United Kingdom
+#4070,2024-09-04 14:20:00,,Cap 01,1,19.0,0.0,paid,fulfilled,144.0,0.0,6.99,11.75,162.74,USD,gszywqqpa301@yahoo.com,Customer 301,BC,Canada
+#3944,2024-12-23 02:45:00,,Premium Tee 02,1,28.0,0.0,paid,partial,77.0,0.0,9.99,13.49,100.48,USD,mmpprv301@brand.com,Customer 301,ENG,United Kingdom
+#4062,2024-10-13 07:18:00,,Clarifying Toner X,2,25.0,0.0,paid,partial,355.0,0.0,4.99,46.64,406.63,USD,qyiuijwlxu200@brand.com,Customer 200,VIC,Australia
+#4034,2025-03-04 18:48:00,,Hydra Cream B,3,49.0,0.0,paid,fulfilled,147.0,0.0,4.99,13.22,165.21,USD,nxkxau301@hotmail.com,Customer 301,CA,United States
+#3676,2025-05-31 20:06:00,,Socks 3-Pack,1,14.0,0.0,paid,unfulfilled,152.0,0.0,0.0,9.38,161.38,USD,cgedtby301@brand.com,Customer 301,NY,United States
+#4106,2025-07-23 11:01:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,181.0,0.0,0.0,21.76,202.76,USD,vomjqod301@gmail.com,Customer 301,VIC,Australia
+#4062,2024-10-13 07:18:00,,Light Jacket 01,2,79.0,0.0,paid,partial,355.0,0.0,4.99,46.64,406.63,USD,ozucciye200@hotmail.com,Customer 200,VIC,Australia
+#3965,2025-05-22 01:06:00,,Classic Tee 01,1,22.0,2.39,paid,fulfilled,180.0,19.22,0.0,14.18,174.96,USD,kikijvdf301@yahoo.com,Customer 301,TX,United States
+#3856,2025-05-10 04:14:00,,Premium Tee 02,1,28.0,5.38,paid,fulfilled,28.0,5.38,9.99,6.43,39.04,USD,fvxmmad301@yahoo.com,Customer 301,ENG,United Kingdom
+#3917,2024-12-25 01:32:00,,Premium Tee 02,1,28.0,0.97,paid,fulfilled,228.0,10.06,4.99,14.6,237.53,USD,jlzkbggi230@gmail.com,Customer 230,CA,United States
+#3646,2025-04-13 03:40:00,,Socks 3-Pack,1,14.0,3.79,paid,partial,107.0,38.8,0.0,6.6,74.8,USD,wshaycsm301@yahoo.com,Customer 301,NSW,Australia
+#3638,2025-04-28 06:43:00,,Starter Kit C,4,79.0,37.77,paid,fulfilled,372.0,44.9,4.99,26.29,358.38,USD,mxuecnqivt301@hotmail.com,Customer 301,NY,United States
+#4091,2024-11-15 18:04:00,,Hoodie 01,2,55.0,0.0,paid,unfulfilled,189.0,0.0,4.99,14.12,208.11,USD,hinrwvmh200@gmail.com,Customer 200,IL,United States
+#4125,2025-01-09 16:33:00,,Starter Kit C,1,79.0,0.0,paid,unfulfilled,79.0,0.0,0.0,13.01,92.01,USD,vtaxyouava301@yahoo.com,Customer 301,VIC,Australia
+#3736,2025-02-07 00:34:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,119.0,0.0,0.0,8.6,127.6,USD,tswlmpwwcz301@hotmail.com,Customer 301,ON,Canada
+#3695,2025-05-05 20:51:00,,Radiance Serum A,1,39.0,0.0,refunded,fulfilled,39.0,0.0,0.0,2.59,0.0,USD,wrmnwlwstj200@brand.com,Customer 200,WA,United States
+#3635,2025-08-07 14:34:00,,Cap 01,2,19.0,3.07,paid,partial,158.0,12.13,0.0,9.24,155.11,USD,hufafiwz326@hotmail.com,Customer 326,CA,United States
+#4147,2025-02-10 06:09:00,,Leggings 01,4,49.0,0.0,paid,partial,369.0,0.0,6.99,27.89,403.88,USD,jyzfjfpix301@hotmail.com,Customer 301,QC,Canada
+#3750,2025-06-04 11:05:00,,Cap 01,3,19.0,0.0,paid,fulfilled,136.0,0.0,0.0,8.83,144.83,USD,aqghkob301@hotmail.com,Customer 301,FL,United States
+#3906,2024-08-29 07:26:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.29,37.29,USD,arpmxb200@hotmail.com,Customer 200,BC,Canada
+#4087,2024-12-07 05:20:00,,Revive Mask M,1,29.0,3.96,paid,fulfilled,78.0,14.46,6.99,6.58,77.11,USD,kliljbj162@brand.com,Customer 162,TX,United States
+#3840,2025-03-20 15:40:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,130.0,0.0,0.0,24.27,154.27,USD,crljipahzq301@brand.com,Customer 301,ENG,United Kingdom
+#3783,2025-03-24 04:31:00,,Clarifying Toner X,1,25.0,0.0,paid,partial,25.0,0.0,6.99,2.94,34.93,USD,cpeyklusc301@brand.com,Customer 301,BC,Canada
+#3862,2025-02-26 21:40:00,2025-03-14 21:40:00,Starter Kit C,2,79.0,7.93,refunded,fulfilled,158.0,7.93,0.0,12.75,0.0,USD,dcvuiqunkk301@yahoo.com,Customer 301,NY,United States
+#4029,2024-10-07 20:45:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,28.0,0.0,0.0,4.32,32.32,USD,pxeykitz326@brand.com,Customer 326,ENG,United Kingdom
+#3848,2025-06-05 12:39:00,,Leggings 01,1,49.0,0.0,paid,partial,49.0,0.0,6.99,4.86,60.85,USD,lupvsky326@gmail.com,Customer 326,BC,Canada
+#3978,2024-11-09 00:44:00,,Hoodie 01,1,55.0,13.36,paid,unfulfilled,55.0,13.36,0.0,3.11,44.75,USD,mqedbdpnq301@hotmail.com,Customer 301,NY,United States
+#3913,2024-12-29 11:20:00,,Radiance Serum A,1,39.0,0.0,paid,fulfilled,39.0,0.0,6.99,3.79,49.78,USD,maepih301@gmail.com,Customer 301,NY,United States
+#3697,2024-11-16 19:14:00,,Classic Tee 01,1,22.0,9.46,paid,unfulfilled,171.0,68.28,0.0,9.73,112.45,USD,ivnshvjrzp301@gmail.com,Customer 301,ON,Canada
+#3653,2025-02-04 21:03:00,,Clarifying Toner X,1,25.0,0.0,paid,unfulfilled,124.0,0.0,0.0,14.0,138.0,USD,foylsd326@yahoo.com,Customer 326,VIC,Australia
+#3895,2025-02-11 03:57:00,,Shorts 01,2,35.0,0.0,paid,fulfilled,109.0,0.0,0.0,9.69,118.69,USD,yqeneesxu301@yahoo.com,Customer 301,IL,United States
+#4010,2025-06-18 15:48:00,,Premium Tee 02,2,28.0,0.0,paid,unfulfilled,126.0,0.0,0.0,7.88,133.88,USD,lssxdp162@hotmail.com,Customer 162,BC,Canada
+#3693,2024-11-12 06:39:00,,Cap 01,1,19.0,0.0,paid,fulfilled,304.0,0.0,0.0,19.72,323.72,USD,pcqppeqx301@hotmail.com,Customer 301,QC,Canada
+#4207,2024-10-15 18:42:00,,Shorts 01,1,35.0,8.48,paid,fulfilled,145.0,26.22,0.0,8.46,127.24,USD,tlbzxihzjx229@gmail.com,Customer 229,NY,United States
+#3928,2024-12-16 19:15:00,,Clarifying Toner X,1,25.0,2.85,paid,fulfilled,118.0,16.44,0.0,9.4,110.96,USD,stqelqafh301@gmail.com,Customer 301,FL,United States
+#4124,2024-12-05 06:43:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,118.0,0.0,0.0,10.53,128.53,USD,wijehmfeyg200@gmail.com,Customer 200,CA,United States
+#4198,2025-04-17 12:58:00,,Glow Oil L,2,35.0,0.0,paid,fulfilled,70.0,0.0,0.0,5.98,75.98,USD,zcmzwndpq200@hotmail.com,Customer 200,CA,United States
+#3654,2025-05-30 04:59:00,,Starter Kit C,1,79.0,4.26,paid,fulfilled,79.0,4.26,6.99,16.26,97.99,USD,vzgojxnww229@hotmail.com,Customer 229,ENG,United Kingdom
+#4111,2025-05-25 14:25:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,29.0,0.0,0.0,1.96,30.96,USD,ftxuoz200@gmail.com,Customer 200,CA,United States
+#3628,2025-01-12 17:29:00,,Hoodie 01,2,55.0,14.47,paid,fulfilled,237.0,35.3,9.99,17.58,229.27,USD,ecllmsrzc301@brand.com,Customer 301,CA,United States
+#3709,2025-07-02 17:18:00,2025-07-05 17:18:00,Clarifying Toner X,2,25.0,0.0,refunded,fulfilled,50.0,0.0,0.0,4.22,0.0,USD,jxlxjczwd229@hotmail.com,Customer 229,ON,Canada
+#3644,2025-08-19 10:05:00,,Starter Kit C,2,79.0,25.79,refunded,fulfilled,286.0,49.17,4.99,22.71,0.0,USD,byfbybagvq301@yahoo.com,Customer 301,ON,Canada
+#3908,2024-12-09 00:39:00,,Premium Tee 02,1,28.0,3.89,paid,fulfilled,63.0,8.77,4.99,3.61,62.83,USD,yxwmse301@gmail.com,Customer 301,QC,Canada
+#3840,2025-03-20 15:40:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,130.0,0.0,0.0,24.27,154.27,USD,dbvfjtwcby301@yahoo.com,Customer 301,ENG,United Kingdom
+#3727,2025-01-27 17:43:00,,Repair Eye Gel G,6,45.0,13.99,paid,fulfilled,270.0,13.99,0.0,15.92,271.93,USD,dydilf301@brand.com,Customer 301,CA,United States
+#4082,2024-11-04 03:53:00,,Leggings 01,1,49.0,0.0,paid,partial,49.0,0.0,0.0,4.03,53.03,USD,koipkslw185@gmail.com,Customer 185,ON,Canada
+#3743,2024-11-26 22:51:00,,Socks 3-Pack,2,14.0,6.7,paid,fulfilled,126.0,42.18,6.99,8.6,99.41,USD,ljmojgcos301@yahoo.com,Customer 301,NY,United States
+#4099,2025-06-05 05:26:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,104.0,0.0,0.0,13.45,117.45,USD,nozdxqe200@hotmail.com,Customer 200,NSW,Australia
+#3649,2025-04-29 23:02:00,,Glow Oil L,1,35.0,0.0,paid,fulfilled,272.0,0.0,6.99,26.29,305.28,USD,vkbqbd301@hotmail.com,Customer 301,BC,Canada
+#3816,2024-10-09 23:27:00,,Cap 01,1,19.0,0.0,paid,fulfilled,74.0,0.0,4.99,14.52,93.51,USD,xrrpto301@gmail.com,Customer 301,ENG,United Kingdom
+#4073,2025-07-17 01:48:00,,Premium Tee 02,2,28.0,8.76,paid,fulfilled,182.0,27.57,9.99,14.6,179.02,USD,eicaaudqoz301@brand.com,Customer 301,VIC,Australia
+#4057,2025-02-27 11:18:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,422.0,0.0,0.0,26.14,448.14,USD,leznzdf301@gmail.com,Customer 301,NY,United States
+#4061,2025-03-12 23:18:00,,Repair Eye Gel G,2,45.0,0.0,paid,fulfilled,90.0,0.0,6.99,6.53,103.52,USD,hdmxcs301@yahoo.com,Customer 301,ON,Canada
+#3787,2025-01-15 11:40:00,,Leggings 01,3,49.0,9.13,paid,fulfilled,240.0,15.01,6.99,20.87,252.85,USD,nussbjk200@hotmail.com,Customer 200,NY,United States
+#4048,2024-12-07 22:33:00,,Classic Tee 01,1,22.0,2.52,paid,fulfilled,101.0,9.4,6.99,8.82,107.41,USD,ctjqwqovfg167@brand.com,Customer 167,CA,United States
+#3760,2025-05-08 04:34:00,,Hydra Cream B,2,49.0,0.0,paid,unfulfilled,570.0,0.0,0.0,39.19,609.19,USD,kdptyy301@gmail.com,Customer 301,BC,Canada
+#4062,2024-10-13 07:18:00,,Leggings 01,3,49.0,0.0,paid,partial,355.0,0.0,4.99,46.64,406.63,USD,fpbdqmu200@yahoo.com,Customer 200,VIC,Australia
+#3887,2025-01-30 10:35:00,,Light Jacket 01,1,79.0,0.0,refunded,partial,79.0,0.0,9.99,16.04,0.0,USD,kbztnl200@brand.com,Customer 200,NSW,Australia
+#3882,2025-08-20 09:34:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,67.0,0.0,4.99,6.53,78.52,USD,qhliut301@gmail.com,Customer 301,QC,Canada
+#4217,2025-06-02 03:13:00,,Premium Tee 02,2,28.0,0.0,paid,fulfilled,154.0,0.0,9.99,15.51,179.5,USD,zbtpub301@gmail.com,Customer 301,WA,United States
+#4112,2025-04-04 05:48:00,,Clarifying Toner X,1,25.0,6.96,paid,partial,274.0,73.56,0.0,12.66,213.1,USD,xiocjkymcx301@yahoo.com,Customer 301,FL,United States
+#4142,2024-09-20 14:45:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,45.0,0.0,0.0,3.87,48.87,USD,yswdnvak301@yahoo.com,Customer 301,IL,United States
+#3770,2024-09-12 12:30:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,29.0,0.0,0.0,1.89,30.89,USD,xtnaat167@yahoo.com,Customer 167,QC,Canada
+#3736,2025-02-07 00:34:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,119.0,0.0,0.0,8.6,127.6,USD,ukzvmi301@hotmail.com,Customer 301,ON,Canada
+#3713,2024-10-24 17:51:00,,Cap 01,1,19.0,1.59,paid,fulfilled,104.0,9.44,6.99,8.9,110.45,USD,obiqjnskh301@yahoo.com,Customer 301,IL,United States
+#3951,2025-02-27 15:46:00,,Shorts 01,2,35.0,0.0,paid,fulfilled,70.0,0.0,0.0,12.24,82.24,USD,dtkfukk200@brand.com,Customer 200,ENG,United Kingdom
+#4063,2024-10-18 20:45:00,,Clarifying Toner X,2,25.0,0.0,paid,fulfilled,99.0,0.0,6.99,6.64,112.63,USD,kwxdjvyj301@brand.com,Customer 301,WA,United States
+#3853,2025-05-14 11:02:00,,Shorts 01,1,35.0,0.0,paid,unfulfilled,35.0,0.0,0.0,2.37,37.37,USD,vtvbmdwik229@yahoo.com,Customer 229,TX,United States
+#4048,2024-12-07 22:33:00,,Light Jacket 01,1,79.0,6.88,paid,fulfilled,101.0,9.4,6.99,8.82,107.41,USD,lsldmml167@yahoo.com,Customer 167,CA,United States
+#3897,2025-07-21 20:20:00,,Hoodie 01,3,55.0,0.0,paid,fulfilled,253.0,0.0,0.0,43.3,296.3,USD,nutfcwryzk289@brand.com,Customer 289,ENG,United Kingdom
+#4115,2024-11-14 05:37:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,35.0,0.0,0.0,2.77,37.77,USD,kqjruvpdoi301@hotmail.com,Customer 301,FL,United States
+#4087,2024-12-07 05:20:00,,Leggings 01,1,49.0,10.5,paid,fulfilled,78.0,14.46,6.99,6.58,77.11,USD,gmnjdoj162@yahoo.com,Customer 162,TX,United States
+#3678,2025-01-25 14:25:00,,Classic Tee 01,2,22.0,0.0,paid,partial,114.0,0.0,0.0,13.75,127.75,USD,naiyiteze301@hotmail.com,Customer 301,VIC,Australia
+#3959,2025-07-28 09:24:00,,Foam Cleanser F,5,21.0,0.0,paid,partial,150.0,0.0,0.0,16.63,166.63,USD,mtyjypkdo301@gmail.com,Customer 301,NSW,Australia
+#3846,2025-04-16 23:41:00,,Premium Tee 02,1,28.0,2.98,paid,fulfilled,28.0,2.98,4.99,5.69,35.7,USD,ggrjrmnpsj301@brand.com,Customer 301,NSW,Australia
+#3620,2025-03-10 05:01:00,,Hoodie 01,2,55.0,0.0,paid,fulfilled,110.0,0.0,4.99,13.29,128.28,USD,lhwtekh301@yahoo.com,Customer 301,ENG,United Kingdom
+#4179,2025-05-09 17:21:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,142.0,0.0,4.99,13.36,160.35,USD,cteaxnmet301@hotmail.com,Customer 301,QC,Canada
+#4210,2024-11-27 14:55:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,77.0,0.0,6.99,10.23,94.22,USD,feqihk301@gmail.com,Customer 301,VIC,Australia
+#3957,2025-06-06 23:30:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,73.0,0.0,0.0,4.99,77.99,USD,zuzoxqnp301@hotmail.com,Customer 301,TX,United States
+#3663,2024-12-26 14:49:00,,Repair Eye Gel G,1,45.0,9.34,paid,unfulfilled,308.0,54.49,4.99,21.05,279.55,USD,kyajlywcro301@hotmail.com,Customer 301,FL,United States
+#3737,2025-04-26 11:27:00,,Light Jacket 01,1,79.0,16.29,paid,fulfilled,163.0,30.7,0.0,10.16,142.46,USD,mdfrasv301@brand.com,Customer 301,NY,United States
+#3640,2025-02-22 00:34:00,,Shorts 01,1,35.0,5.96,paid,partial,35.0,5.96,0.0,1.76,30.8,USD,moxddmnoit301@brand.com,Customer 301,TX,United States
+#4088,2025-05-05 16:07:00,,Classic Tee 01,2,22.0,0.0,paid,fulfilled,93.0,0.0,4.99,6.67,104.66,USD,efqshae200@brand.com,Customer 200,FL,United States
+#3920,2025-03-31 13:13:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,45.0,0.0,6.99,4.03,56.02,USD,wqnemrv301@brand.com,Customer 301,QC,Canada
+#3866,2025-04-28 08:34:00,,Light Jacket 01,2,79.0,0.0,paid,fulfilled,213.0,0.0,0.0,12.87,225.87,USD,vkflamtshy301@hotmail.com,Customer 301,BC,Canada
+#3882,2025-08-20 09:34:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,67.0,0.0,4.99,6.53,78.52,USD,hfurzme301@gmail.com,Customer 301,QC,Canada
+#3833,2025-03-08 22:15:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,149.0,0.0,4.99,27.89,181.88,USD,uboykjsvg200@gmail.com,Customer 200,NSW,Australia
+#3672,2024-10-06 05:45:00,,Premium Tee 02,2,28.0,0.0,paid,fulfilled,56.0,0.0,0.0,3.38,59.38,USD,tzcnjle301@hotmail.com,Customer 301,NY,United States
+#3818,2025-04-14 19:00:00,,Socks 3-Pack,2,14.0,0.0,paid,fulfilled,63.0,0.0,4.99,5.88,73.87,USD,slrafp200@hotmail.com,Customer 200,ON,Canada
+#4163,2025-02-20 10:23:00,,Light Jacket 01,1,79.0,18.59,paid,fulfilled,104.0,26.51,4.99,5.35,87.83,USD,ygqwvld200@yahoo.com,Customer 200,CA,United States
+#3959,2025-07-28 09:24:00,,Repair Eye Gel G,1,45.0,0.0,paid,partial,150.0,0.0,0.0,16.63,166.63,USD,tkenmlznn301@yahoo.com,Customer 301,NSW,Australia
+#3820,2025-02-04 01:56:00,,Repair Eye Gel G,1,45.0,0.0,paid,partial,442.0,0.0,6.99,47.65,496.64,USD,qdeviqowb301@yahoo.com,Customer 301,ENG,United Kingdom
+#4089,2025-02-20 04:33:00,,Revive Mask M,2,29.0,3.68,paid,fulfilled,128.0,7.39,0.0,11.96,132.57,USD,ilzrlaz200@gmail.com,Customer 200,ENG,United Kingdom
+#3756,2025-08-07 11:48:00,,Premium Tee 02,1,28.0,5.83,paid,unfulfilled,57.0,11.11,9.99,8.57,64.45,USD,afsjusblk289@yahoo.com,Customer 289,NSW,Australia
+#3628,2025-01-12 17:29:00,,Hydra Cream B,2,49.0,16.37,paid,fulfilled,237.0,35.3,9.99,17.58,229.27,USD,bgrfdyom301@brand.com,Customer 301,CA,United States
+#3803,2024-12-21 22:45:00,,Revive Mask M,1,29.0,3.06,paid,fulfilled,221.0,31.07,4.99,16.19,211.11,USD,kxwbqczq301@hotmail.com,Customer 301,BC,Canada
+#3983,2025-07-11 10:21:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,29.0,0.0,0.0,4.93,33.93,USD,pwhdgqhdnp229@brand.com,Customer 229,VIC,Australia
+#3844,2025-06-08 01:29:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,100.0,0.0,4.99,9.45,114.44,USD,zzdyxioyd301@hotmail.com,Customer 301,NY,United States
+#3771,2024-11-30 04:15:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,330.0,0.0,0.0,22.19,352.19,USD,qpbcvbdldg200@yahoo.com,Customer 200,WA,United States
+#3716,2025-01-22 14:37:00,,Glow Oil L,1,35.0,0.0,paid,unfulfilled,35.0,0.0,0.0,2.84,37.84,USD,taopshf301@yahoo.com,Customer 301,WA,United States
+#4126,2024-11-01 21:08:00,,Foam Cleanser F,3,21.0,0.0,refunded,fulfilled,108.0,0.0,0.0,20.42,0.0,USD,hcsvllgwz200@gmail.com,Customer 200,NSW,Australia
+#4216,2025-08-24 18:43:00,,Leggings 01,1,49.0,0.0,paid,unfulfilled,93.0,0.0,0.0,7.77,100.77,USD,fjszvfgvll301@brand.com,Customer 301,QC,Canada
+#4010,2025-06-18 15:48:00,,Shorts 01,2,35.0,0.0,paid,unfulfilled,126.0,0.0,0.0,7.88,133.88,USD,zvyrjbji162@gmail.com,Customer 162,BC,Canada
+#4114,2024-10-02 09:41:00,,Foam Cleanser F,1,21.0,0.0,paid,fulfilled,98.0,0.0,4.99,6.95,109.94,USD,ojapxx289@hotmail.com,Customer 289,FL,United States
+#3902,2025-02-27 11:24:00,,Foam Cleanser F,1,21.0,2.54,paid,fulfilled,21.0,2.54,9.99,1.95,30.4,USD,bhqbfqtp200@yahoo.com,Customer 200,WA,United States
+#4209,2025-03-26 16:06:00,,Leggings 01,1,49.0,11.07,paid,unfulfilled,88.0,23.3,4.99,5.86,75.55,USD,ppuyod200@yahoo.com,Customer 200,TX,United States
+#3917,2024-12-25 01:32:00,,Glow Oil L,4,35.0,6.59,paid,fulfilled,228.0,10.06,4.99,14.6,237.53,USD,nkamaioicm230@yahoo.com,Customer 230,CA,United States
+#4121,2025-04-09 16:04:00,,Repair Eye Gel G,1,45.0,11.08,paid,unfulfilled,74.0,19.89,6.99,8.37,69.47,USD,ovdnukp301@yahoo.com,Customer 301,VIC,Australia
+#3758,2025-04-21 00:35:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,74.0,0.0,0.0,6.39,80.39,USD,oxcppm301@gmail.com,Customer 301,TX,United States
+#3960,2025-01-31 23:59:00,,Glow Oil L,2,35.0,0.0,paid,fulfilled,149.0,0.0,0.0,9.03,158.03,USD,adukyhhet301@gmail.com,Customer 301,TX,United States
+#4150,2024-09-05 12:16:00,,Hydra Cream B,1,49.0,0.0,paid,fulfilled,139.0,0.0,6.99,10.35,156.34,USD,omdcse301@gmail.com,Customer 301,WA,United States
+#3957,2025-06-06 23:30:00,,Premium Tee 02,1,28.0,0.0,paid,fulfilled,73.0,0.0,0.0,4.99,77.99,USD,husrsngi301@yahoo.com,Customer 301,TX,United States
+#4036,2025-02-02 00:48:00,,Revive Mask M,1,29.0,0.0,paid,fulfilled,87.0,0.0,0.0,11.22,98.22,USD,itwnyvk162@gmail.com,Customer 162,ENG,United Kingdom
+#3729,2025-02-10 04:58:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,25.0,0.0,4.99,1.92,31.91,USD,gkeqlapfp301@brand.com,Customer 301,QC,Canada
+#4093,2025-03-27 08:47:00,,Premium Tee 02,2,28.0,18.97,refunded,partial,214.0,73.68,0.0,12.31,0.0,USD,bnipllz301@hotmail.com,Customer 301,ON,Canada
+#4046,2025-01-17 17:12:00,,Cap 01,1,19.0,2.03,paid,fulfilled,19.0,2.03,0.0,1.11,18.08,USD,qgvnaj301@hotmail.com,Customer 301,IL,United States
+#3897,2025-07-21 20:20:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,253.0,0.0,0.0,43.3,296.3,USD,xdoikvlcb289@yahoo.com,Customer 289,ENG,United Kingdom
+#4032,2025-04-23 22:50:00,,Radiance Serum A,1,39.0,0.0,refunded,fulfilled,96.0,0.0,0.0,11.45,0.0,USD,xgotdhhf301@brand.com,Customer 301,NSW,Australia
+#3922,2025-05-31 04:54:00,,Hoodie 01,2,55.0,0.0,paid,fulfilled,110.0,0.0,6.99,7.58,124.57,USD,vqgpkceg326@hotmail.com,Customer 326,TX,United States
+#3652,2025-08-14 16:17:00,,Classic Tee 01,1,22.0,0.0,paid,fulfilled,22.0,0.0,4.99,2.09,29.08,USD,pxtpaf50@gmail.com,Customer 50,IL,United States
+#3897,2025-07-21 20:20:00,,Classic Tee 01,3,22.0,0.0,paid,fulfilled,253.0,0.0,0.0,43.3,296.3,USD,ztzrusxi289@gmail.com,Customer 289,ENG,United Kingdom
+#3956,2025-04-17 22:06:00,,Clarifying Toner X,1,25.0,6.63,paid,fulfilled,25.0,6.63,0.0,2.76,21.13,USD,pguszcbjqj301@gmail.com,Customer 301,VIC,Australia
+#4137,2025-01-09 14:39:00,,Shorts 01,1,35.0,0.0,paid,fulfilled,84.0,0.0,4.99,7.45,96.44,USD,zkgjoqivzc301@yahoo.com,Customer 301,WA,United States
+#4072,2025-04-02 07:40:00,,Socks 3-Pack,1,14.0,0.0,paid,fulfilled,112.0,0.0,6.99,8.51,127.5,USD,ykskieg301@yahoo.com,Customer 301,IL,United States
+#3760,2025-05-08 04:34:00,,Classic Tee 01,2,22.0,0.0,paid,unfulfilled,570.0,0.0,0.0,39.19,609.19,USD,wwwgrome301@brand.com,Customer 301,BC,Canada
+#3631,2025-07-12 13:57:00,,Premium Tee 02,1,28.0,6.09,paid,unfulfilled,85.0,18.08,0.0,12.0,78.92,USD,wjevsp301@gmail.com,Customer 301,NSW,Australia
+#3801,2024-11-17 02:00:00,,Starter Kit C,4,79.0,0.0,paid,unfulfilled,316.0,0.0,6.99,25.61,348.6,USD,mujfuthmnk301@gmail.com,Customer 301,QC,Canada
+#3886,2025-01-28 23:06:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,95.0,0.0,0.0,7.69,102.69,USD,puqpezwc301@brand.com,Customer 301,BC,Canada
+#3713,2024-10-24 17:51:00,,Revive Mask M,1,29.0,2.23,paid,fulfilled,104.0,9.44,6.99,8.9,110.45,USD,gwznkhop301@yahoo.com,Customer 301,IL,United States
+#3772,2024-12-11 16:27:00,,Hoodie 01,1,55.0,0.0,paid,fulfilled,189.0,0.0,4.99,17.22,211.21,USD,rmgacco301@brand.com,Customer 301,VIC,Australia
+#4201,2025-07-09 15:21:00,,Revive Mask M,1,29.0,0.84,partially_refunded,fulfilled,29.0,0.84,6.99,2.32,18.94,USD,kzlgltrniz229@yahoo.com,Customer 229,WA,United States
+#3730,2024-11-21 20:29:00,,Shorts 01,1,35.0,3.0,paid,fulfilled,134.0,9.61,0.0,9.59,133.98,USD,zikkcjleru230@gmail.com,Customer 230,FL,United States
+#3843,2025-06-17 15:10:00,,Clarifying Toner X,1,25.0,0.0,paid,unfulfilled,83.0,0.0,4.99,8.31,96.3,USD,yfikdsnrwr200@brand.com,Customer 200,BC,Canada
+#4106,2025-07-23 11:01:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,181.0,0.0,0.0,21.76,202.76,USD,ljbcuhdfp301@hotmail.com,Customer 301,VIC,Australia
+#3859,2025-08-24 07:10:00,,Premium Tee 02,1,28.0,5.52,paid,fulfilled,83.0,18.16,0.0,5.92,70.76,USD,nurhecyo162@gmail.com,Customer 162,CA,United States
+#3908,2024-12-09 00:39:00,,Shorts 01,1,35.0,4.88,paid,fulfilled,63.0,8.77,4.99,3.61,62.83,USD,cpafeh301@gmail.com,Customer 301,QC,Canada
+#3820,2025-02-04 01:56:00,,Shorts 01,1,35.0,0.0,paid,partial,442.0,0.0,6.99,47.65,496.64,USD,tgjovikjr301@yahoo.com,Customer 301,ENG,United Kingdom
+#4085,2024-10-07 04:35:00,,Hoodie 01,1,55.0,2.56,paid,fulfilled,161.0,5.91,9.99,13.69,178.77,USD,ivtniy301@brand.com,Customer 301,QC,Canada
+#3797,2025-05-17 15:44:00,,Foam Cleanser F,2,21.0,6.45,paid,fulfilled,70.0,10.75,4.99,5.64,69.88,USD,eqgcrob301@brand.com,Customer 301,CA,United States
+#4020,2024-11-22 08:38:00,,Hydra Cream B,2,49.0,0.0,paid,fulfilled,98.0,0.0,6.99,18.57,123.56,USD,jzrebjm301@gmail.com,Customer 301,NSW,Australia
+#3693,2024-11-12 06:39:00,,Starter Kit C,2,79.0,0.0,paid,fulfilled,304.0,0.0,0.0,19.72,323.72,USD,murhbblm301@yahoo.com,Customer 301,QC,Canada
+#4022,2024-09-19 05:44:00,,Hoodie 01,3,55.0,57.19,paid,fulfilled,165.0,57.19,6.99,13.23,128.03,USD,hqjdcmrna200@brand.com,Customer 200,VIC,Australia
+#4147,2025-02-10 06:09:00,,Hydra Cream B,1,49.0,0.0,paid,partial,369.0,0.0,6.99,27.89,403.88,USD,zqmmwtuaa301@yahoo.com,Customer 301,QC,Canada
+#3676,2025-05-31 20:06:00,,Cap 01,1,19.0,0.0,paid,unfulfilled,152.0,0.0,0.0,9.38,161.38,USD,ttlyoqqwq301@yahoo.com,Customer 301,NY,United States
+#3835,2024-08-26 11:06:00,,Socks 3-Pack,1,14.0,0.0,paid,unfulfilled,131.0,0.0,6.99,11.85,149.84,USD,xnoocleg301@yahoo.com,Customer 301,FL,United States
+#3668,2025-04-07 16:45:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,67.0,0.0,4.99,8.95,80.94,USD,xkvksiigy301@brand.com,Customer 301,NSW,Australia
+#3885,2025-08-19 01:17:00,,Repair Eye Gel G,1,45.0,0.0,paid,fulfilled,45.0,0.0,0.0,6.76,51.76,USD,lfjhiao200@hotmail.com,Customer 200,NSW,Australia
+#3811,2024-12-25 19:09:00,,Leggings 01,1,49.0,3.45,paid,fulfilled,49.0,3.45,9.99,3.79,59.33,USD,pnspyvqlf167@hotmail.com,Customer 167,CA,United States
+#3742,2024-10-25 12:43:00,,Clarifying Toner X,3,25.0,2.35,paid,fulfilled,154.0,4.71,0.0,10.25,159.54,USD,pittdsseyn301@hotmail.com,Customer 301,FL,United States
+#3891,2024-11-12 06:25:00,,Repair Eye Gel G,1,45.0,0.0,paid,partial,66.0,0.0,0.0,5.57,71.57,USD,wsttixnkbj200@brand.com,Customer 200,TX,United States
+#3688,2025-03-28 05:21:00,,Foam Cleanser F,4,21.0,0.0,paid,fulfilled,112.0,0.0,4.99,9.36,126.35,USD,rldgqjyadl301@hotmail.com,Customer 301,WA,United States
+#3992,2024-08-31 02:12:00,,Light Jacket 01,3,79.0,66.21,paid,fulfilled,283.0,79.89,0.0,13.76,216.87,USD,pypnrha301@yahoo.com,Customer 301,ON,Canada
+#3631,2025-07-12 13:57:00,,Premium Tee 02,1,28.0,5.86,paid,unfulfilled,85.0,18.08,0.0,12.0,78.92,USD,lzzbfg301@hotmail.com,Customer 301,NSW,Australia
+#4047,2025-02-04 14:12:00,,Cap 01,1,19.0,0.9,paid,fulfilled,19.0,0.9,0.0,2.03,20.13,USD,kpibvvf200@hotmail.com,Customer 200,ENG,United Kingdom
+#3658,2025-05-19 05:39:00,,Socks 3-Pack,2,14.0,0.0,paid,fulfilled,56.0,0.0,0.0,8.41,64.41,USD,dlggauxrel200@hotmail.com,Customer 200,NSW,Australia
+#3679,2025-08-12 04:09:00,,Classic Tee 01,1,22.0,0.0,paid,partial,66.0,0.0,6.99,6.47,79.46,USD,aitdjevuve301@brand.com,Customer 301,TX,United States
+#3771,2024-11-30 04:15:00,,Starter Kit C,2,79.0,0.0,paid,fulfilled,330.0,0.0,0.0,22.19,352.19,USD,hhspix200@yahoo.com,Customer 200,WA,United States
+#4140,2024-11-15 09:37:00,,Clarifying Toner X,1,25.0,0.0,paid,fulfilled,25.0,0.0,0.0,1.71,26.71,USD,bleumt167@brand.com,Customer 167,TX,United States
+#3871,2025-01-23 04:48:00,,Leggings 01,1,49.0,0.0,paid,fulfilled,49.0,0.0,6.99,4.25,60.24,USD,grkgnlhuji230@gmail.com,Customer 230,BC,Canada
+#3677,2025-03-03 14:09:00,,Starter Kit C,1,79.0,0.0,paid,fulfilled,282.0,0.0,0.0,25.09,307.09,USD,qbsznpjxku326@gmail.com,Customer 326,BC,Canada

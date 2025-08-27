@@ -18,10 +18,28 @@ def audience_to_score(n, min_n):
     if n<=0: return 0.0
     return float(np.clip((n - min_n)/(4*min_n if min_n>0 else 1), 0.0, 1.0))
 
-def confidence_from_ci(ci_low, ci_high):
-    import numpy as np
-    if any(np.isnan([ci_low, ci_high])): return 0.5
-    width = abs(ci_high - ci_low); return float(np.clip(1.0 / (1.0 + width), 0.0, 1.0))
+def confidence_from_ci(ci_low, ci_high) -> float:
+    """
+    Map a CI to a confidence score in [0,1].
+    - If CI is missing/NaN or straddles 0 -> return a conservative 0.5.
+    - If CI excludes 0 -> return a higher confidence (0.9).
+    (You can later refine this to use CI width.)
+    """
+    # Missing CI → neutral confidence
+    if ci_low is None or ci_high is None:
+        return 0.5
+    try:
+        lo = float(ci_low)
+        hi = float(ci_high)
+    except (TypeError, ValueError):
+        return 0.5
+    if np.isnan(lo) or np.isnan(hi):
+        return 0.5
+    # Straddles zero → low confidence
+    if lo <= 0.0 <= hi:
+        return 0.5
+    # Excludes zero → higher confidence
+    return 0.9
 
 def financial_to_score(expected_lift, floor):
     import numpy as np

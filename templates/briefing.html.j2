@@ -1,198 +1,316 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>{{ brand }} — Action Briefing</title>
+  <meta charset="utf-8" />
+  <title>Narrative Briefing — {{ brand }}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; }
-    .muted { color: #666; font-size: 12px; }
-    .card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
-    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius: 999px; font-size: 12px; margin-left: 8px; }
-    ul { margin: 6px 0 6px 18px; }
-    details { margin-top: 8px; }
-    h2 { margin-top: 24px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif; margin: 24px; color: #111; }
+    h1,h2,h3 { margin: 0 0 8px 0; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; margin-top: 20px; }
+    h3 { font-size: 16px; margin-top: 12px; }
+    .muted { color: #555; }
+    .small { font-size: 12px; color: #666; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-left: 6px; background: #f2f2f2; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .kpi { border: 1px solid #eee; border-radius: 10px; padding: 12px; }
+    .row { display: grid; grid-template-columns: 1.2fr 1fr 0.9fr 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px dashed #eee; }
+    .row.header { font-weight: 600; border-bottom: 1px solid #ddd; }
+    .row:last-child { border-bottom: none; }
+    .green { color: #0a7f2e; } .red { color: #b00020; } .gray { color: #777; }
+    .tag { background: #eef2ff; color: #1e40af; border-radius: 6px; padding: 2px 6px; font-size: 12px; margin-left: 6px; }
+    .section { margin-top: 28px; }
+    ul { margin: 6px 0 0 18px; }
+    code { background: #f6f8fa; padding: 2px 6px; border-radius: 6px; }
+    /* Charts: single row, auto-fit to N charts */
+    .charts-one-line { display: grid; gap: 8px; align-items: stretch; }
+    .chart-card { border:1px solid #eee; border-radius:10px; padding:6px; background:#fff; }
+    img.chart { width: 100%; height: auto; max-height: 280px; object-fit: contain; border-radius:6px; display:block; }
+    /* Actions: high-emphasis cards */
+    .actions-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .action-checklist { list-style:none; padding-left:0; margin:8px 0 16px 0; }
+    .action-checklist li { margin: 4px 0; }
+    .action-card { border:1px solid #e5e7eb; border-left:6px solid #2563eb; background:#f8fafc; border-radius:12px; padding:14px; margin:12px 0; }
+    .action-title { font-size:16px; font-weight:600; }
+    .num { width:26px; height:26px; border-radius:50%; background:#2563eb; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:700; }
+    .badges { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+    .badge { font-size:12px; border-radius:999px; padding:2px 8px; background:#eef2ff; color:#1e40af; }
+    .impact { background:#ecfdf5; color:#065f46; }
+    .effort { background:#fff7ed; color:#9a3412; }
+    .cta-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .btn { display:inline-block; border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px; text-decoration:none; color:#111; background:#fff; }
+    .btn:hover { background:#f3f4f6; }
+    .steps ul { margin:6px 0 0 18px; }
+    .prev { color:#888; }
   </style>
 </head>
 <body>
-  <h1>{{ brand }} — Action Briefing</h1>
-  <div class="muted">
-    Window: {{ aligned.window_days }}d (Recent {{ aligned.recent_start }}→{{ aligned.recent_end }} vs Prior {{ aligned.prior_start }}→{{ aligned.prior_end }})
+
+{% macro fmt_money(x, decimals=0) -%}
+  {{ ('$%.' ~ decimals ~ 'f') % x if x is not none else '—' }}
+{%- endmacro %}
+
+{% macro fmt_pct(x, digits=1) -%}
+  {{ ('%.' ~ digits ~ 'f%%') % (x*100) if x is not none else '—' }}
+{%- endmacro %}
+
+{% macro fmt_delta_pct(x, digits=1) -%}
+  {{ ('%+' ~ digits ~ '.1f%%') % (x*100) if x is not none else '—' }}
+{%- endmacro %}
+
+{% macro arrow(delta, good_when_up=True, significant=True) -%}
+  {%- set dir = 'up' if (delta is not none and delta >= 0) else 'down' -%}
+  {%- set good = (delta is not none) and ((delta >= 0 and good_when_up) or (delta < 0 and not good_when_up)) -%}
+  {%- set color = 'green' if (significant and good) else ('red' if (significant and not good) else 'gray') -%}
+  <span class="{{ color }}">{{ '▲' if dir == 'up' else '▼' }}</span>
+{%- endmacro %}
+
+{% macro prev_val(curr, delta) -%}
+  {%- if curr is not none and delta is not none and (1 + delta) != 0 -%}
+    {{ curr / (1 + delta) }}
+  {%- else -%}
+    {{ None }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro kpi_block(label) -%}
+  <div class="kpi">
+    <div class="row header">
+      <div>Metric</div><div>Value</div><div>Δ vs prior</div><div>Notes</div>
+    </div>
+
+    {# Net Sales #}
+    {% set curr = aligned[label]['net_sales'] %}
+    {% set dlt = aligned[label]['delta']['net_sales'] %}
+    {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
+    <div class="row">
+      <div>Net Sales</div>
+      <div>{{ fmt_money(curr) }}</div>
+      <div>
+        {{ arrow(dlt, True, True) }} {{ fmt_delta_pct(dlt) }}
+        <span class="small prev">(prev {{ fmt_money(prev) }})</span>
+      </div>
+      <div class="small muted">vs previous {{ aligned[label]['window_days'] }} days</div>
+    </div>
+
+    {# Orders #}
+    {% set curr = aligned[label]['orders'] %}
+    {% set dlt = aligned[label]['delta']['orders'] %}
+    {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
+    <div class="row">
+      <div>Orders</div>
+      <div>{{ curr if curr is not none else '—' }}</div>
+      <div>
+        {{ arrow(dlt, True, True) }} {{ fmt_delta_pct(dlt) }}
+        <span class="small prev">(prev {{ prev|int if prev is not none else '—' }})</span>
+      </div>
+      <div class="small muted">vs previous {{ aligned[label]['window_days'] }} days</div>
+    </div>
+
+    {# AOV #}
+    {% set curr = aligned[label]['aov'] %}
+    {% set dlt = aligned[label]['delta']['aov'] %}
+    {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
+    <div class="row">
+      <div>AOV</div>
+      <div>{{ fmt_money(curr, 2) }}</div>
+      <div>
+        {{ arrow(dlt, True, aligned[label]['sig']['aov']) }}
+        {{ fmt_delta_pct(dlt) }}
+        <span class="small prev">(prev {{ fmt_money(prev, 2) }})</span>
+      </div>
+      <div class="small muted">
+        {% if aligned[label]['p']['aov'] is not none %}p={{ '%.3f' % aligned[label]['p']['aov'] }}{% else %}—{% endif %}
+      </div>
+    </div>
+
+    {# Discount Rate #}
+    {% set curr = aligned[label]['discount_rate'] %}
+    {% set dlt = aligned[label]['delta']['discount_rate'] %}
+    {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
+    <div class="row">
+      <div>Discount Rate</div>
+      <div>{{ fmt_pct(curr, 1) }}</div>
+      <div>
+        {{ arrow(dlt, False, aligned[label]['sig']['discount_rate']) }}
+        {{ fmt_delta_pct(dlt) }}
+        <span class="small prev">(prev {{ fmt_pct(prev, 1) }})</span>
+      </div>
+      <div class="small muted">
+        {% if aligned[label]['p']['discount_rate'] is not none %}p={{ '%.3f' % aligned[label]['p']['discount_rate'] }}{% else %}—{% endif %}
+      </div>
+    </div>
+
+    {# Repeat Share #}
+    {% set curr = aligned[label]['repeat_share'] %}
+    {% set dlt = aligned[label]['delta']['repeat_share'] %}
+    {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
+    <div class="row">
+      <div>Repeat Share</div>
+      <div>{{ fmt_pct(curr, 1) }}</div>
+      <div>
+        {{ arrow(dlt, True, aligned[label]['sig']['repeat_share']) }}
+        {{ fmt_delta_pct(dlt) }}
+        <span class="small prev">(prev {{ fmt_pct(prev, 1) }})</span>
+      </div>
+      <div class="small muted">
+        {% if aligned[label]['p']['repeat_share'] is not none %}p={{ '%.3f' % aligned[label]['p']['repeat_share'] }}{% else %}—{% endif %}
+      </div>
+    </div>
   </div>
+{%- endmacro %}
 
-    <!-- ===== KPI STRIP (Recent vs Prior) ===== -->
-  <style>
-    .kpi-grid { display:grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap:12px; margin:14px 0 20px; }
-    .kpi { border:1px solid #eee; border-radius:10px; padding:10px 12px; }
-    .kpi .label { font-size:12px; color:#666; }
-    .kpi .value { font-size:22px; font-weight:600; line-height:1.2; margin-top:2px; }
-    .kpi .sub { font-size:12px; color:#666; margin-top:4px; }
-    .delta-pos { color:#137333; }   /* green */
-    .delta-neg { color:#b00020; }   /* red */
-  </style>
+<header>
+  <h1>Weekly Revenue Briefing — {{ brand }}</h1>
+  <div class="muted">Week of {{ aligned['anchor'].strftime('%Y-%m-%d') if aligned.get('anchor') else '' }}</div>
+</header>
 
-  {% set recent_n = aligned.recent_n or 0 %}
-  {% set prior_n  = aligned.prior_n  or 0 %}
-  {% set rr_r = aligned.recent_repeat_rate or 0.0 %}
-  {% set rr_p = aligned.prior_repeat_rate  or 0.0 %}
-  {% set rr_d = rr_r - rr_p %}
-
-  {% set aov_r = aligned.recent_aov or 0.0 %}
-  {% set aov_p = aligned.prior_aov  or 0.0 %}
-  {% set aov_d = aov_r - aov_p %}
-  {% set aov_d_pct = (aov_r and aov_p) and ((aov_r - aov_p) / (aov_p if aov_p != 0 else 1)) or 0.0 %}
-
-  {% set dr_r = aligned.recent_discount_rate or 0.0 %}
-  {% set dr_p = aligned.prior_discount_rate  or 0.0 %}
-  {% set dr_d = dr_r - dr_p %}
-
-  <div class="kpi-grid">
-    <!-- Orders -->
-    <div class="kpi">
-      <div class="label">Orders</div>
-      <div class="value">{{ recent_n }}</div>
-      <div class="sub">
-        Prior: {{ prior_n }}
-        {% set ord_d = recent_n - prior_n %}
-        {% if ord_d >= 0 %}
-          <span class="delta-pos">▲ +{{ ord_d }}</span>
-        {% else %}
-          <span class="delta-neg">▼ {{ ord_d }}</span>
-        {% endif %}
-      </div>
+<section class="section">
+  <h2>KPI Snapshot</h2>
+  <div class="grid">
+    <div>
+      <h3>L7</h3>
+      {{ kpi_block('L7') }}
     </div>
-
-    <!-- Repeat share -->
-    <div class="kpi">
-      <div class="label">Repeat share</div>
-      <div class="value">{{ (rr_r*100)|round(1) }}%</div>
-      <div class="sub">
-        Prior: {{ (rr_p*100)|round(1) }}%
-        {% if rr_d >= 0 %}
-          <span class="delta-pos">▲ +{{ (rr_d*100)|round(1) }} pts</span>
-        {% else %}
-          <span class="delta-neg">▼ {{ (rr_d*100)|round(1) }} pts</span>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- AOV -->
-    <div class="kpi">
-      <div class="label">AOV</div>
-      <div class="value">${{ aov_r|round(2) }}</div>
-      <div class="sub">
-        Prior: ${{ aov_p|round(2) }}
-        {% if aov_d >= 0 %}
-          <span class="delta-pos">▲ +${{ aov_d|round(2) }} ({{ (aov_d_pct*100)|round(1) }}%)</span>
-        {% else %}
-          <span class="delta-neg">▼ ${{ aov_d|round(2) }} ({{ (aov_d_pct*100)|round(1) }}%)</span>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Discount rate -->
-    <div class="kpi">
-      <div class="label">Discount rate</div>
-      <div class="value">{{ (dr_r*100)|round(1) }}%</div>
-      <div class="sub">
-        Prior: {{ (dr_p*100)|round(1) }}%
-        {% if dr_d <= 0 %}
-          <!-- Lower discount rate is good -->
-         <span class="delta-pos">▲ {{ ((dr_d|abs)*100)|round(1) }} pts better</span>
-        {% else %}
-          <span class="delta-neg">▼ +{{ (dr_d*100)|round(1) }} pts higher</span>
-        {% endif %}
-      </div>
+    <div>
+      <h3>L28</h3>
+      {{ kpi_block('L28') }}
     </div>
   </div>
-  <!-- ===== /KPI STRIP ===== -->
+</section>
 
+{% if outputs.get('charts') and outputs['charts'] %}
+<section class="section">
+  <h2>Mini Charts</h2>
+  {# Force single line by setting columns == number of charts #}
+  <div class="charts-one-line" style="grid-template-columns: repeat({{ outputs['charts']|length }}, minmax(120px, 1fr));">
+    {% for c in outputs['charts'] %}
+      <div class="chart-card"><img class="chart" src="{{ c }}" alt="chart {{ loop.index }}" /></div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
-  <h2>Top Actions ({{ outputs.actions|length }})</h2>
-  {% if outputs.actions|length == 0 %}<p>No Top Actions passed. See Pilot below.</p>{% endif %}
-  {% for a in outputs.actions %}
-  <div class="card">
-    <div><strong>{{ a.title }}</strong>
-      <span class="pill">Priority P{{ loop.index }}</span>
-      <span class="pill">Confidence: {{ a.confidence_label }}</span>
-    </div>
-    <p><strong>Do this:</strong> {{ a.do_this or 'Run the play as configured.' }}</p>
-    {% if a.targeting %}<p><strong>Targeting:</strong> {{ a.targeting }}</p>{% endif %}
-    <p><strong>How to launch:</strong></p>
-    <ul>
-      {% for step in (a.how_to_launch or []) %}<li>{{ step }}</li>{% endfor %}
+<section class="section">
+  <h2>Your Top Actions <span class="pill">Do these this week</span></h2>
+
+  {% if outputs.get('actions') and outputs['actions'] %}
+    <!-- Quick checklist summary -->
+    <ul class="action-checklist">
+      {% for a in outputs['actions'] %}
+        <li>☐ <strong>{{ a.get('title','') }}</strong> — {{ a.get('do_this','') }}</li>
+      {% endfor %}
     </ul>
-    {% if a.offer %}<p><strong>Offer:</strong> {{ a.offer }}</p>{% endif %}
-    {% if a.channels or a.cadence %}
-    <p><strong>Channels & cadence:</strong> {{ (a.channels or [])|join(', ') }}{% if a.cadence %}; {{ a.cadence }}{% endif %}</p>
-    {% endif %}
-    <p><strong>Expected 14d GP:</strong> ${{ a.expected_range[0]|round(0) }}–${{ a.expected_range[1]|round(0) }}</p>
-    <p><strong>Assets:</strong> CSV: {{ a.attachment }}{% if outputs.copy_assets and outputs.copy_assets.get(a.play_id) %}; Copy: {{ outputs.copy_assets[a.play_id]|map('string')|list|join(', ') }}{% endif %}</p>
-    <details><summary>View evidence</summary>
-      <div class="muted">
-        Δ={{ (a.effect_abs*100)|round(1) }} pts/%, n={{ a.n }}.
-        {% if a.ci_low is not none and a.ci_high is not none %}
-          CI [{{ (a.ci_low*100)|round(1) }}, {{ (a.ci_high*100)|round(1) }}]%
-        {% else %}
-          p={{ a.p|round(4) }}, q={{ a.q|round(4) }}
-        {% endif %}
-        · Decision rule: min N, significance (q≤α or CI excludes 0), effect floor, financial floor.
-      </div>
-    </details>
-  </div>
-  {% endfor %}
 
-  {% if outputs.pilot_actions|length > 0 %}
-  <h2>Pilot Actions ({{ outputs.pilot_actions|length }})</h2>
-  {% for p in outputs.pilot_actions %}
-  <div class="card">
-    <div><strong>{{ p.title }} (Pilot)</strong>
-      <span class="pill">Audience: {{ (p.pilot_audience_fraction*100)|round(0) }}%</span>
-      <span class="pill">Budget cap: ${{ p.pilot_budget_cap|round(0) }}</span>
-      <span class="pill">Confidence: {{ p.confidence_label }}</span>
-    </div>
-    <p><strong>Do this:</strong> {{ p.do_this or 'Run a capped pilot.' }}</p>
-    {% if p.targeting %}<p><strong>Targeting:</strong> {{ p.targeting }}</p>{% endif %}
-    <p><strong>How to launch:</strong></p>
-    <ul>
-      {% for step in (p.how_to_launch or []) %}<li>{{ step }}</li>{% endfor %}
-    </ul>
-    {% if p.offer %}<p><strong>Offer:</strong> {{ p.offer }}</p>{% endif %}
-    {% if p.channels or p.cadence %}
-    <p><strong>Channels & cadence:</strong> {{ (p.channels or [])|join(', ') }}{% if p.cadence %}; {{ p.cadence }}{% endif %}</p>
-    {% endif %}
-    <p><strong>Expected 14d GP:</strong> ${{ p.expected_range[0]|round(0) }}–${{ p.expected_range[1]|round(0) }}</p>
-    <p><strong>n_needed:</strong> {{ p.n_needed }} to confirm effect at 80% power. <strong>Graduation rule:</strong> {{ p.decision_rule or 'CI excludes 0 or q≤α by day 14.' }}</p>
-    <p><strong>Assets:</strong> CSV: {{ p.attachment }}{% if outputs.copy_assets and outputs.copy_assets.get(p.play_id) %}; Copy: {{ outputs.copy_assets[p.play_id]|map('string')|list|join(', ') }}{% endif %}</p>
-    <details><summary>View evidence</summary>
-      <div class="muted">
-        Δ={{ (p.effect_abs*100)|round(1) }} pts/%, n={{ p.n }}.
-        {% if p.ci_low is not none and p.ci_high is not none %}
-          CI [{{ (p.ci_low*100)|round(1) }}, {{ (p.ci_high*100)|round(1) }}]%
-        {% else %}
-          p={{ p.p|round(4) }}, q={{ p.q|round(4) }}
+    {% for a in outputs['actions'] %}
+      <div class="action-card">
+        <div class="actions-header">
+          <div class="num">{{ loop.index }}</div>
+          <div class="action-title">{{ a.get('title','') }}</div>
+          <div class="badges">
+            {% if a.get('expected_$') %}<span class="badge impact">Est. {{ fmt_money(a.get('expected_$')) }}</span>{% endif %}
+            {% if a.get('effort') is not none %}<span class="badge effort">Effort: {{ a.get('effort') }}</span>{% endif %}
+            {% if a.get('confidence_label') %}<span class="badge">{{ a.get('confidence_label') }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="muted">{{ a.get('do_this','') }}</div>
+        {% if a.get('how_to_launch') %}
+          <div class="steps">
+            <div class="small" style="margin-top:6px;"><strong>Steps:</strong></div>
+            <ul>
+              {% for step in a['how_to_launch'][:5] %}<li>{{ step }}</li>{% endfor %}
+            </ul>
+          </div>
         {% endif %}
+        <div class="cta-row">
+          {% if a.get('attachment') %}<span class="btn">⬇︎ Download: {{ a.get('attachment') }}</span>{% endif %}
+          {% if a.get('targeting') %}<span class="btn">🎯 Targeting</span>{% endif %}
+          {% if a.get('offer') %}<span class="btn">🏷 Offer</span>{% endif %}
+        </div>
       </div>
-    </details>
-  </div>
-  {% endfor %}
+    {% endfor %}
+  {% else %}
+    <div class="muted">No actions passed all gates. See Pilot below.</div>
   {% endif %}
+</section>
 
-  <h2>Watchlist</h2>
-  {% if outputs.watchlist|length == 0 %}<p>None.</p>{% endif %}
-  {% for w in outputs.watchlist %}
-  <div class="card"><strong>{{ w.title }}</strong> — {{ (w.reasons or w.failed)|join("; ") }}</div>
+{% if outputs.get('pilot_actions') and outputs['pilot_actions'] %}
+<section class="section">
+  <h2>Pilot (if no top actions)</h2>
+  {% for p in outputs['pilot_actions'] %}
+    <div class="action-card" style="border-left-color:#0ea5e9;">
+      <div class="actions-header">
+        <div class="num">P</div>
+        <div class="action-title">{{ p.get('title','') }}</div>
+        <div class="badges">
+          <span class="badge">Pilot</span>
+          {% if p.get('expected_$') %}<span class="badge impact">Est. {{ fmt_money(p.get('expected_$')) }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="muted">{{ p.get('do_this','') }}</div>
+      <div class="small" style="margin-top:6px;">
+        Audience: ~{{ (p.get('pilot_audience_fraction',0.2)*100)|int }}% &nbsp;•&nbsp;
+        Budget cap: {{ fmt_money(p.get('pilot_budget_cap', 0)) }} &nbsp;•&nbsp;
+        Decision rule: {{ p.get('decision_rule','') }}
+      </div>
+    </div>
   {% endfor %}
+</section>
+{% endif %}
 
-  <h2>Backlog</h2>
-  {% if outputs.backlog|length == 0 %}<p>None.</p>{% endif %}
-  {% for b in outputs.backlog %}
-  <div class="card"><strong>{{ b.title }}</strong> — {{ b.reason or 'effort budget or prerequisites' }}</div>
-  {% endfor %}
+{% if outputs.get('watchlist') is not none %}
+<section class="section">
+  <h2>Watchlist (Directional — needs more data or $)</h2>
+  {% if outputs['watchlist'] %}
+    {% for w in outputs['watchlist'] %}
+      <div class="action-card" style="border-left-color:#9ca3af;background:#fcfcfd;">
+        <div class="action-title">{{ w.get('title','') }} <span class="pill">Watch</span></div>
+        <div class="small muted" style="margin-top:4px;">
+          {% if w.get('reasons') %}
+            {{ w['reasons'] | join('; ') }}
+          {% else %}
+            Fails: {{ (w.get('failed', []) or []) | join(', ') }}
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="muted">No watchlist items this week.</div>
+  {% endif %}
+</section>
+{% endif %}
 
-  <h2>Charts</h2>
-  <div class="muted">Repeat share: {{ outputs.charts.repeat_share }}</div>
-  <div class="muted">AOV: {{ outputs.charts.aov }}</div>
-  <div class="muted">Discount rate: {{ outputs.charts.discount_share }}</div>
+{% if outputs.get('backlog') is not none %}
+<section class="section">
+  <h2>Backlog (Passed gates — deferred)</h2>
+  {% if outputs['backlog'] %}
+    <ul>
+    {% for b in outputs['backlog'] %}
+      <li><strong>{{ b.get('title','') }}</strong> — <span class="muted">{{ b.get('reason','ranked below top actions') }}</span></li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <div class="muted">No backlog items.</div>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="section">
+  <h2>Receipts</h2>
+  <div class="small muted">Why we believe this week’s actions will work — based on your recent deltas and store baselines.</div>
+  <ul>
+    <li>AOV and Orders trends shown above (L7/L28 vs prior).</li>
+    <li>Repeat share and discount hygiene directional significance reported where measurable.</li>
+    <li>Segments and copy matched to your top SKUs and cohorts.</li>
+  </ul>
+</section>
+
+{% if outputs.get('segments_bundle') %}
+<section class="section">
+  <h2>Attachments</h2>
+  <div class="small muted">Segments bundle: <code>{{ outputs['segments_bundle'] }}</code> (upload to Klaviyo as lists/segments)</div>
+</section>
+{% endif %}
+
 </body>
 </html>

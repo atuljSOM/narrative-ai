@@ -1,11 +1,71 @@
-
 from __future__ import annotations
 from typing import Dict, Any, List
 from pathlib import Path
 import numpy as np, pandas as pd, json
-from .stats import two_proportion_test, welch_t_test, benjamini_hochberg, wilson_ci, required_n_for_proportion
-from .scoring import compute_score, significance_to_score, effect_to_score, audience_to_score, confidence_from_ci, financial_to_score
-from .utils import read_json, write_json
+
+# stats & scoring
+from .stats import (
+    two_proportion_z_test,   # p-value only
+    welch_t_test,            # p-value only
+    benjamini_hochberg,      # returns q-values list
+    required_n_for_proportion,
+    needed_n_for_proportion_delta,
+)
+from .scoring import (
+    compute_score,
+    significance_to_score,
+    effect_to_score,
+    audience_to_score,
+    confidence_from_ci,
+    financial_to_score,
+)
+
+# utils
+from .utils import write_json
+
+
+# ---- Section partition helper (single source of truth for sections) ----
+def _partition_candidates(final: list[dict], effort_budget: int = 8):
+    """
+    Watchlist  := any candidate with failed gates (c['failed'] nonempty) or not allowed
+    Pool       := candidates that pass all gates (c['failed'] == [])
+    Top        := pick <=3 from Pool subject to effort budget and simple category diversity
+    Backlog    := the rest of Pool (passed all gates) not selected
+    """
+    # classify
+    watchlist = [c for c in final if c.get("failed")]  # failed at least one gate
+    pool = [c for c in final if not c.get("failed")]   # passed all gates
+
+    # greedy selection with diversity + effort budget
+    pool_sorted = sorted(pool, key=lambda x: x.get("score", 0), reverse=True)
+    top, used_cats, used_effort = [], set(), 0
+    for c in pool_sorted:
+        if len(top) >= 3:
+            break
+        # category diversity: avoid 2 of the same category until we have diversity
+        if c.get("category") in used_cats and len(used_cats) < 2:
+            continue
+        if used_effort + int(c.get("effort", 2)) > effort_budget:
+            # mark the reason for deprioritization; item still belongs in backlog (passed all gates)
+            c["defer_reason"] = "effort budget"
+            continue
+        top.append(c)
+        used_cats.add(c.get("category"))
+        used_effort += int(c.get("effort", 2))
+
+    chosen_ids = {(c.get("id"), c.get("play_id")) for c in top}
+    backlog = []
+    for c in pool_sorted:
+        key = (c.get("id"), c.get("play_id"))
+        if key in chosen_ids:
+            continue
+        # everything in backlog has passed all gates; set default reason if none
+        if not c.get("defer_reason"):
+            c["defer_reason"] = "ranked below top actions"
+        backlog.append(c)
+
+    return top, backlog, watchlist
+
 
 def load_playbooks(path: str) -> List[Dict[str, Any]]:
     import yaml
@@ -15,9 +75,16 @@ def _gate_and_score(candidate: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str,
     passed, failed = [], []
     if candidate["n"] >= candidate["min_n"]: passed.append("min_n")
     else: failed.append("min_n")
-    sig_ok = ((not np.isnan(candidate.get("q", np.nan))) and (candidate["q"] < 0.05)) or (
-        (candidate.get("ci_low") is not None and candidate.get("ci_high") is not None) and (candidate["ci_low"] * candidate["ci_high"] > 0)
+   # significance gate: (CI excludes 0) OR (p < 0.05) OR (q < FDR_ALPHA)
+    q = candidate.get("q", np.nan)
+    p = candidate.get("p", np.nan)
+    ci_ok = (
+        (candidate.get("ci_low") is not None)
+        and (candidate.get("ci_high") is not None)
+        and (candidate["ci_low"] * candidate["ci_high"] > 0)
     )
+    sig_ok = ci_ok or (not np.isnan(p) and p < 0.05) or (not np.isnan(q) and q < cfg["FDR_ALPHA"])
+
     if sig_ok: passed.append("significance")
     else: failed.append("significance")
     if abs(candidate["effect_abs"]) >= candidate["effect_floor"]: passed.append("effect_floor")
@@ -87,58 +154,100 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
     gross_margin = cfg["GROSS_MARGIN"]
 
     # Repeat rate
-    x1 = int(round((aligned["recent_repeat_rate"] or 0)*aligned["recent_n"])); x2 = int(round((aligned["prior_repeat_rate"] or 0)*aligned["prior_n"]))
-    pr = two_proportion_test(x1, aligned["recent_n"] or 1, x2, aligned["prior_n"] or 1)
-    effect_pts = pr.diff
-    expected = max(0.0, effect_pts) * aligned["recent_n"] * (aligned["prior_repeat_rate"] or 0.15) * gross_margin
+   # Repeat rate (recent vs prior window)
+    x1 = int(round((aligned["recent_repeat_rate"] or 0) * (aligned["recent_n"] or 0)))
+    x2 = int(round((aligned["prior_repeat_rate"]  or 0) * (aligned["prior_n"]  or 0)))
+    n1, n2 = int(aligned["recent_n"] or 0), int(aligned["prior_n"] or 0)
+
+    pval = two_proportion_z_test(x1, n1, x2, n2)
+    rate_recent = (x1 / n1) if n1 else 0.0
+    rate_prior  = (x2 / n2) if n2 else 0.0
+    effect_pts  = rate_recent - rate_prior  # absolute delta in points (e.g., +0.024)
+
+    expected = max(0.0, effect_pts) * (n1) * (aligned["prior_repeat_rate"] or 0.15) * gross_margin
+
     cands.append({
-        "id":"repeat_rate_improve","play_id":"winback_21_45","metric":"repeat_rate",
-        "n": aligned["recent_n"], "effect_abs": effect_pts, "p": pr.p_value, "q": np.nan,
-        "ci_low": pr.ci_low, "ci_high": pr.ci_high, "expected_$": expected,
-        "min_n": cfg["MIN_N_WINBACK"], "effect_floor": cfg["REPEAT_PTS_FLOOR"],
-        "rationale": f"Repeat share {aligned['recent_repeat_rate']:.1%} vs {aligned['prior_repeat_rate']:.1%} (Δ {effect_pts:+.1%}).",
-        "audience_size": aligned["recent_n"], "attachment":"segment_winback_21_45.csv",
-        "baseline_rate": aligned["prior_repeat_rate"] or 0.15,
+        "id": "repeat_rate_improve",
+        "play_id": "winback_21_45",
+        "metric": "repeat_rate",
+        "n": n1 + n2,
+        "effect_abs": effect_pts,
+        "p": pval,
+        "q": np.nan,                     # set later by BH
+        "ci_low": None, "ci_high": None, # (optional) add CI later if you implement it
+        "expected_$": expected,
+        "min_n": cfg["MIN_N_WINBACK"],
+        "effect_floor": cfg["REPEAT_PTS_FLOOR"],
+        "rationale": f"Repeat share {rate_recent:.1%} vs {rate_prior:.1%} (Δ {effect_pts:+.1%}).",
+        "audience_size": n1,
+        "attachment": "segment_winback_21_45.csv",
+        "baseline_rate": rate_prior or 0.15,
     })
 
+
     # AOV
+    # AOV (Welch t-test)
     maxd = pd.to_datetime(g["Created at"]).max()
-    start = maxd - pd.Timedelta(days=aligned["window_days"]-1)
-    rec = g[g["Created at"]>=start]["AOV"].values
-    pri = g[(g["Created at"]<start)&(g["Created at"]>= start - pd.Timedelta(days=aligned["window_days"]))]["AOV"].values
-    if len(rec)>0 and len(pri)>0:
-        mt = welch_t_test(rec, pri)
-        aov_prior = aligned["prior_aov"] or 0.0
-        effect_pct = (mt.m1 - mt.m2)/mt.m2 if mt.m2 else 0.0
-        expected = max(0.0, effect_pct) * aligned["recent_n"] * (aligned["prior_repeat_rate"] or 0.15) * (aov_prior) * gross_margin
+    start = maxd - pd.Timedelta(days=aligned["window_days"] - 1)
+    rec = g[g["Created at"] >= start]["AOV"].astype(float).values
+    pri = g[(g["Created at"] < start) & (g["Created at"] >= start - pd.Timedelta(days=aligned["window_days"]))]["AOV"].astype(float).values
+
+    if rec.size > 0 and pri.size > 0:
+        pval = welch_t_test(rec, pri)
+        m1, m2 = float(np.mean(rec)), float(np.mean(pri))
+        effect_pct = (m1 - m2) / m2 if m2 else 0.0
+        expected = max(0.0, effect_pct) * (aligned["recent_n"] or 0) * (aligned["prior_repeat_rate"] or 0.15) * (aligned["prior_aov"] or m2 or 0.0) * gross_margin
+
         cands.append({
-            "id":"aov_increase","play_id":"bestseller_amplify","metric":"aov",
-            "n": len(rec)+len(pri), "effect_abs": effect_pct, "p": mt.p_value, "q": np.nan,
-            "ci_low": mt.ci_low, "ci_high": mt.ci_high, "expected_$": expected,
-            "min_n": cfg["MIN_N_SKU"], "effect_floor": cfg["AOV_EFFECT_FLOOR"],
-            "rationale": f"AOV {aligned['recent_aov']:.2f} vs {aligned['prior_aov']:.2f} (Δ {effect_pct:+.1%}).",
-            "audience_size": len(rec), "attachment":"segment_bestseller_amplify.csv",
+            "id": "aov_increase",
+            "play_id": "bestseller_amplify",
+            "metric": "aov",
+            "n": int(rec.size + pri.size),
+            "effect_abs": effect_pct,
+            "p": pval,
+            "q": np.nan,
+            "ci_low": None, "ci_high": None,
+            "expected_$": expected,
+            "min_n": cfg["MIN_N_SKU"],
+            "effect_floor": cfg["AOV_EFFECT_FLOOR"],
+            "rationale": f"AOV {m1:.2f} vs {m2:.2f} (Δ {effect_pct:+.1%}).",
+            "audience_size": int(rec.size),
+            "attachment": "segment_bestseller_amplify.csv",
             "baseline_rate": aligned["prior_repeat_rate"] or 0.15,
         })
 
+
     # Discount rate share (>=5% discounted orders)
-    start = maxd - pd.Timedelta(days=aligned["window_days"]-1)
-    rec_disc = g[g["Created at"]>=start]["discount_rate"].fillna(0).values
-    pri_disc = g[(g["Created at"]<start)&(g["Created at"]>= start - pd.Timedelta(days=aligned["window_days"]))]["discount_rate"].fillna(0).values
-    x1 = int(np.sum(rec_disc>=0.05)); n1 = len(rec_disc); x2 = int(np.sum(pri_disc>=0.05)); n2 = len(pri_disc)
-    if n1>0 and n2>0:
-        pr2 = two_proportion_test(x1, n1, x2, n2)
-        effect_pts2 = (x1/n1) - (x2/n2)
-        expected2 = max(0.0, -effect_pts2) * n1 * 0.5 * gross_margin * (np.nanmean(g["AOV"]) or 0)
+    # Discount rate share (>=5% discounted orders)
+    rec_disc = g[g["Created at"] >= start]["discount_rate"].fillna(0).astype(float).values
+    pri_disc = g[(g["Created at"] < start) & (g["Created at"] >= start - pd.Timedelta(days=aligned["window_days"]))]["discount_rate"].fillna(0).astype(float).values
+
+    x1, n1 = int(np.sum(rec_disc >= 0.05)), int(rec_disc.size)
+    x2, n2 = int(np.sum(pri_disc >= 0.05)), int(pri_disc.size)
+    if n1 > 0 and n2 > 0:
+        pval2 = two_proportion_z_test(x1, n1, x2, n2)
+        # effect is negative if discount share increased (we want *reduction*)
+        effect_pts2 = (x2 / n2) - (x1 / n1)  # reduction is positive if recent < prior
+        expected2 = max(0.0, effect_pts2) * n1 * 0.5 * gross_margin * (float(np.nanmean(g["AOV"])) if not np.isnan(np.nanmean(g["AOV"])) else 0.0)
+
         cands.append({
-            "id":"discount_hygiene","play_id":"discount_hygiene","metric":"discount_rate",
-            "n": n1+n2, "effect_abs": -effect_pts2, "p": pr2.p_value, "q": np.nan,
-            "ci_low": pr2.ci_low, "ci_high": pr2.ci_high, "expected_$": expected2,
-            "min_n": cfg["MIN_N_SKU"], "effect_floor": cfg["DISCOUNT_PTS_FLOOR"],
-            "rationale": f"Discount share {x1/(n1 or 1):.1%} vs {x2/(n2 or 1):.1%} (Δ {-effect_pts2:+.1%} reduction).",
-            "audience_size": n1, "attachment":"segment_discount_hygiene.csv",
+            "id": "discount_hygiene",
+            "play_id": "discount_hygiene",
+            "metric": "discount_rate",
+            "n": n1 + n2,
+            "effect_abs": effect_pts2,
+            "p": pval2,
+            "q": np.nan,
+            "ci_low": None, "ci_high": None,
+            "expected_$": expected2,
+            "min_n": cfg["MIN_N_SKU"],
+            "effect_floor": cfg["DISCOUNT_PTS_FLOOR"],
+            "rationale": f"Discount share {x1/(n1 or 1):.1%} vs {x2/(n2 or 1):.1%} (Δ {effect_pts2:+.1%} reduction).",
+            "audience_size": n1,
+            "attachment": "segment_discount_hygiene.csv",
             "baseline_rate": aligned["prior_repeat_rate"] or 0.15,
         })
+
     return cands
 
 def select_actions(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str, Any], playbooks_path: str, receipts_dir: str) -> Dict[str, Any]:
@@ -146,11 +255,17 @@ def select_actions(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str, Any]
     cands = _compute_candidates(g, aligned, cfg)
 
     # FDR adjust (q-values)
-    pvals = [c.get("p", np.nan) for c in cands]
-    if sum([0 if np.isnan(p) else 1 for p in pvals]) > 0:
-        qvals, _ = benjamini_hochberg([p if not np.isnan(p) else 1.0 for p in pvals], alpha=cfg["FDR_ALPHA"])
+    # FDR adjust (q-values)
+    p_list = []
+    for c in cands:
+        p = c.get("p", np.nan)
+        p_list.append(1.0 if np.isnan(p) else float(p))
+
+    if any(not np.isnan(c.get("p", np.nan)) for c in cands):
+        qvals = benjamini_hochberg(p_list)  # returns list aligned to p_list order
         for i, c in enumerate(cands):
             c["q"] = qvals[i]
+
 
     # Gate + score + meta attach
     final = []
@@ -179,82 +294,47 @@ def select_actions(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str, Any]
         final.append(cand)
 
     # Partition
-    out = {"actions": [], "watchlist": [], "no_call": [], "backlog": [], "pilot_actions": []}
-    for c in final:
-        if c["tier"] == "Actions":
-            out["actions"].append(c)
-        elif c["tier"] == "Watchlist":
-            out["watchlist"].append(c)
-        else:
-            out["no_call"].append(c)
+    # Partition (single source of truth)
+    budget = cfg.get("EFFORT_BUDGET", 8)
+    top_actions, backlog, watchlist = _partition_candidates(final, effort_budget=budget)
 
-    # Select up to 3 actions under effort budget with category diversity
-    selected, used, budget = [], set(), cfg.get("EFFORT_BUDGET", 8)
-    for c in sorted(out["actions"], key=lambda x: x["score"], reverse=True):
-        if c["category"] in used and len(selected) < 2:
-            continue
-        if sum(x["effort"] for x in selected) + c["effort"] > budget:
-            out["backlog"].append({**c, "reason": "fails effort budget"})
-            continue
-        selected.append(c)
-        used.add(c["category"])
-        if len(selected) >= 3:
-            break
-    out["actions"] = selected
+    out = {
+        "actions": top_actions,     # passed all gates + selected under budget/diversity
+        "watchlist": watchlist,     # failed at least one gate (no attachments)
+        "no_call": [],              # keep for compatibility if you use it elsewhere
+        "backlog": [],              # passed all gates but deferred
+        "pilot_actions": []
+    }
 
-    # Pilot fallback (if no Actions)
+    # Backlog: passed all gates, deferred (set a reason if not already present)
+    for c in backlog:
+        out["backlog"].append({**c, "reason": c.get("defer_reason", "ranked below top actions")})
+
+    # Pilot fallback (only if nothing made it into Top Actions)
     if len(out["actions"]) == 0 and len(final) > 0:
-        pilot = sorted(final, key=lambda x: x["score"], reverse=True)[0]
-        n_needed = pilot["min_n"]
-        if pilot["metric"] in ("repeat_rate", "discount_rate"):
-            p = pilot.get("baseline_rate", 0.15)
-            delta = pilot.get("effect_floor", 0.02)
-            n_needed = required_n_for_proportion(p if p > 0 else 0.15, delta if delta > 0 else 0.02, alpha=0.05, power=0.8)
-        pilot_payload = {
+        # choose the highest-score candidate as a pilot, even if it failed a gate (clearly labeled)
+        pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
+        n_needed = pilot.get("min_n", 0)
+        if pilot.get("metric") in ("repeat_rate", "discount_rate"):
+            p = pilot.get("baseline_rate", 0.15) or 0.15
+            delta = pilot.get("effect_floor", 0.02) or 0.02
+            # required_n_for_proportion should already exist in your stats/helpers
+            n_needed = required_n_for_proportion(p, delta, alpha=0.05, power=0.8)
+
+        out["pilot_actions"] = [{
             **pilot,
             "tier": "Pilot",
             "pilot_audience_fraction": cfg.get("PILOT_AUDIENCE_FRACTION", 0.2),
             "pilot_budget_cap": cfg.get("PILOT_BUDGET_CAP", 200.0),
             "n_needed": int(n_needed),
-            "decision_rule": "Graduate to full rollout if CI excludes 0 or q ≤ α at 14 days, else rollback.",
+            "decision_rule": "Graduate to full rollout if CI excludes 0 or q ≤ α at 14 days; else rollback.",
             "confidence_label": "Low",
-            "expected_range": [round((pilot.get("expected_$", 0) or 0) * 0.6, 2), round((pilot.get("expected_$", 0) or 0) * 1.3, 2)],
-        }
-        out["pilot_actions"] = [pilot_payload]
+            "expected_range": [
+                round((pilot.get("expected_$", 0) or 0) * 0.6, 2),
+                round((pilot.get("expected_$", 0) or 0) * 1.3, 2),
+            ],
+        }]
 
-    # --- Build Backlog of near-misses (top 3 by score), after pilot to avoid duplicates ---
-    backlog = []
-    backlog.extend(out.get("backlog", []))  # keep budget/category spillover
-
-    # Exclude the chosen pilot from backlog (if any)
-    pilot_key = None
-    if out.get("pilot_actions"):
-        pilot0 = out["pilot_actions"][0]
-        pilot_key = (pilot0.get("id"), pilot0.get("play_id"))
-
-    near_misses = []
-    for c in final:
-        if c in out["actions"]:
-            continue
-        key = (c.get("id"), c.get("play_id"))
-        if pilot_key and key == pilot_key:
-            continue
-        fail_cnt = len(c["failed"])
-        if fail_cnt <= 1 or c["tier"] == "Watchlist":
-            reason = ", ".join(c.get("reasons", [])) or "near miss"
-            near_misses.append({**c, "reason": reason})
-
-    seen_ids = {(b.get("id"), b.get("play_id")) for b in backlog}
-    for c in sorted(near_misses, key=lambda x: x["score"], reverse=True):
-        key = (c.get("id"), c.get("play_id"))
-        if key in seen_ids:
-            continue
-        backlog.append({"id": c.get("id"), "play_id": c.get("play_id"), "title": c["title"], "reason": c.get("reason", "near miss")})
-        seen_ids.add(key)
-        if len(backlog) >= 3:
-            break
-
-    out["backlog"] = backlog
     return out
 
 def write_actions_log(receipts_dir: str, actions: List[Dict[str, Any]]) -> None:
@@ -265,3 +345,22 @@ def write_actions_log(receipts_dir: str, actions: List[Dict[str, Any]]) -> None:
     for a in actions:
         log.append({"play_id": a["play_id"], "title": a["title"]})
     write_json(str(log_path), log)
+
+def tipover_for_financial(shortfall: float, segment_size: int, baseline_rate: float, gross_margin: float) -> dict:
+    """
+    Given a $ shortfall to the financial floor, estimate how many additional reachable
+    customers you need to clear the floor, using baseline conversion and GM.
+    Returns a dict with the missing dollars and an order-of-magnitude customer count.
+    """
+    br = max(float(baseline_rate), 1e-9)
+    gm = max(float(gross_margin),  1e-9)
+    add_customers = int(np.ceil(float(shortfall) / (br * gm)))
+    return {"needed_$": round(float(shortfall), 2), "add_customers≈": max(add_customers, 0)}
+
+def tipover_for_significance(p_base: float, current_n: int, alpha: float, power: float, target_delta: float) -> dict:
+    """
+    For a two-proportion test, compute additional per-group N needed to detect target_delta (absolute)
+    at the given alpha/power. Returns 0 if current_n already meets/exceeds the requirement.
+    """
+    need_n = int(needed_n_for_proportion_delta(float(p_base), float(target_delta), float(alpha), float(power)))
+    return {"needed_n_per_group": max(0, need_n - int(current_n))}

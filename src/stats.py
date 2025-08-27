@@ -1,81 +1,175 @@
-
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Tuple, List
+from typing import Tuple, List, NamedTuple
+import math
 import numpy as np
-from math import sqrt
-from scipy import stats
+from scipy.stats import norm, fisher_exact, ttest_ind
+from math import sqrt, erfc
 
-@dataclass
-class ProportionTestResult:
-    p1: float; p2: float; n1: int; n2: int
-    diff: float; se: float; z: float; p_value: float
-    method: str; ci_low: float; ci_high: float
+class TwoProportionResult(NamedTuple):
+    diff: float        # p1 - p2 (absolute difference in proportions)
+    p_value: float     # two-sided p-value (normal approx)
+    ci_low: float      # CI low for (p1 - p2)
+    ci_high: float     # CI high for (p1 - p2)
 
-def wilson_ci(successes: int, n: int, conf: float = 0.95) -> Tuple[float,float]:
-    if n==0: return (np.nan, np.nan)
-    z = stats.norm.ppf(1 - (1-conf)/2); ph = successes/n
-    denom = 1 + z**2/n
-    center = (ph + z**2/(2*n)) / denom
-    adj = z * sqrt((ph*(1-ph) + z**2/(4*n))/n) / denom
-    return max(0.0, center-adj), min(1.0, center+adj)
+def _zcrit(alpha: float = 0.05) -> float:
+    """
+    Two-sided z critical value. Precomputed for common alphas.
+    Falls back to 1.96 if an uncommon alpha is passed.
+    """
+    a = float(alpha)
+    if abs(a - 0.05) < 1e-9:  # 95% CI
+        return 1.959963984540054
+    if abs(a - 0.10) < 1e-9:  # 90% CI
+        return 1.6448536269514722
+    if abs(a - 0.01) < 1e-9:  # 99% CI
+        return 2.5758293035489004
+    return 1.959963984540054
 
-def two_proportion_test(x1: int, n1: int, x2: int, n2: int, conf: float=0.95) -> ProportionTestResult:
-    p1 = x1/n1 if n1 else np.nan; p2 = x2/n2 if n2 else np.nan
-    if min(x1, n1-x1, x2, n2-x2) < 5:
-        table = np.array([[x1, n1-x1],[x2, n2-x2]])
-        _, p = stats.fisher_exact(table, alternative='two-sided')
-        p_pool = (x1+x2)/(n1+n2) if (n1+n2)>0 else np.nan
-        se = np.sqrt(p_pool*(1-p_pool)*(1/n1 + 1/n2)) if (n1>0 and n2>0) else np.nan
-        zcrit = stats.norm.ppf(1 - (1-conf)/2); diff = (p1 - p2) if (n1>0 and n2>0) else np.nan
-        return ProportionTestResult(p1,p2,n1,n2,diff,se,np.nan,p,"fisher", diff - zcrit*se, diff + zcrit*se)
-    p_pool = (x1+x2)/(n1+n2); se = np.sqrt(p_pool*(1-p_pool)*(1/n1 + 1/n2)); z = ((p1)-(p2))/se if se>0 else 0.0
-    p = 2*(1 - stats.norm.cdf(abs(z))); zcrit = stats.norm.ppf(1 - (1-conf)/2); diff = (p1-p2)
-    return ProportionTestResult(p1,p2,n1,n2,diff,se,z,p,"ztest", diff - zcrit*se, diff + zcrit*se)
+def _phi(z: float) -> float:
+    """Standard normal CDF via erf: Phi(z) = 0.5 * erfc(-z / sqrt(2))."""
+    return 0.5 * erfc(-z / sqrt(2.0))
 
-@dataclass
-class MeanTestResult:
-    m1: float; m2: float; n1: int; n2: int; diff: float; p_value: float
-    method: str; ci_low: float; ci_high: float; cohen_d: float
+def two_proportion_test(
+    x1: int, n1: int, x2: int, n2: int, alpha: float = 0.05, continuity: bool = False
+) -> TwoProportionResult:
+    """
+    Z test for difference in proportions (two-sided), with 1-α CI for (p1 - p2).
+    - p1 = x1/n1, p2 = x2/n2
+    - p-value uses pooled SE (classical two-proportion z-test).
+    - CI uses unpooled SE (Wald CI for difference).
+    - 'continuity': optional Yates correction for z numerator (rarely needed here).
+    """
+    n1 = int(n1); n2 = int(n2)
+    x1 = int(x1); x2 = int(x2)
+    if n1 <= 0 or n2 <= 0:
+        return TwoProportionResult(diff=np.nan, p_value=1.0, ci_low=np.nan, ci_high=np.nan)
 
-def bootstrap_mean_ci(a: np.ndarray, b: np.ndarray, n_boot=800, conf=0.95, seed=123):
-    rng = np.random.default_rng(seed); diffs=[]
-    n1, n2 = len(a), len(b)
-    if n1==0 or n2==0: return (np.nan, np.nan)
-    for _ in range(n_boot):
-        s1 = rng.choice(a, size=n1, replace=True); s2 = rng.choice(b, size=n2, replace=True)
-        diffs.append(s1.mean()-s2.mean())
-        low = np.percentile(diffs, (1-conf)/2*100); high = np.percentile(diffs, (1+conf)/2*100)
-    return float(low), float(high)
+    p1 = x1 / n1
+    p2 = x2 / n2
+    diff = p1 - p2
 
-def cohen_d(a: np.ndarray, b: np.ndarray) -> float:
-    a = a.astype(float); b = b.astype(float)
-    ma, mb = np.nanmean(a), np.nanmean(b); sa, sb = np.nanstd(a, ddof=1), np.nanstd(b, ddof=1)
-    na, nb = len(a), len(b); denom = np.sqrt(((na-1)*sa**2 + (nb-1)*sb**2) / (na+nb-2)) if (na+nb-2)>0 else np.nan
-    return (ma-mb)/denom if denom>0 else 0.0
+    # pooled proportion for hypothesis test
+    p_pool = (x1 + x2) / (n1 + n2)
+    se_pooled = sqrt(max(p_pool * (1.0 - p_pool), 0.0) * (1.0 / n1 + 1.0 / n2))
 
-def welch_t_test(a: np.ndarray, b: np.ndarray, conf: float=0.95) -> MeanTestResult:
-    a = np.asarray(a, float); b = np.asarray(b, float)
-    t, p = stats.ttest_ind(a, b, equal_var=False, nan_policy='omit')
-    diff = float(np.nanmean(a) - np.nanmean(b)); ci_low, ci_high = bootstrap_mean_ci(a[~np.isnan(a)], b[~np.isnan(b)], conf=conf)
-    return MeanTestResult(float(np.nanmean(a)), float(np.nanmean(b)), len(a), len(b), diff, float(p), "welch", float(ci_low), float(ci_high), float(cohen_d(a,b)))
+    # continuity correction (optional)
+    num = diff
+    if continuity:
+        # subtract 0.5/n from absolute difference
+        cc = 0.5 * (1.0 / n1 + 1.0 / n2)
+        num = np.sign(diff) * max(abs(diff) - cc, 0.0)
 
-def benjamini_hochberg(pvals: List[float], alpha: float=0.10):
-    p = np.array(pvals, float); n=len(p); order = np.argsort(p); ranked=p[order]
-    q = np.empty(n); prev=1.0
-    for i in range(n-1, -1, -1):
-        q_i = ranked[i]*n/(i+1); prev = min(prev, q_i); q[i]=prev
-    out = np.empty(n); out[order]=q
-    return out.tolist(), (out<=alpha).tolist()
+    # z and two-sided p-value using normal approx
+    if se_pooled == 0.0:
+        p_value = 1.0
+    else:
+        z = num / se_pooled
+        # two-sided p = 2 * (1 - Phi(|z|)) = erfc(|z|/sqrt(2))
+        p_value = float(erfc(abs(z) / sqrt(2.0)))
 
-def mde_proportion(p: float, n: int, alpha=0.05, power=0.8) -> float:
-    z_alpha = stats.norm.ppf(1 - alpha/2); z_beta = stats.norm.ppf(power)
-    se = np.sqrt(2*p*(1-p)/n) if n>0 else np.nan
-    return float((z_alpha+z_beta)*se)
+    # CI for difference uses unpooled SE
+    se_unpooled = sqrt(
+        max(p1 * (1.0 - p1), 0.0) / n1 + max(p2 * (1.0 - p2), 0.0) / n2
+    )
+    zc = _zcrit(alpha)
+    if se_unpooled == 0.0:
+        ci_low = ci_high = diff
+    else:
+        ci_low = diff - zc * se_unpooled
+        ci_high = diff + zc * se_unpooled
 
-def required_n_for_proportion(p: float, delta: float, alpha=0.05, power=0.8, max_n=100000) -> int:
-    if delta<=0 or p<=0 or p>=1: return 0
-    n=10
-    while n<max_n and mde_proportion(p, n, alpha=alpha, power=power) > delta:
-        n = int(n*1.2)+1
-    return n
+    return TwoProportionResult(diff=float(diff), p_value=float(p_value),
+                               ci_low=float(ci_low), ci_high=float(ci_high))
+# --- end block ---
+# ----------------- Proportions: CI and tests -----------------
+
+def wilson_ci(successes: int, n: int, alpha: float = 0.05) -> Tuple[float, float]:
+    """Wilson score interval for a binomial proportion."""
+    n = max(0, int(n))
+    if n == 0:
+        return (0.0, 1.0)
+    z = norm.ppf(1 - alpha / 2)
+    phat = successes / n
+    denom = 1 + z**2 / n
+    center = (phat + z**2 / (2 * n)) / denom
+    half = (z * math.sqrt((phat * (1 - phat) + z**2 / (4 * n)) / n)) / denom
+    return (max(0.0, center - half), min(1.0, center + half))
+
+
+def two_proportion_z_test(s1: int, n1: int, s2: int, n2: int) -> float:
+    """Two-proportion z-test (two-sided), returns p-value. Falls back to Fisher if near-zero counts."""
+    n1, n2 = int(n1), int(n2)
+    s1, s2 = int(s1), int(s2)
+    if min(n1, n2) == 0:
+        return 1.0
+    # Fisher fallback if extreme counts
+    if min(s1, s2, n1 - s1, n2 - s2) < 5:
+        # construct 2x2 table
+        a, b = s1, n1 - s1
+        c, d = s2, n2 - s2
+        _, p = fisher_exact([[a, b], [c, d]], alternative="two-sided")
+        return float(p)
+    p1, p2 = s1 / n1, s2 / n2
+    p_pool = (s1 + s2) / (n1 + n2)
+    se = math.sqrt(p_pool * (1 - p_pool) * (1 / n1 + 1 / n2))
+    if se == 0:
+        return 1.0
+    z = (p1 - p2) / se
+    p = 2 * (1 - norm.cdf(abs(z)))
+    return float(p)
+
+
+# ----------------- Means: Welch t-test (basic) -----------------
+
+def welch_t_test(x: np.ndarray, y: np.ndarray) -> float:
+    """Two-sided Welch t-test p-value (uses scipy.stats.ttest_ind with equal_var=False)."""
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    if len(x) == 0 or len(y) == 0:
+        return 1.0
+    _, p = ttest_ind(x, y, equal_var=False)
+    return float(p)
+
+
+# ----------------- Multiple testing (BH-FDR) -----------------
+
+def benjamini_hochberg(p_values: List[float]) -> List[float]:
+    """
+    Return BH-adjusted q-values in the original order.
+    """
+    m = len(p_values)
+    if m == 0:
+        return []
+    order = np.argsort(p_values)
+    ranks = np.empty(m, dtype=int)
+    ranks[order] = np.arange(1, m + 1)
+    p = np.asarray(p_values, dtype=float)
+    q = p * m / ranks
+    # enforce monotonicity from the right
+    q_sorted = q[order]
+    for i in range(m - 2, -1, -1):
+        q_sorted[i] = min(q_sorted[i], q_sorted[i + 1])
+    q[order] = q_sorted
+    return q.tolist()
+
+
+# ----------------- Power / MDE helpers -----------------
+
+def needed_n_for_proportion_delta(p_base: float, delta_abs: float, alpha: float = 0.05, power: float = 0.8) -> int:
+    """
+    Approx per-group sample size to detect an ABSOLUTE delta in proportions with two-sided z-test.
+    """
+    p = float(max(min(p_base, 1 - 1e-9), 1e-9))
+    d = float(abs(delta_abs))
+    if d <= 1e-9:
+        return 10**9
+    z_alpha = norm.ppf(1 - alpha / 2)
+    z_beta = norm.ppf(power)
+    se_needed = d / (z_alpha + z_beta)
+    n = 2 * p * (1 - p) / (se_needed**2)
+    return int(math.ceil(n))
+
+
+# Compatibility alias if your code calls this name
+def required_n_for_proportion(p_base: float, delta_abs: float, alpha: float = 0.05, power: float = 0.8) -> int:
+    return needed_n_for_proportion_delta(p_base, delta_abs, alpha, power)
