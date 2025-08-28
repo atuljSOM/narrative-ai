@@ -25,7 +25,7 @@
     /* Charts: single row, auto-fit to N charts */
     .charts-one-line { display: grid; gap: 8px; align-items: stretch; }
     .chart-card { border:1px solid #eee; border-radius:10px; padding:6px; background:#fff; }
-    img.chart { width: 100%; height: auto; max-height: 280px; object-fit: contain; border-radius:6px; display:block; }
+    img.chart { width: 100%; height: auto; max-height: 360px; object-fit: contain; border-radius:6px; display:block; }
     /* Actions: high-emphasis cards */
     .actions-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
     .action-checklist { list-style:none; padding-left:0; margin:8px 0 16px 0; }
@@ -199,6 +199,13 @@
     <ul class="action-checklist">
       {% for a in outputs['actions'] %}
         <li>☐ <strong>{{ a.get('title','') }}</strong> — {{ a.get('do_this','') }}</li>
+        {% if a.get('offer') %}
+          <div class="small muted">
+             Offer: {{ a['offer'].get('type') }}{% if a['offer'].get('value') %} ({{ a['offer']['value'] }}%){% endif %}
+          </div>
+        {% elif a.get('variant_id') %}
+          <div class="small muted">Variant: {{ a['variant_id'] }}</div>
+        {% endif %}
       {% endfor %}
     </ul>
 
@@ -248,6 +255,13 @@
         </div>
       </div>
       <div class="muted">{{ p.get('do_this','') }}</div>
+      {% if p.get('offer') %}
+        <div class="small muted">
+          Offer: {{ p['offer'].get('type') }}{% if p['offer'].get('value') %} ({{ p['offer']['value'] }}%){% endif %}
+        </div>
+      {% elif p.get('variant_id') %}
+        <div class="small muted">Variant: {{ p['variant_id'] }}</div>
+      {% endif %}
       <div class="small" style="margin-top:6px;">
         Audience: ~{{ (p.get('pilot_audience_fraction',0.2)*100)|int }}% &nbsp;•&nbsp;
         Budget cap: {{ fmt_money(p.get('pilot_budget_cap', 0)) }} &nbsp;•&nbsp;
@@ -297,12 +311,17 @@
 
 <section class="section">
   <h2>Receipts</h2>
-  <div class="small muted">Why we believe this week’s actions will work — based on your recent deltas and store baselines.</div>
-  <ul>
-    <li>AOV and Orders trends shown above (L7/L28 vs prior).</li>
-    <li>Repeat share and discount hygiene directional significance reported where measurable.</li>
-    <li>Segments and copy matched to your top SKUs and cohorts.</li>
+  <p class="muted">Why we believe this week’s actions will work — based on your recent deltas and store baselines.</p>
+  <ul class="receipts">
+   {% if outputs.receipts and outputs.receipts|length > 0 %}
+     {% for r in outputs.receipts %}
+       <li>{{ r }}</li>
+     {% endfor %}
+   {% else %}
+     <li>We selected these actions based on L28 deltas in AOV, orders, discount share, and repeat mix; no single metric dominated the decision.</li>
+   {% endif %}
   </ul>
+
 </section>
 
 {% if outputs.get('segments_bundle') %}

@@ -15,7 +15,7 @@ from .features import compute_features, aligned_periods_summary
 from .segments import build_segments
 from .charts import generate_charts
 from .briefing import render_briefing
-from .action_engine import select_actions, write_actions_log
+from .action_engine import select_actions, write_actions_log, build_receipts, evidence_for_action
 from .copykit import render_copy_for_actions
 
 
@@ -118,6 +118,8 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
     plays = str(Path(Path(__file__).resolve().parent.parent) / "templates" / "playbooks.yml")
     actions = select_actions(g, aligned, cfg, plays, str(receipts_dir))
 
+    receipts = build_receipts(aligned_for_template, actions)
+
     # copy assets for selected actions/pilots
     assets_dir = Path(out_dir) / "briefings" / "assets"
     selected_for_copy = (actions.get("actions", []) + actions.get("pilot_actions", []))
@@ -153,7 +155,14 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
         "backlog": actions.get("backlog", []),
         "cfg": cfg,
         "copy_assets": copy_assets,
+        "receipts": receipts,
     }
+
+    for a in outputs["actions"]:
+        a["evidence"] = evidence_for_action(a, aligned_for_template)
+    for p in outputs.get("pilot_actions", []):
+        p["evidence"] = evidence_for_action(p, aligned_for_template)
+        
     briefing_out = Path(out_dir) / "briefings" / f"{brand}_briefing.html"
     render_briefing(
         str(Path(Path(__file__).resolve().parent.parent) / "templates"),

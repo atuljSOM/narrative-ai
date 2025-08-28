@@ -133,24 +133,41 @@ def welch_t_test(x: np.ndarray, y: np.ndarray) -> float:
 
 # ----------------- Multiple testing (BH-FDR) -----------------
 
-def benjamini_hochberg(p_values: List[float]) -> List[float]:
+
+def benjamini_hochberg(pvals, alpha: float = 0.10):
     """
-    Return BH-adjusted q-values in the original order.
+    Benjamini–Hochberg FDR correction.
+    Args:
+      pvals: iterable of p-values (NaNs allowed; treated as 1.0)
+      alpha: target FDR level for reject mask (q <= alpha)
+    Returns:
+      qvals: list of BH-adjusted p-values (same order as input)
+      reject: list[bool] where q <= alpha
     """
-    m = len(p_values)
-    if m == 0:
-        return []
-    order = np.argsort(p_values)
-    ranks = np.empty(m, dtype=int)
-    ranks[order] = np.arange(1, m + 1)
-    p = np.asarray(p_values, dtype=float)
-    q = p * m / ranks
-    # enforce monotonicity from the right
-    q_sorted = q[order]
-    for i in range(m - 2, -1, -1):
-        q_sorted[i] = min(q_sorted[i], q_sorted[i + 1])
-    q[order] = q_sorted
-    return q.tolist()
+    if pvals is None:
+        return [], []
+    pv = np.asarray([1.0 if (x is None or (isinstance(x, float) and np.isnan(x))) else float(x) for x in pvals], dtype=float)
+    n = pv.size
+    if n == 0:
+        return [], []
+
+    order = np.argsort(pv)
+    ranked = pv[order]
+
+    q = np.empty(n, dtype=float)
+    prev = 1.0
+    # Compute monotone BH q-values backward
+    for i in range(n - 1, -1, -1):
+        rank = i + 1
+        val = ranked[i] * n / rank
+        if val > prev:
+            val = prev
+        prev = val
+        q[order[i]] = min(1.0, max(0.0, val))
+
+    reject = (q <= float(alpha))
+    return q.tolist(), reject.tolist()
+
 
 
 # ----------------- Power / MDE helpers -----------------

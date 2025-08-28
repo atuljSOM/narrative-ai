@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Dict, Any, List
 from pathlib import Path
 import numpy as np, pandas as pd, json
+from .policy import load_policy, is_eligible
+import datetime
 
 # stats & scoring
 from .stats import (
@@ -23,48 +25,135 @@ from .scoring import (
 # utils
 from .utils import write_json
 
+def _load_actions_log(receipts_dir: str) -> list[dict]:
+    p = Path(receipts_dir) / "actions_log.json"
+    if not p.exists(): return []
+    try: return json.loads(p.read_text())
+    except Exception: return []
+
+def _weeks_since_used(
+    log: list[dict],
+    play_id: str,
+    variant_id: str | None,
+    asof_date: datetime.date | None = None
+) -> int | None:
+    """
+    Return how many whole ISO weeks since this play/variant was last used,
+    relative to `asof_date` (default: today). 0 = same ISO week.
+    """
+    ts_list: list[datetime.date] = []
+    for r in log:
+        if r.get("play_id") != play_id: 
+            continue
+        if variant_id is not None and r.get("variant_id") != variant_id:
+            continue
+        try:
+            d = datetime.datetime.fromisoformat(r["ts"].replace("Z","")).date()
+            ts_list.append(d)
+        except Exception:
+            pass
+    if not ts_list:
+        return None
+    last = max(ts_list)
+    ref = asof_date or datetime.date.today()
+    # ISO week difference (calendar weeks), not just 7-day buckets:
+    last_iso_year, last_iso_week, _ = last.isocalendar()
+    ref_iso_year, ref_iso_week, _ = ref.isocalendar()
+    return (ref_iso_year - last_iso_year) * 52 + (ref_iso_week - last_iso_week)
+
 
 # ---- Section partition helper (single source of truth for sections) ----
 def _partition_candidates(final: list[dict], effort_budget: int = 8):
     """
-    Watchlist  := any candidate with failed gates (c['failed'] nonempty) or not allowed
-    Pool       := candidates that pass all gates (c['failed'] == [])
-    Top        := pick <=3 from Pool subject to effort budget and simple category diversity
-    Backlog    := the rest of Pool (passed all gates) not selected
+    Sections:
+      - Watchlist := failed ≥1 gate
+      - Pool      := passed all gates
+      - Top       := up to 3 from Pool under effort budget,
+                     *one variant per play_id*,
+                     and soft category diversity (try to include ≥2 categories).
+      - Backlog   := remaining Pool items (all passed gates) with a defer reason
     """
-    # classify
-    watchlist = [c for c in final if c.get("failed")]  # failed at least one gate
-    pool = [c for c in final if not c.get("failed")]   # passed all gates
+    # 1) Classify
+    watchlist = [c for c in final if c.get("failed")]          # failed at least one gate
+    pool      = [c for c in final if not c.get("failed")]      # passed all gates
 
-    # greedy selection with diversity + effort budget
+    # 2) Rank pool by score (desc)
     pool_sorted = sorted(pool, key=lambda x: x.get("score", 0), reverse=True)
-    top, used_cats, used_effort = [], set(), 0
+
+    top: list[dict] = []
+    used_cats: set   = set()
+    used_plays: set  = set()
+    used_effort: int = 0
+
+    # --- First pass: enforce play-level uniqueness + category diversity ---
     for c in pool_sorted:
         if len(top) >= 3:
             break
-        # category diversity: avoid 2 of the same category until we have diversity
-        if c.get("category") in used_cats and len(used_cats) < 2:
-            continue
-        if used_effort + int(c.get("effort", 2)) > effort_budget:
-            # mark the reason for deprioritization; item still belongs in backlog (passed all gates)
-            c["defer_reason"] = "effort budget"
-            continue
-        top.append(c)
-        used_cats.add(c.get("category"))
-        used_effort += int(c.get("effort", 2))
 
-    chosen_ids = {(c.get("id"), c.get("play_id")) for c in top}
-    backlog = []
-    for c in pool_sorted:
-        key = (c.get("id"), c.get("play_id"))
-        if key in chosen_ids:
+        pid = c.get("play_id")
+        cat = c.get("category")
+        eff = int(c.get("effort", 2))
+
+        # one-per-play family
+        if pid in used_plays:
+            c.setdefault("defer_reason", "another variant of this play selected")
             continue
-        # everything in backlog has passed all gates; set default reason if none
-        if not c.get("defer_reason"):
-            c["defer_reason"] = "ranked below top actions"
-        backlog.append(c)
+
+        # soft category diversity: until we have ≥2 categories, avoid duplicates
+        if cat in used_cats and len(used_cats) < 2:
+            c.setdefault("defer_reason", "category diversity")
+            continue
+
+        # effort budget
+        if used_effort + eff > effort_budget:
+            c.setdefault("defer_reason", "effort budget")
+            continue
+
+        top.append(c)
+        used_plays.add(pid)
+        if cat:
+            used_cats.add(cat)
+        used_effort += eff
+
+    # --- Second pass: if we still have <3, relax category diversity (but keep one-per-play & budget) ---
+    if len(top) < 3:
+        for c in pool_sorted:
+            if len(top) >= 3:
+                break
+
+            pid = c.get("play_id")
+            eff = int(c.get("effort", 2))
+
+            # skip items already chosen
+            if any((c.get("play_id"), c.get("variant_id")) == (t.get("play_id"), t.get("variant_id")) for t in top):
+                continue
+
+            # still enforce one-per-play family
+            if pid in used_plays:
+                c.setdefault("defer_reason", "another variant of this play selected")
+                continue
+
+            # budget
+            if used_effort + eff > effort_budget:
+                c.setdefault("defer_reason", "effort budget")
+                continue
+
+            top.append(c)
+            used_plays.add(pid)
+            used_effort += eff
+
+    # 3) Build backlog: all pool items not chosen (they passed gates)
+    chosen_keys = {(t.get("play_id"), t.get("variant_id")) for t in top}
+    backlog: list[dict] = []
+    for c in pool_sorted:
+        key = (c.get("play_id"), c.get("variant_id"))
+        if key not in chosen_keys:
+            c.setdefault("defer_reason", "ranked below top actions")
+            backlog.append(c)
 
     return top, backlog, watchlist
+
+
 
 
 def load_playbooks(path: str) -> List[Dict[str, Any]]:
@@ -250,75 +339,169 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
 
     return cands
 
-def select_actions(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str, Any], playbooks_path: str, receipts_dir: str) -> Dict[str, Any]:
+def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, policy_path: str | None = None) -> Dict[str, Any]:
+    """
+    1) Build base candidates (same as before)
+    2) Gate + score (same as before)
+    3) Expand into variants; apply cooldown + novelty penalty
+    4) Partition with soft diversity + effort budget
+    5) Pilot fallback if nothing passes
+    """
+    # --- load playbook + base candidates ---
     plays = {p["id"]: p for p in load_playbooks(playbooks_path)}
-    cands = _compute_candidates(g, aligned, cfg)
+    base_cands = _compute_candidates(g, aligned, cfg)
 
-    # FDR adjust (q-values)
-    # FDR adjust (q-values)
-    p_list = []
-    for c in cands:
-        p = c.get("p", np.nan)
-        p_list.append(1.0 if np.isnan(p) else float(p))
-
-    if any(not np.isnan(c.get("p", np.nan)) for c in cands):
-        qvals = benjamini_hochberg(p_list)  # returns list aligned to p_list order
-        for i, c in enumerate(cands):
+    # FDR adjust (q-values) across base candidates only
+    pvals = [c.get("p", np.nan) for c in base_cands]
+    if any([not np.isnan(p) for p in pvals]):
+        # your BH takes (pvals, alpha) -> (qvals, reject_mask_or_none)
+        qvals, _ = benjamini_hochberg([p if not np.isnan(p) else 1.0 for p in pvals], cfg["FDR_ALPHA"])
+        for i, c in enumerate(base_cands):
             c["q"] = qvals[i]
 
-
-    # Gate + score + meta attach
-    final = []
-    for c in cands:
+    # --- Gate + score + meta attach (unchanged from your prior flow) ---
+    final: List[Dict[str, Any]] = []
+    for c in base_cands:
         meta = plays.get(c["play_id"], {})
+        # attach metadata (safe defaults)
         c["category"] = meta.get("category", "general")
         c["title"] = meta.get("title", c["play_id"])
-        for k in ["do_this","targeting","channels","cadence","offer","copy_snippets","assets","how_to_launch",
-                  "success_criteria","risks_mitigations","owner_suggested","time_to_set_up_minutes","holdout_plan"]:
+        for k in [
+            "do_this","targeting","channels","cadence","offer","copy_snippets","assets",
+            "how_to_launch","success_criteria","risks_mitigations","owner_suggested",
+            "time_to_set_up_minutes","holdout_plan"
+        ]:
             c[k] = meta.get(k)
         c["effort"] = meta.get("effort", 2)
         c["risk"] = meta.get("risk", 2)
 
         cand = _gate_and_score(c, cfg)
 
-        # Confidence label + expected range
+        # confidence label + expected range (same logic as before)
         if len(cand["failed"]) == 0:
             cand["confidence_label"] = "High"
         elif ("min_n" in cand["passed"]) and ("significance" in cand["failed"]) and ("effect_floor" not in cand["failed"]) and ("financial_floor" not in cand["failed"]):
             cand["confidence_label"] = "Medium"
         else:
             cand["confidence_label"] = "Low"
-        expv = cand.get("expected_$", 0) or 0
+
+        expv = float(cand.get("expected_$") or 0.0)
         cand["expected_range"] = [round(expv * 0.6, 2), round(expv * 1.3, 2)]
 
         final.append(cand)
 
-    # Partition
-    # Partition (single source of truth)
+    # ---------- INSERTED BLOCK STARTS HERE ----------
+    # Expand into variant candidates + apply policy, cooldown, novelty
+     # ---------- INSERTED BLOCK (corrected) ----------
+# Expand into variant candidates + apply policy, cooldown, novelty
+    try:
+        from .policy import load_policy, is_eligible  # optional dependency
+    except Exception:
+        def load_policy(_=None): 
+            return {"allow_free_shipping": True, "max_discount_pct": 15, "channel_caps": {"email_per_week": 2, "sms_per_week": 1}}
+        def is_eligible(expr, policy): 
+            return True
+
+    # Anchor date for week-aware cooldown
+    anchor_dt = None
+    try:
+        val = aligned.get("anchor")
+        if val:
+            anchor_dt = val.date() if hasattr(val, "date") else datetime.date.fromisoformat(str(val)[:10])
+    except Exception:
+        anchor_dt = None
+
+    policy = load_policy(policy_path)
+    log = _load_actions_log(receipts_dir)
+
+    variant_cands: List[Dict[str, Any]] = []
+    for cand in final:
+        pmeta = plays.get(cand["play_id"], {})
+        variants = pmeta.get("variants", [{"id": "base", "offer_type": "no_discount", "lift_multiplier": 1.0}])
+        cooldown_weeks = int(pmeta.get("cooldown_weeks", 1))
+
+        for v in variants:
+            if not is_eligible(v.get("eligible_if", "True"), policy):
+                continue
+
+            vc = cand.copy()
+            vc["variant_id"] = v.get("id", "base")
+            vc["offer"] = {"type": v.get("offer_type"), "value": v.get("value")}
+
+            # Expected $: base × lift − incentive_cost (concierge-simple)
+            exp_base = float(vc.get("expected_$") or 0.0)
+            lift_mult = float(v.get("lift_multiplier", 1.0))
+            aov = float(aligned.get("recent_aov") or aligned.get("L28_aov") or 0.0)
+            audience = int(vc.get("audience_size") or vc.get("n") or 0)
+
+            cost_per_order = 0.0
+            if v.get("cost_type") == "percent_of_aov" and aov > 0:
+                cost_per_order = (float(v.get("cost_value", 0.0)) / 100.0) * aov
+            elif v.get("cost_type") == "flat_per_order":
+                cost_per_order = float(v.get("cost_value", 0.0))
+            incentive_cost = cost_per_order * audience
+
+            vc["expected_$"] = max(0.0, exp_base * lift_mult - incentive_cost)
+
+            # Novelty & cooldown (week-aware)
+            weeks_variant = _weeks_since_used(log, vc["play_id"], vc["variant_id"], asof_date=anchor_dt)
+            weeks_family  = _weeks_since_used(log, vc["play_id"], None,           asof_date=anchor_dt)
+
+            penalty = 0.0
+            if weeks_variant == 0: penalty = 0.25
+            elif weeks_variant == 1: penalty = 0.15
+            elif weeks_variant == 2: penalty = 0.05
+
+            # Cooldown applies only across weeks (>=1), not within same week (0)
+            if (weeks_family is not None) and (weeks_family >= 1) and (weeks_family < cooldown_weeks):
+                # skip this family this week due to cooldown
+                continue
+
+            vc["score"] = (vc.get("score") or 0.0) * (1.0 - penalty)
+            variant_cands.append(vc)
+
+    # If cooldown filtered everything, fall back to passed candidates (ignore cooldown)
+    if not variant_cands:
+        variant_cands = []
+        for cand in final:
+            if cand.get("failed"):   # keep only passes
+                continue
+            vc = cand.copy()
+            vc.setdefault("variant_id", "base")
+            variant_cands.append(vc)
+
+    # Use variants for selection
+    finals_for_selection = variant_cands if variant_cands else final
+    # ---------- INSERTED BLOCK END ----------
+
+    # ---------- INSERTED BLOCK ENDS HERE ----------
+
+    # --- Partition & select (soft diversity + effort budget) ---
     budget = cfg.get("EFFORT_BUDGET", 8)
-    top_actions, backlog, watchlist = _partition_candidates(final, effort_budget=budget)
+    top_actions, backlog, watchlist = _partition_candidates(finals_for_selection, effort_budget=budget)
 
     out = {
-        "actions": top_actions,     # passed all gates + selected under budget/diversity
-        "watchlist": watchlist,     # failed at least one gate (no attachments)
-        "no_call": [],              # keep for compatibility if you use it elsewhere
-        "backlog": [],              # passed all gates but deferred
-        "pilot_actions": []
+        "actions": top_actions,
+        "watchlist": [c for c in final if c.get("failed")],  # failed ≥1 gate (no attachments)
+        "no_call": [],
+        "backlog": [],
+        "pilot_actions": [],
     }
 
-    # Backlog: passed all gates, deferred (set a reason if not already present)
-    for c in backlog:
-        out["backlog"].append({**c, "reason": c.get("defer_reason", "ranked below top actions")})
+    # Backlog: passed all gates but deferred (keep reason)
+    for b in backlog:
+        out["backlog"].append({
+            **b,
+            "reason": b.get("defer_reason", "ranked below top actions"),
+        })
 
-    # Pilot fallback (only if nothing made it into Top Actions)
+    # Pilot fallback (if nothing made it into Top Actions)
     if len(out["actions"]) == 0 and len(final) > 0:
-        # choose the highest-score candidate as a pilot, even if it failed a gate (clearly labeled)
         pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
         n_needed = pilot.get("min_n", 0)
         if pilot.get("metric") in ("repeat_rate", "discount_rate"):
             p = pilot.get("baseline_rate", 0.15) or 0.15
             delta = pilot.get("effect_floor", 0.02) or 0.02
-            # required_n_for_proportion should already exist in your stats/helpers
             n_needed = required_n_for_proportion(p, delta, alpha=0.05, power=0.8)
 
         out["pilot_actions"] = [{
@@ -337,13 +520,21 @@ def select_actions(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str, Any]
 
     return out
 
-def write_actions_log(receipts_dir: str, actions: List[Dict[str, Any]]) -> None:
-    log_path = Path(receipts_dir)/"actions_log.json"
+
+def write_actions_log(receipts_dir: str, actions: list[dict]) -> None:
+    log_path = Path(receipts_dir) / "actions_log.json"
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
     log = []
     if log_path.exists():
-        log = json.loads(log_path.read_text())
+        try: log = json.loads(log_path.read_text())
+        except Exception: log = []
     for a in actions:
-        log.append({"play_id": a["play_id"], "title": a["title"]})
+        log.append({
+            "ts": now,
+            "play_id": a.get("play_id"),
+            "variant_id": a.get("variant_id"),
+            "title": a.get("title"),
+        })
     write_json(str(log_path), log)
 
 def tipover_for_financial(shortfall: float, segment_size: int, baseline_rate: float, gross_margin: float) -> dict:
@@ -364,3 +555,119 @@ def tipover_for_significance(p_base: float, current_n: int, alpha: float, power:
     """
     need_n = int(needed_n_for_proportion_delta(float(p_base), float(target_delta), float(alpha), float(power)))
     return {"needed_n_per_group": max(0, need_n - int(current_n))}
+
+# --- Evidence builder (drop-in) --- #
+def _pct(x, digits=1):
+    return f"{x*100:.{digits}f}%" if (x is not None) else "—"
+
+def _money(x):
+    try:
+        return f"${float(x):,.0f}"
+    except Exception:
+        return "—"
+
+def _num(x):
+    try:
+        return f"{int(x)}"
+    except Exception:
+        return "—"
+
+def _safe_get(al, path, default=None):
+    cur = al
+    try:
+        for k in path:
+            cur = cur[k]
+        return cur
+    except Exception:
+        return default
+
+def _receipt_discount_hygiene(al, a):
+    dr1 = _safe_get(al, ["L28","discount_rate"])
+    dr0 = _safe_get(al, ["L28","prior","discount_rate"])
+    ddr = _safe_get(al, ["L28","delta","discount_rate"])
+    p   = _safe_get(al, ["L28","p","discount_rate"])
+    sig = _safe_get(al, ["L28","sig","discount_rate"])
+    aov_delta = _safe_get(al, ["L28","delta","aov"])
+    est = _money(a.get("expected_$"))
+    msg = []
+    if dr1 is not None and dr0 is not None:
+        msg.append(f"Discounted-order share rose from {_pct(dr0)} → {_pct(dr1)} ({_pct(ddr)} vs prior){' [significant]' if sig else ''}.")
+    if aov_delta is not None:
+        msg.append(f"AOV {_pct(aov_delta)} vs prior (flat/down suggests margin leakage).")
+    msg.append(f"Guardrail expected to recover ≈ {est}.")
+    return " ".join(msg)
+
+def _receipt_winback(al, a):
+    rr1 = _safe_get(al, ["L28","repeat_share"])
+    rr0 = _safe_get(al, ["L28","prior","repeat_share"])
+    drr = _safe_get(al, ["L28","delta","repeat_share"])
+    p   = _safe_get(al, ["L28","p","repeat_share"])
+    sig = _safe_get(al, ["L28","sig","repeat_share"])
+    idn = _safe_get(al, ["L28","meta","identified_recent"], 0)
+    est = _money(a.get("expected_$"))
+    parts = []
+    if rr1 is not None and rr0 is not None:
+        parts.append(f"Repeat share {_pct(rr1)} (was {_pct(rr0)}; {_pct(drr)} vs prior){' [significant]' if sig else ''}.")
+    parts.append(f"Identified customers this period: {_num(idn)}.")
+    parts.append(f"Win-back cohort expected value ≈ {est}.")
+    return " ".join(parts)
+
+def _receipt_bestseller(al, a):
+    aov_d = _safe_get(al, ["L28","delta","aov"])
+    orders_d = _safe_get(al, ["L28","delta","orders"])
+    est = _money(a.get("expected_$"))
+    msg = []
+    if aov_d is not None:
+        msg.append(f"AOV {_pct(aov_d)} vs prior; bundling/hero placement aims to extend this lift.")
+    if orders_d is not None:
+        msg.append(f"Orders {_pct(orders_d)}; amplifying top seller targets attach rate.")
+    msg.append(f"Expected impact ≈ {est}.")
+    return " ".join(msg)
+
+def _receipt_dormant(al, a):
+    rr0 = _safe_get(al, ["L28","prior","repeat_share"])
+    rr1 = _safe_get(al, ["L28","repeat_share"])
+    est = _money(a.get("expected_$"))
+    msg = []
+    if rr1 is not None and rr0 is not None:
+        msg.append(f"Store repeat share {_pct(rr1)} vs {_pct(rr0)} prior; reactivating multi-buyers should lift frequency.")
+    msg.append(f"Expected impact ≈ {est}.")
+    return " ".join(msg)
+
+def evidence_for_action(action: dict, aligned: dict) -> list[str]:
+    """Return a few concise, numeric reasons for this specific action."""
+    pid = (action.get("play_id") or "").lower()
+    if "discount_hygiene" in pid:
+        return [_receipt_discount_hygiene(aligned, action)]
+    if "winback" in pid:
+        return [_receipt_winback(aligned, action)]
+    if "bestseller" in pid or "amplify" in pid:
+        return [_receipt_bestseller(aligned, action)]
+    if "dormant" in pid:
+        return [_receipt_dormant(aligned, action)]
+    # fallback: use rationale/effect
+    eff = action.get("effect_abs")
+    return [action.get("rationale") or f"Effect delta {_pct(eff)} vs prior; expected ≈ {_money(action.get('expected_$'))}."]
+
+def build_receipts(aligned: dict, actions_bundle: dict) -> list[str]:
+    """
+    Take selected actions (and pilot if any) and produce 3–5 'why this will work' bullets.
+    """
+    out = []
+    # Top actions first
+    for a in actions_bundle.get("actions", []):
+        out += evidence_for_action(a, aligned)
+    # If still sparse, include pilot rationale
+    for p in actions_bundle.get("pilot_actions", []):
+        out += evidence_for_action(p, aligned)
+    # Keep it tight
+    uniq = []
+    seen = set()
+    for s in out:
+        k = s.strip()
+        if k and k not in seen:
+            uniq.append(k); seen.add(k)
+        if len(uniq) >= 5:
+            break
+    return uniq
+# --- end evidence builder --- #
