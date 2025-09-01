@@ -17,6 +17,7 @@ from .charts import generate_charts
 from .briefing import render_briefing
 from .action_engine import select_actions, write_actions_log, build_receipts, evidence_for_action
 from .copykit import render_copy_for_actions
+from .validation import DataValidationEngine  # NEW IMPORT
 
 
 def run(csv_path: str, brand: str, out_dir: str) -> None:
@@ -119,6 +120,33 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
     actions = select_actions(g, aligned, cfg, plays, str(receipts_dir))
 
     receipts = build_receipts(aligned_for_template, actions)
+    
+     # --- DATA VALIDATION (NEW) ---
+    validator = DataValidationEngine()
+    validation_results = validator.run_all_checks(
+        df=df, 
+        aligned=aligned_for_template,
+        actions=actions.get("actions", []),
+        qa=qa
+    )
+    
+    # Save validation report
+    validation_path = receipts_dir / "validation_report.json"
+    write_json(str(validation_path), validation_results)
+    
+    # Generate HTML panel for briefing
+    validation_html = validator.to_html_panel(validation_results)
+    
+    # Print validation summary to console
+    print(f"\nData Validation: {validation_results['summary']}")
+    if validation_results['critical_issues']:
+        print("Critical Issues:")
+        for issue in validation_results['critical_issues']:
+            print(f"  - {issue}")
+    if validation_results['warnings']:
+        print("Warnings:")
+        for warning in validation_results['warnings']:
+            print(f"  - {warning}")
 
     # copy assets for selected actions/pilots
     assets_dir = Path(out_dir) / "briefings" / "assets"
@@ -156,13 +184,15 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
         "cfg": cfg,
         "copy_assets": copy_assets,
         "receipts": receipts,
+        "validation_html": validation_html,  # Pass to template
+        "validation_results": validation_results  # Pass full results too
     }
 
     for a in outputs["actions"]:
         a["evidence"] = evidence_for_action(a, aligned_for_template)
     for p in outputs.get("pilot_actions", []):
         p["evidence"] = evidence_for_action(p, aligned_for_template)
-        
+
     briefing_out = Path(out_dir) / "briefings" / f"{brand}_briefing.html"
     render_briefing(
         str(Path(Path(__file__).resolve().parent.parent) / "templates"),
