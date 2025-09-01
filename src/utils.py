@@ -8,7 +8,8 @@ from datetime import timedelta
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from .stats import welch_t_test, two_proportion_test, benjamini_hochberg
+import re
+from .stats import welch_t_test, two_proportion_test, benjamini_hochberg, seasonal_adjustment
 
 DEFAULTS: Dict[str, Any] = {
     # thresholds & knobs (sane defaults; .env can override)
@@ -30,6 +31,9 @@ DEFAULTS: Dict[str, Any] = {
     # pilot knobs
     "PILOT_AUDIENCE_FRACTION": 0.2,
     "PILOT_BUDGET_CAP": 200.0,
+    # seasonality knobs
+    "SEASONAL_ADJUST": True,
+    "SEASONAL_PERIOD": 7,
 }
 
 
@@ -84,6 +88,75 @@ def write_json(path: str, payload: Dict[str, Any]) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     with open(p, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
+
+
+def read_yaml(path: str) -> dict:
+    try:
+        import yaml
+    except Exception:
+        return {}
+    p = Path(path)
+    if not p.exists():
+        return {}
+    try:
+        return yaml.safe_load(p.read_text()) or {}
+    except Exception:
+        return {}
+
+
+def load_category_map(default_dir: Optional[str] = None) -> dict[str, list[str]]:
+    """
+    Load token lists per category from templates/category_map.yml.
+    Returns {category: [token,...]}, all lowercased.
+    """
+    base = Path(default_dir) if default_dir else Path(__file__).resolve().parent.parent / 'templates'
+    yml = base / 'category_map.yml'
+    data = read_yaml(str(yml)) if yml.exists() else {}
+    out: dict[str, list[str]] = {}
+    for cat, tokens in (data or {}).items():
+        try:
+            out[str(cat).lower()] = [str(t).lower() for t in (tokens or [])]
+        except Exception:
+            continue
+    return out
+
+
+def dominant_category_for_order(rows: pd.DataFrame, cat_map: dict[str, list[str]]) -> str:
+    """
+    Given all line-items (rows) for a single order, choose a dominant category by token match.
+    """
+    if not cat_map:
+        return 'unknown'
+    counts: dict[str, int] = {k: 0 for k in cat_map.keys()}
+    token_to_cat: list[tuple[str, str]] = []
+    for c, toks in cat_map.items():
+        for t in toks:
+            token_to_cat.append((t, c))
+    # compile simple word tokenizer
+    word_re = re.compile(r"[A-Za-z]+")
+    names = rows.get('Lineitem name') if 'Lineitem name' in rows.columns else None
+    if names is None:
+        return 'unknown'
+    for name in names.astype(str).str.lower().tolist():
+        for w in word_re.findall(name):
+            for t, c in token_to_cat:
+                if t in w:
+                    counts[c] = counts.get(c, 0) + 1
+    # pick max count category
+    best = 'unknown'
+    best_ct = 0
+    for c, ct in counts.items():
+        if ct > best_ct:
+            best, best_ct = c, ct
+    return best if best_ct > 0 else 'unknown'
+
+
+def estimate_expected_orders(H: int, p_repeat: float, median_ipi: float) -> float:
+    """Simple expected orders over horizon H using repeat probability and median IPI."""
+    H = int(max(H, 0))
+    p = float(max(min(p_repeat or 0.0, 1.0), 0.0))
+    ipi = float(max(median_ipi or 0.0, 1.0))
+    return float(p * (H / ipi))
 
 
 def choose_window(l7_orders: int, l28_orders: int, policy: str = "auto") -> str:
@@ -394,7 +467,9 @@ from .stats import welch_t_test, two_proportion_test, benjamini_hochberg
 
 def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None,
                              min_identified:int=10, discount_positive_is_bad:bool=True,
-                             alpha:float=0.05) -> dict:
+                             alpha:float=0.05,
+                             seasonally_adjust: bool = False,
+                             seasonal_period: int = 7) -> dict:
     """
     Returns nested structure with recent/prior KPIs for L7/L28, deltas and significance.
     Values:
@@ -473,6 +548,17 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
     )
 
     anchor = pd.Timestamp(anchor_ts) if anchor_ts is not None else d_kpi_ord["Created at"].max()
+
+    # Precompute seasonally adjusted daily series if enabled
+    # Use raw df 'd' for adjustment so refunds (negative) are retained in net_sales
+    if seasonally_adjust:
+        orders_adj_ts, _orders_method = seasonal_adjustment(d, 'orders', seasonal=seasonal_period)
+        netsales_adj_ts, _nets_method = seasonal_adjustment(d, 'net_sales', seasonal=seasonal_period)
+        seasonal_method = _nets_method or _orders_method or ""
+    else:
+        orders_adj_ts = None
+        netsales_adj_ts = None
+        seasonal_method = ""
     def _window(anchor: pd.Timestamp, days:int) -> Tuple[pd.Timestamp,pd.Timestamp,pd.Timestamp,pd.Timestamp]:
         recent_end = anchor.normalize() + pd.Timedelta(hours=23, minutes=59, seconds=59)
         recent_start = recent_end.normalize() - pd.Timedelta(days=days-1)
@@ -503,6 +589,24 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             return float("nan")
 
         ns1 = _netsales(rec); ns0 = _netsales(pri)
+
+        # Optional: override orders/net_sales with seasonally adjusted sums over the window
+        if seasonally_adjust and orders_adj_ts is not None and netsales_adj_ts is not None:
+            try:
+                def _sum_range(ts, start, end):
+                    return float(ts.loc[start.normalize():end.normalize()].sum())
+                o1_adj = int(round(max(0.0, _sum_range(orders_adj_ts, rs, re))))
+                o0_adj = int(round(max(0.0, _sum_range(orders_adj_ts, ps, pe))))
+                ns1_adj = max(0.0, _sum_range(netsales_adj_ts, rs, re))
+                ns0_adj = max(0.0, _sum_range(netsales_adj_ts, ps, pe))
+                # Only override if adjusted series cover the windows
+                if o1_adj is not None and o0_adj is not None:
+                    o1, o0 = o1_adj, o0_adj
+                if ns1_adj is not None and ns0_adj is not None:
+                    ns1, ns0 = ns1_adj, ns0_adj
+            except Exception:
+                # fall back silently on any indexing error
+                pass
 
         aov1 = float(ns1/o1) if (o1 and not np.isnan(ns1)) else None
         aov0 = float(ns0/o0) if (o0 and not np.isnan(ns0)) else None
@@ -632,10 +736,18 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             "p": p,
             "q": q,
             "sig": sig,
-            "meta": {"identified_recent": id1, "identified_prior": id0}
+            "meta": {
+                "identified_recent": id1,
+                "identified_prior": id0
+            }
         }
 
     out = {"anchor": anchor, "L7": _summarize(7), "L28": _summarize(28)}
+    out["meta"] = {
+        "seasonal_adjusted": bool(seasonally_adjust),
+        "seasonal_period": int(seasonal_period) if seasonally_adjust else None,
+        "seasonal_method": seasonal_method,
+    }
     # convenience: top-level recent values for backward compatibility
     for label in ("L7","L28"):
         for k in ("net_sales","orders","aov","discount_rate","repeat_share"):
@@ -680,4 +792,3 @@ def _bh_adjust(p_list: list[float], alpha: float = 0.05) -> list[float]:
         except Exception:
             # pure p->q implementation (no alpha arg)
             return _bh_fallback(p_list)
-

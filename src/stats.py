@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Tuple, List, NamedTuple
+import pandas as pd
 import math
 import numpy as np
 from scipy.stats import norm, fisher_exact, ttest_ind
@@ -190,3 +191,103 @@ def needed_n_for_proportion_delta(p_base: float, delta_abs: float, alpha: float 
 # Compatibility alias if your code calls this name
 def required_n_for_proportion(p_base: float, delta_abs: float, alpha: float = 0.05, power: float = 0.8) -> int:
     return needed_n_for_proportion_delta(p_base, delta_abs, alpha, power)
+
+
+# ----------------- Seasonality Adjustment -----------------
+
+def seasonal_adjustment(df: pd.DataFrame, metric: str = 'orders', seasonal: int = 7) -> Tuple[pd.Series, str]:
+    """
+    Return a seasonally adjusted daily time series for the given metric using STL.
+
+    Args:
+      df: DataFrame containing at least 'Created at' and the fields to derive the metric.
+      metric: 'orders' (unique Name per day) or 'net_sales' (Subtotal-Total Discount per day).
+      seasonal: STL seasonal period (days). Weekly=7 by default.
+
+    Returns:
+      pd.Series indexed by day (timestamp at 00:00) with trend+resid (i.e., with seasonal component removed).
+
+    Notes:
+      - Ignores cancelled/refunded rows if those columns exist.
+      - Fills missing days with zeros before decomposition for stability.
+    """
+    try:
+        from statsmodels.tsa.seasonal import STL
+        stl_available = True
+    except Exception:
+        stl_available = False
+
+    if df is None or df.empty:
+        return pd.Series(dtype=float), "None"
+
+    d = df.copy()
+    d['Created at'] = pd.to_datetime(d['Created at'], errors='coerce')
+    d = d.dropna(subset=['Created at'])
+    if d.empty:
+        return pd.Series(dtype=float), "None"
+
+    # Exclude cancelled orders; keep refunds as negative values if present
+    if 'Cancelled at' in d.columns:
+        canc = pd.to_datetime(d['Cancelled at'], errors='coerce')
+        d = d[canc.isna()]
+
+    # Build daily metric
+    grouper = pd.Grouper(key='Created at', freq='D')
+    if metric == 'orders':
+        if 'Name' in d.columns:
+            ts = d.drop_duplicates('Name').groupby(grouper)['Name'].count()
+        else:
+            ts = d.groupby(grouper).size().astype(float)
+    elif metric == 'net_sales':
+        # Prefer Subtotal - Total Discount; fallback to Total - Shipping - Taxes
+        def money(s: pd.Series | None) -> pd.Series:
+            if s is None:
+                return pd.Series(dtype=float)
+            raw = s.astype(str)
+            neg = raw.str.contains(r"^\s*\(.*\)\s*$", na=False)
+            cleaned = raw.str.replace(r"[^\d\.\-]", "", regex=True)
+            out = pd.to_numeric(cleaned, errors='coerce')
+            out.loc[neg] = -out.loc[neg].abs()
+            return out
+        for c in ['Subtotal','Total Discount','Total','Shipping','Taxes']:
+            if c in d.columns:
+                d[c] = money(d[c])
+        if {'Subtotal','Total Discount'}.issubset(d.columns):
+            d['_net'] = d['Subtotal'] - d['Total Discount']
+        elif {'Total','Shipping','Taxes'}.issubset(d.columns):
+            d['_net'] = d['Total'] - d['Shipping'] - d['Taxes']
+        else:
+            d['_net'] = 0.0
+        ts = d.groupby(grouper)['_net'].sum()
+    else:
+        # Generic: sum the provided numeric column per day
+        if metric in d.columns:
+            ts = pd.to_numeric(d[metric], errors='coerce').groupby(grouper).sum()
+        else:
+            return pd.Series(dtype=float)
+
+    ts = ts.astype(float).fillna(0.0)
+    # Ensure continuous daily index
+    if not ts.empty:
+        full_idx = pd.date_range(ts.index.min().normalize(), ts.index.max().normalize(), freq='D')
+        ts = ts.reindex(full_idx, fill_value=0.0)
+
+    # Data sufficiency guardrail
+    n = int(ts.dropna().shape[0])
+    if (not stl_available) or (n < 4 * int(seasonal)):
+        # Fallback: centered moving average removal of seasonal component
+        ma = ts.rolling(int(seasonal), min_periods=1, center=True).mean()
+        adj = (ts - ma).rename(f"{metric}_adj")
+        method = "MovingAverage"
+    else:
+        stl = STL(ts, seasonal=int(seasonal), robust=True)
+        res = stl.fit()
+        adj = (res.trend + res.resid).rename(f"{metric}_adj")
+        method = "STL"
+
+    # Clamp counts to non-negative
+    if metric == 'orders':
+        import numpy as np
+        adj = pd.Series(np.clip(adj.values, 0.0, None), index=adj.index, name=adj.name)
+
+    return adj, method

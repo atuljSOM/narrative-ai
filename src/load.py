@@ -2,7 +2,7 @@
 from __future__ import annotations
 import pandas as pd, numpy as np
 from typing import Dict, Any, Tuple
-from .utils import winsorize_series, write_json
+from .utils import winsorize_series, write_json, load_category_map, dominant_category_for_order
 
 MONETARY = ["Subtotal","Total Discount","Shipping","Taxes","Total","Lineitem price","Lineitem discount"]
 REQUIRED = [
@@ -71,6 +71,19 @@ def preprocess(df: pd.DataFrame):
     qa["raw_rows"] = int(before); qa["final_rows"] = int(len(df))
     qa["min_date"] = str(pd.to_datetime(df["Created at"]).min())
     qa["max_date"] = str(pd.to_datetime(df["Created at"]).max())
+
+    # --- Category tagging (dominant per order) ---
+    try:
+        cat_map = load_category_map()
+        if cat_map and 'Name' in df.columns:
+            cats: dict[str, str] = {}
+            for name, rows in df.groupby('Name'):
+                cats[name] = dominant_category_for_order(rows, cat_map)
+            df['category'] = df['Name'].map(cats).fillna('unknown')
+        else:
+            df['category'] = 'unknown'
+    except Exception:
+        df['category'] = 'unknown'
     return df, qa
 
 def load_csv(path: str, qa_out_path: str|None=None):

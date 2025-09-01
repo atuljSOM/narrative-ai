@@ -142,3 +142,102 @@ playbooks:
         lift_multiplier: 1.2
         cost_type: percent_of_aov
         cost_value: 10
+
+  - id: subscription_nudge
+    title: "Convert Regulars to Subscription"
+    category: lifecycle
+    effort: 3
+    risk: 2
+    cooldown_weeks: 2
+    do_this: "Offer 15% off + free shipping for subscription signup on frequently purchased items"
+    targeting: "Customers with 3+ orders of same product in 90 days"
+    expected_lift: "20-30% LTV increase"
+    why_it_works: "Beauty/supplements have natural replenishment cycles"
+    channels: ["email","site"]
+    cadence: "Always-on message; target product pages and post-purchase"
+    variants:
+      - id: sub_15_free_ship
+        offer_type: percent_off
+        value: 15
+        eligible_if: "policy.allow_free_shipping and policy.max_discount_pct >= 15"
+        lift_multiplier: 1.2
+        cost_type: percent_of_aov
+        cost_value: 15
+      - id: sub_free_ship
+        offer_type: free_shipping
+        eligible_if: "policy.allow_free_shipping"
+        lift_multiplier: 1.1
+
+  - id: sample_to_full
+    title: "Sample to Full-Size Conversion"
+    category: merchandising
+    effort: 2
+    risk: 1
+    do_this: "Follow up sample/travel size buyers with full-size discount"
+    targeting: "Bought travel/sample 14–21 days ago, no full-size purchase"
+    expected_lift: "35% conversion on samples"
+    channels: ["email","site"]
+    cadence: "Email Day 14; Reminder Day 21; PDP banner for 7 days"
+    variants:
+      - id: pct_15
+        offer_type: percent_off
+        value: 15
+        eligible_if: "policy.max_discount_pct >= 15"
+        lift_multiplier: 1.2
+        cost_type: percent_of_aov
+        cost_value: 15
+
+  - id: routine_builder
+    title: "Complete Your Routine"
+    category: merchandising
+    effort: 4
+    risk: 2
+    do_this: "Bundle complementary products (cleanser+serum+moisturizer)"
+    targeting: "Single-product purchasers in skincare"
+    expected_lift: "40% AOV increase"
+    channels: ["email","site"]
+    cadence: "7-day push with bundle hero + PDP upsell"
+    variants:
+      - id: bundle_no_discount
+        offer_type: bundle
+        eligible_if: "True"
+        lift_multiplier: 1.0
+      - id: bundle_10
+        offer_type: percent_off
+        value: 10
+        eligible_if: "policy.max_discount_pct >= 10"
+        lift_multiplier: 1.1
+        cost_type: percent_of_aov
+        cost_value: 10
+
+  - id: ingredient_education
+    title: "Ingredient Education Campaign"
+    category: lifecycle
+    effort: 3
+    risk: 1
+    do_this: "Educational email series about key ingredients they've purchased"
+    targeting: "First-time buyers of technical products (retinol, acids, peptides)"
+    expected_lift: "25% higher retention"
+    channels: ["email"]
+    cadence: "3-part series over 10 days"
+    variants:
+      - id: edu_series
+        offer_type: no_discount
+        eligible_if: "True"
+        lift_multiplier: 1.0
+
+  - id: empty_bottle
+    title: "Running Low Reminder"
+    category: lifecycle
+    effort: 2
+    risk: 1
+    do_this: "Timely reorder reminder based on product size and usage rate"
+    targeting: "Calculate based on oz/ml purchased and typical usage"
+    timing: "Size-based: 30ml=25 days, 50ml=40 days, 100ml=75 days"
+    channels: ["email","sms"]
+    cadence: "Automated reminders on predicted depletion date"
+    variants:
+      - id: nudge_no_discount
+        offer_type: no_discount
+        eligible_if: "True"
+        lift_multiplier: 1.0

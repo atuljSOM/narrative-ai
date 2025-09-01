@@ -40,67 +40,14 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
     seg_dir = Path(out_dir) / "segments"
     seg_files = build_segments(g, cfg.get("GROSS_MARGIN", 0.70), str(seg_dir))
 
-    # --- Charts: normalize what generate_charts returns and copy near the HTML ---
-    chart_out_dir = Path(out_dir) / "charts"
-    # upstream may return stems, dicts, tuples, or paths
-    chart_items_raw = generate_charts(aligned, str(chart_out_dir)) or []
-    chart_items = list(chart_items_raw)
-
-    briefing_dir = Path(out_dir) / "briefings"
-    briefing_dir.mkdir(parents=True, exist_ok=True)
-    charts_brief_dir = briefing_dir / "charts"
-    charts_brief_dir.mkdir(parents=True, exist_ok=True)
-
-    def _coerce_chart_path(item, default_dir: Path) -> Path | None:
-        """
-        Accepts: 'repeat_share', 'repeat_share.png', Path, (name, path),
-                 {'path': ...}|{'file': ...}|{'filename': ...}|{'filepath': ...}
-        Returns an absolute existing .png path or None.
-        """
-        # dict form
-        if isinstance(item, dict):
-            for k in ("path", "file", "filename", "filepath"):
-                if k in item and item[k]:
-                    item = item[k]
-                    break
-        # tuple/list form
-        if isinstance(item, (list, tuple)) and len(item) >= 2:
-            item = item[1]
-        # str/Path
-        if isinstance(item, Path):
-            p = item
-        elif isinstance(item, str):
-            p = Path(item)
-        else:
-            return None
-        # add suffix if missing
-        if p.suffix == "":
-            p = p.with_suffix(".png")
-        # resolve to disk
-        if not p.is_absolute():
-            if p.exists():
-                p = p.resolve()
-            else:
-                p = (default_dir / p.name).resolve()
-        return p if p.exists() else None
-
-    chart_paths_abs_resolved: list[str] = []
-    chart_paths_rel: list[str] = []
-    for item in chart_items:
-        src_path = _coerce_chart_path(item, chart_out_dir)
-        if src_path is None:
-            print(f"[warn] chart unresolved or missing on disk: {repr(item)}")
-            continue
-        dst_path = charts_brief_dir / src_path.name
-        try:
-            shutil.copy2(src_path, dst_path)
-            chart_paths_abs_resolved.append(str(src_path))
-            chart_paths_rel.append(str(dst_path.relative_to(briefing_dir)))
-        except Exception as e:
-            print(f"[warn] failed to copy chart {src_path} -> {dst_path}: {e}")
+    # (charts generation moved to after actions are selected)
 
     # --- KPI snapshot with deltas (use RAW df)
-    aligned_for_template = kpi_snapshot_with_deltas(df)
+    aligned_for_template = kpi_snapshot_with_deltas(
+        df,
+        seasonally_adjust=bool(cfg.get("SEASONAL_ADJUST", False)),
+        seasonal_period=int(cfg.get("SEASONAL_PERIOD", 7)),
+    )
 
     # --- adaptive knobs from snapshot
     l7_orders  = int(aligned_for_template.get("L7", {}).get("orders") or 0)
@@ -120,6 +67,37 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
     actions = select_actions(g, aligned, cfg, plays, str(receipts_dir))
 
     receipts = build_receipts(aligned_for_template, actions)
+
+    # --- Charts (new): generate with feature df and copy near the HTML ---
+    chart_out_dir = Path(out_dir) / "charts"
+    chart_data = generate_charts(
+        g=g,
+        aligned=aligned_for_template,
+        actions=actions,
+        out_dir=str(chart_out_dir),
+        df=df,
+        chosen_window=str(cfg.get("CHOSEN_WINDOW", "L28"))
+    ) or {}
+
+    briefing_dir = Path(out_dir) / "briefings"
+    briefing_dir.mkdir(parents=True, exist_ok=True)
+    charts_brief_dir = briefing_dir / "charts"
+    charts_brief_dir.mkdir(parents=True, exist_ok=True)
+
+    charts_map_rel: dict[str, str] = {}
+    chart_paths_abs_resolved: list[str] = []
+    for name, src in chart_data.items():
+        try:
+            src_path = Path(src)
+            if not src_path.exists():
+                print(f"[warn] chart missing on disk: {src}")
+                continue
+            dst_path = charts_brief_dir / src_path.name
+            shutil.copy2(src_path, dst_path)
+            charts_map_rel[name] = str(dst_path.relative_to(briefing_dir))
+            chart_paths_abs_resolved.append(str(src_path.resolve()))
+        except Exception as e:
+            print(f"[warn] failed to copy chart {src} -> {dst_path}: {e}")
     
      # --- DATA VALIDATION (NEW) ---
     validator = DataValidationEngine()
@@ -164,7 +142,8 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
     write_json(str(summary_path), {
         "aligned": aligned,
         "charts_abs": chart_paths_abs_resolved,
-        "charts_rel": chart_paths_rel,
+        "charts_rel": list(charts_map_rel.values()),
+        "charts_map": charts_map_rel,
         "segments": seg_files,
         "actions": actions.get("actions", []),
         "watchlist": actions.get("watchlist", []),
@@ -175,7 +154,8 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
 
     # render briefing
     outputs = {
-        "charts": chart_paths_rel,  # what the template uses
+        "charts": list(charts_map_rel.values()),  # backward-compat (not used by new template)
+        "charts_map": charts_map_rel,
         "segments_bundle": [s for s in seg_files if s.endswith(".zip")][0] if seg_files else "",
         "actions": actions.get("actions", []),
         "watchlist": actions.get("watchlist", []),

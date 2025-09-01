@@ -93,20 +93,23 @@ class TransactionVolumeCheck(ValidationCheck):
 
 class AOVConsistencyCheck(ValidationCheck):
     """
-    Verifies AOV consistency across different calculation methods.
-    Flags hidden fees or calculation errors.
+    Verifies AOV stability across two independent Shopify calculations:
+      1) Order-level: sum(Subtotal − Total Discount) / #unique_orders
+      2) Line-item:  (Σ(Lineitem price * Lineitem quantity) − Σ(Lineitem discount)) / #unique_orders
+
+    Reports percent difference and flags per thresholds:
+      green <5%, amber 5–12%, red >12%.
     """
-    
+
     def __init__(self):
         super().__init__(
             "AOV Consistency",
-            "Validates average order value calculations"
+            "Validates AOV via order-level vs line-item paths"
         )
-    
+
     def run(self, data: Dict[str, Any]) -> Dict[str, Any]:
         df = data.get('df')
-        aligned = data.get('aligned', {})
-        
+
         if df is None or df.empty:
             return {
                 'status': 'red',
@@ -114,66 +117,80 @@ class AOVConsistencyCheck(ValidationCheck):
                 'details': {},
                 'severity': 'critical'
             }
-        
-        # Method 1: From aligned summary (if available)
-        aov_aligned = aligned.get('L28', {}).get('aov') or aligned.get('L7', {}).get('aov')
-        
-        # Method 2: Direct calculation from orders
-        if 'Subtotal' in df.columns and 'Total Discount' in df.columns:
-            net_sales = (pd.to_numeric(df['Subtotal'], errors='coerce') - 
-                        pd.to_numeric(df['Total Discount'], errors='coerce')).sum()
-            order_count = df['Name'].nunique() if 'Name' in df.columns else len(df)
-            aov_direct = net_sales / order_count if order_count > 0 else 0
-        else:
-            aov_direct = None
-        
-        # Method 3: From Total (if available)
-        if 'Total' in df.columns:
-            total_sum = pd.to_numeric(df['Total'], errors='coerce').sum()
-            order_count = df['Name'].nunique() if 'Name' in df.columns else len(df)
-            aov_total = total_sum / order_count if order_count > 0 else 0
-        else:
-            aov_total = None
-        
-        # Compare methods
-        aovs = [a for a in [aov_aligned, aov_direct, aov_total] if a is not None and a > 0]
-        
-        if len(aovs) < 2:
+
+        d = df.copy()
+
+        # Exclude cancelled/refunded if present (defensive)
+        if 'Cancelled at' in d.columns:
+            canc = pd.to_datetime(d['Cancelled at'], errors='coerce')
+            d = d[canc.isna()]
+        if 'Financial Status' in d.columns:
+            d = d[~d['Financial Status'].astype(str).str.contains('refunded|chargeback', case=False, na=False)]
+
+        # Determine unique order count (Shopify 'Name') AFTER filtering
+        order_count = int(d['Name'].nunique()) if 'Name' in d.columns else int(len(d))
+
+        # ---- Order-level AOV (de-duplicate orders) ----
+        aov_orders = None
+        if {'Subtotal', 'Total Discount'}.issubset(d.columns) and order_count > 0:
+            # Drop duplicates to avoid summing order-level fields multiple times
+            if 'Name' in d.columns:
+                d_orders = d.sort_values('Created at' if 'Created at' in d.columns else 'Name')
+                d_orders = d_orders.drop_duplicates(subset=['Name'])
+            else:
+                d_orders = d
+            subtotal_sum = pd.to_numeric(d_orders['Subtotal'], errors='coerce').sum()
+            discount_sum = pd.to_numeric(d_orders['Total Discount'], errors='coerce').sum()
+            net_sales_orders = float(subtotal_sum - discount_sum)
+            aov_orders = float(net_sales_orders / order_count) if order_count else None
+
+        # ---- Line-item AOV (independent path) ----
+        aov_line = None
+        if {'Lineitem price', 'Lineitem quantity'}.issubset(d.columns) and order_count > 0:
+            li_price = pd.to_numeric(d['Lineitem price'], errors='coerce')
+            li_qty   = pd.to_numeric(d['Lineitem quantity'], errors='coerce')
+            li_rev   = float((li_price * li_qty).sum())
+            if 'Lineitem discount' in d.columns:
+                li_disc = pd.to_numeric(d['Lineitem discount'], errors='coerce').sum()
+            else:
+                li_disc = 0.0
+            net_sales_line = float(li_rev - (li_disc if not np.isnan(li_disc) else 0.0))
+            aov_line = float(net_sales_line / order_count) if order_count else None
+
+        # ---- Validate presence of both paths ----
+        if not (aov_orders and aov_orders > 0) or not (aov_line and aov_line > 0):
             return {
                 'status': 'amber',
-                'message': 'Insufficient data for AOV cross-validation',
-                'details': {'aov_calculated': aovs[0] if aovs else None},
+                'message': 'Insufficient data to cross-check AOV (need order-level and line-item fields)',
+                'details': {
+                    'aov_orders': None if not (aov_orders and aov_orders > 0) else round(aov_orders, 2),
+                    'aov_line': None if not (aov_line and aov_line > 0) else round(aov_line, 2),
+                    'order_count': order_count
+                },
                 'severity': 'warning'
             }
-        
-        aov_mean = np.mean(aovs)
-        aov_std = np.std(aovs)
-        cv = (aov_std / aov_mean * 100) if aov_mean > 0 else 0
-        
-        if cv > 10:
-            status = 'red'
-            severity = 'critical'
-            message = f"⚠️ AOV calculations differ by {cv:.1f}% - possible data issue"
-        elif cv > 5:
-            status = 'amber'
-            severity = 'warning'
-            message = f"Minor AOV variance ({cv:.1f}%) detected across methods"
+
+        # ---- Compare percent difference ----
+        diff_pct = float(abs(aov_orders - aov_line) / aov_orders * 100.0) if aov_orders else 0.0
+
+        if diff_pct > 12.0:
+            status, severity = 'red', 'critical'
+            message = f"⚠️ AOV methods differ by {diff_pct:.1f}% (orders ${aov_orders:.2f} vs line ${aov_line:.2f})"
+        elif diff_pct >= 5.0:
+            status, severity = 'amber', 'warning'
+            message = f"Minor AOV variance {diff_pct:.1f}% (orders ${aov_orders:.2f} vs line ${aov_line:.2f})"
         else:
-            status = 'green'
-            severity = 'info'
-            message = f"✓ AOV consistent: ${aov_mean:.2f} (±{cv:.1f}%)"
-        
+            status, severity = 'green', 'info'
+            message = f"✓ AOV stable: orders ${aov_orders:.2f} vs line ${aov_line:.2f} (Δ{diff_pct:.1f}%)"
+
         return {
             'status': status,
             'message': message,
             'details': {
-                'aov_mean': f"${aov_mean:.2f}",
-                'aov_methods': {
-                    'from_summary': f"${aov_aligned:.2f}" if aov_aligned else "N/A",
-                    'from_orders': f"${aov_direct:.2f}" if aov_direct else "N/A",
-                    'from_totals': f"${aov_total:.2f}" if aov_total else "N/A"
-                },
-                'coefficient_variation': f"{cv:.1f}%"
+                'aov_orders': f"${aov_orders:.2f}",
+                'aov_line': f"${aov_line:.2f}",
+                'difference_pct': f"{diff_pct:.1f}%",
+                'order_count': order_count
             },
             'severity': severity
         }

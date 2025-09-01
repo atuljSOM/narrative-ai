@@ -2,81 +2,152 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Narrative Briefing — {{ brand }}</title>
+  <title>{{ brand }} — Weekly Growth Briefing</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif; margin: 24px; color: #111; }
-    h1,h2,h3 { margin: 0 0 8px 0; }
-    h1 { font-size: 24px; }
-    h2 { font-size: 18px; margin-top: 20px; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif; 
+      margin: 0;
+      padding: 24px;
+      color: #111;
+      background: #fafafa;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 32px 40px;
+      text-align: center;
+    }
+    h1 { font-size: 32px; margin: 0 0 8px 0; font-weight: 700; }
+    h2 { font-size: 20px; margin-top: 32px; margin-bottom: 16px; font-weight: 600; }
     h3 { font-size: 16px; margin-top: 12px; }
+    .header-meta { opacity: 0.95; font-size: 15px; }
+    .content { padding: 32px 40px; }
+    
     .muted { color: #555; }
     .small { font-size: 12px; color: #666; }
     .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-left: 6px; background: #f2f2f2; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .kpi { border: 1px solid #eee; border-radius: 10px; padding: 12px; }
-    .row { display: grid; grid-template-columns: 1.2fr 1fr 0.9fr 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px dashed #eee; }
-    .row.header { font-weight: 600; border-bottom: 1px solid #ddd; }
-    .row:last-child { border-bottom: none; }
-    .green { color: #0a7f2e; } .red { color: #b00020; } .gray { color: #777; }
-    .tag { background: #eef2ff; color: #1e40af; border-radius: 6px; padding: 2px 6px; font-size: 12px; margin-left: 6px; }
-    .section { margin-top: 28px; }
-    ul { margin: 6px 0 0 18px; }
-    code { background: #f6f8fa; padding: 2px 6px; border-radius: 6px; }
-    /* Charts: single row, auto-fit to N charts */
-    .charts-one-line { display: grid; gap: 8px; align-items: stretch; }
-    .chart-card { border:1px solid #eee; border-radius:10px; padding:6px; background:#fff; }
-    img.chart { width: 100%; height: auto; max-height: 360px; object-fit: contain; border-radius:6px; display:block; }
-    /* Actions: high-emphasis cards */
-    .actions-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-    .action-checklist { list-style:none; padding-left:0; margin:8px 0 16px 0; }
-    .action-checklist li { margin: 4px 0; }
-    .action-card { border:1px solid #e5e7eb; border-left:6px solid #2563eb; background:#f8fafc; border-radius:12px; padding:14px; margin:12px 0; }
-    .action-title { font-size:16px; font-weight:600; }
-    .num { width:26px; height:26px; border-radius:50%; background:#2563eb; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:700; }
-    .badges { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
-    .badge { font-size:12px; border-radius:999px; padding:2px 8px; background:#eef2ff; color:#1e40af; }
-    .impact { background:#ecfdf5; color:#065f46; }
-    .effort { background:#fff7ed; color:#9a3412; }
-    .cta-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
-    .btn { display:inline-block; border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px; text-decoration:none; color:#111; background:#fff; }
-    .btn:hover { background:#f3f4f6; }
-    .steps ul { margin:6px 0 0 18px; }
-    .prev { color:#888; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     
-    /* Validation Panel Styles */
+    /* Enhanced KPI Cards */
+    .kpi { 
+      border: 1px solid #e5e7eb; 
+      border-radius: 12px; 
+      padding: 16px;
+      background: #fafafa;
+      position: relative;
+    }
+    .kpi-badge {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: #6366f1;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+      z-index: 2;
+    }
+    /* Leave a little headroom so the badge does not sit in the header row */
+    .kpi .row.header { margin-top: 18px; }
+    .row { 
+      display: grid; 
+      grid-template-columns: 1.3fr 1fr 1.1fr 1fr; 
+      gap: 8px; 
+      padding: 8px 8px; 
+      border-bottom: 1px solid #f0f0f0; 
+      align-items: center;
+    }
+    .row.header { 
+      font-weight: 600; 
+      border-bottom: none;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+    }
+    .row > div:nth-child(1) { text-align: left; }
+    .row > div:nth-child(2) { text-align: right; padding-right: 10px; }
+    .row > div:nth-child(3) { text-align: left; padding-left: 10px; }
+    .row > div:nth-child(4) { text-align: left; }
+    .seasonality-tag { display: inline-block; margin-left: 6px; font-size: 11px; color: #9ca3af; white-space: nowrap; }
+    .row:last-child { border-bottom: none; }
+    .green { color: #059669; font-weight: 600; } 
+    .red { color: #dc2626; font-weight: 600; } 
+    .gray { color: #9ca3af; }
+    
+    /* Validation Panel - Enhanced */
     .validation-banner {
       background: linear-gradient(to right, #f9fafb, #f3f4f6);
       border: 1px solid #e5e7eb;
       border-radius: 12px;
-      padding: 16px 20px;
-      margin: 16px 0 20px 0;
+      padding: 20px 24px;
+      margin-bottom: 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .validation-banner.success {
+      background: linear-gradient(to right, #f0fdf4, #dcfce7);
+      border-color: #86efac;
+    }
+    
+    .validation-banner.warning {
+      background: linear-gradient(to right, #fffbeb, #fef3c7);
+      border-color: #fde68a;
+    }
+    
+    .validation-banner.error {
+      background: linear-gradient(to right, #fef2f2, #fee2e2);
+      border-color: #fecaca;
     }
     
     .validation-score-wrapper {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
     }
     
     .validation-score-circle {
-      width: 60px;
-      height: 60px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 24px;
       font-weight: bold;
       color: white;
       position: relative;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
-    .score-green { background: linear-gradient(135deg, #10b981, #059669); }
-    .score-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .score-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .score-green { 
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    }
+    .score-amber { 
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    }
+    .score-red { 
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    }
     
     .validation-summary {
       flex: 1;
@@ -88,36 +159,39 @@
       font-weight: 600;
       color: #374151;
       margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .validation-message {
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.4;
+      font-size: 14px;
+      color: #4b5563;
+      line-height: 1.5;
     }
     
     .validation-details {
       display: flex;
-      gap: 24px;
+      gap: 20px;
       align-items: center;
     }
     
     .validation-check {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
+      gap: 8px;
+      font-size: 13px;
       color: #6b7280;
+      white-space: nowrap;
     }
     
     .check-icon {
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: bold;
     }
     
@@ -125,20 +199,16 @@
     .check-amber { background: #fed7aa; color: #92400e; }
     .check-red { background: #fee2e2; color: #991b1b; }
     
-    .validation-expandable {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #e5e7eb;
-    }
-    
     .validation-toggle {
-      color: #3b82f6;
-      font-size: 12px;
+      color: #6366f1;
+      font-size: 13px;
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      margin-top: 12px;
+      font-weight: 500;
     }
     
     .validation-toggle:hover {
@@ -147,11 +217,11 @@
     
     .validation-details-grid {
       display: none;
-      margin-top: 12px;
-      padding: 12px;
+      margin-top: 16px;
+      padding: 16px;
       background: white;
       border-radius: 8px;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 12px;
     }
     
@@ -159,40 +229,219 @@
       display: grid;
     }
     
-    .validation-detail-card {
-      padding: 10px;
-      background: #f9fafb;
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
+    /* Enhanced Charts Section */
+    .charts-container {
+      margin: 24px 0;
     }
     
-    .detail-label {
-      font-size: 11px;
-      color: #9ca3af;
+    .charts-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    }
+    
+    .chart-card { 
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      background: #fafafa;
+      transition: all 0.2s;
+    }
+    
+    .chart-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+    
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 12px;
+      color: #4b5563;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 4px;
     }
     
-    .detail-value {
-      font-size: 13px;
+    img.chart { 
+      width: 100%; 
+      height: auto; 
+      min-height: 320px;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 8px;
+      display: block;
+      background: white;
+      padding: 8px;
+    }
+    
+    /* Actions */
+    .section { margin-top: 32px; }
+    .action-checklist { 
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .action-checklist li { 
+      margin: 8px 0;
+      padding-left: 24px;
+      position: relative;
+    }
+    .action-checklist li:before {
+      content: "☐";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: #6366f1;
+      font-weight: bold;
+    }
+    
+    .action-card { 
+      border: 2px solid #e5e7eb;
+      border-left: 5px solid #6366f1;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      transition: all 0.2s;
+    }
+    
+    .action-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateX(4px);
+    }
+    
+    .actions-header { 
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .num { 
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .action-title { 
+      font-size: 18px;
+      font-weight: 600;
+      flex: 1;
+    }
+    
+    .badges { 
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .badge { 
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 4px 12px;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-weight: 600;
+    }
+    
+    .impact { background: #d1fae5; color: #065f46; }
+    .effort { background: #fed7aa; color: #92400e; }
+    
+    .cta-row { 
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    
+    .btn { 
+      display: inline-block;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 8px 16px;
+      text-decoration: none;
       color: #374151;
+      background: white;
+      font-size: 14px;
       font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .btn:hover { 
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+    }
+    
+    .steps ul { 
+      margin: 8px 0 8px 20px;
+      padding-left: 0;
+    }
+    
+    .steps li {
+      margin: 6px 0;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    
+    .prev { color: #9ca3af; font-size: 11px; }
+    
+    /* Watchlist */
+    .watchlist-card {
+      border: 1px solid #e5e7eb;
+      border-left: 5px solid #9ca3af;
+      background: #fafafa;
+      opacity: 0.85;
+    }
+    
+    /* Footer */
+    .footer {
+      background: #f9fafb;
+      padding: 24px 40px;
+      text-align: center;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .validation-details { display: none; }
+      .content { padding: 20px; }
     }
   </style>
 </head>
 <body>
 
 {% macro fmt_money(x, decimals=0) -%}
-  {{ ('$%.' ~ decimals ~ 'f') % x if x is not none else '—' }}
+  {%- if x is not none -%}
+    {%- if x >= 1000000 -%}${{ '%.1fM' % (x / 1000000) }}
+    {%- elif x >= 1000 -%}${{ '%.1fK' % (x / 1000) }}
+    {%- else -%}${{ ('%.{}f'.format(decimals)) % x }}{%- endif -%}
+  {%- else -%}—{%- endif -%}
 {%- endmacro %}
 
 {% macro fmt_pct(x, digits=1) -%}
-  {{ ('%.' ~ digits ~ 'f%%') % (x*100) if x is not none else '—' }}
+  {{ ('%.{}f%%'.format(digits)) % (x*100) if x is not none else '—' }}
 {%- endmacro %}
 
 {% macro fmt_delta_pct(x, digits=1) -%}
-  {{ ('%+' ~ digits ~ '.1f%%') % (x*100) if x is not none else '—' }}
+  {{ ('%+.' ~ digits ~ 'f%%') % (x*100) if x is not none else '—' }}
 {%- endmacro %}
 
 {% macro arrow(delta, good_when_up=True, significant=True) -%}
@@ -202,18 +451,13 @@
   <span class="{{ color }}">{{ '▲' if dir == 'up' else '▼' }}</span>
 {%- endmacro %}
 
-{% macro prev_val(curr, delta) -%}
-  {%- if curr is not none and delta is not none and (1 + delta) != 0 -%}
-    {{ curr / (1 + delta) }}
-  {%- else -%}
-    {{ None }}
-  {%- endif -%}
-{%- endmacro %}
-
 {% macro kpi_block(label) -%}
   <div class="kpi">
+    {% if aligned.get('meta', {}).get('seasonal_adjusted') %}
+      <span class="kpi-badge">Adjusted for seasonality</span>
+    {% endif %}
     <div class="row header">
-      <div>Metric</div><div>Value</div><div>Δ vs prior</div><div>Notes</div>
+      <div>Metric</div><div>Current</div><div>Change</div><div>Notes</div>
     </div>
 
     {# Net Sales #}
@@ -221,13 +465,13 @@
     {% set dlt = aligned[label]['delta']['net_sales'] %}
     {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
     <div class="row">
-      <div>Net Sales</div>
+      <div><strong>Net Sales</strong></div>
       <div>{{ fmt_money(curr) }}</div>
       <div>
         {{ arrow(dlt, True, True) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ fmt_money(prev) }})</span>
       </div>
-      <div class="small muted">vs previous {{ aligned[label]['window_days'] }} days</div>
+      <div class="small muted">—</div>
     </div>
 
     {# Orders #}
@@ -235,13 +479,13 @@
     {% set dlt = aligned[label]['delta']['orders'] %}
     {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
     <div class="row">
-      <div>Orders</div>
+      <div><strong>Orders</strong></div>
       <div>{{ curr if curr is not none else '—' }}</div>
       <div>
         {{ arrow(dlt, True, True) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ prev|int if prev is not none else '—' }})</span>
       </div>
-      <div class="small muted">vs previous {{ aligned[label]['window_days'] }} days</div>
+      <div class="small muted">—</div>
     </div>
 
     {# AOV #}
@@ -249,15 +493,15 @@
     {% set dlt = aligned[label]['delta']['aov'] %}
     {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
     <div class="row">
-      <div>AOV</div>
-      <div>{{ fmt_money(curr, 2) }}</div>
+      <div><strong>AOV</strong></div>
+      <div>{{ fmt_money(curr, 0) }}</div>
       <div>
-        {{ arrow(dlt, True, aligned[label]['sig']['aov']) }}
-        {{ fmt_delta_pct(dlt) }}
-        <span class="small prev">(prev {{ fmt_money(prev, 2) }})</span>
+        {{ arrow(dlt, True, aligned[label]['sig']['aov']) }} {{ fmt_delta_pct(dlt) }}
+        <span class="small prev">(prev {{ fmt_money(prev, 0) }})</span>
       </div>
       <div class="small muted">
-        {% if aligned[label]['p']['aov'] is not none %}p={{ '%.3f' % aligned[label]['p']['aov'] }}{% else %}—{% endif %}
+        {% set p = aligned[label]['p']['aov'] %}
+        {% if p is not none %}p={{ '%.3f' % p }}{% else %}—{% endif %}
       </div>
     </div>
 
@@ -266,15 +510,15 @@
     {% set dlt = aligned[label]['delta']['discount_rate'] %}
     {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
     <div class="row">
-      <div>Discount Rate</div>
+      <div><strong>Discount Rate</strong></div>
       <div>{{ fmt_pct(curr, 1) }}</div>
       <div>
-        {{ arrow(dlt, False, aligned[label]['sig']['discount_rate']) }}
-        {{ fmt_delta_pct(dlt) }}
+        {{ arrow(dlt, False, aligned[label]['sig']['discount_rate']) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ fmt_pct(prev, 1) }})</span>
       </div>
       <div class="small muted">
-        {% if aligned[label]['p']['discount_rate'] is not none %}p={{ '%.3f' % aligned[label]['p']['discount_rate'] }}{% else %}—{% endif %}
+        {% set p = aligned[label]['p']['discount_rate'] %}
+        {% if p is not none %}p={{ '%.3f' % p }}{% else %}—{% endif %}
       </div>
     </div>
 
@@ -283,245 +527,242 @@
     {% set dlt = aligned[label]['delta']['repeat_share'] %}
     {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
     <div class="row">
-      <div>Repeat Share</div>
+      <div><strong>Repeat Share</strong></div>
       <div>{{ fmt_pct(curr, 1) }}</div>
       <div>
-        {{ arrow(dlt, True, aligned[label]['sig']['repeat_share']) }}
-        {{ fmt_delta_pct(dlt) }}
+        {{ arrow(dlt, True, aligned[label]['sig']['repeat_share']) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ fmt_pct(prev, 1) }})</span>
       </div>
       <div class="small muted">
-        {% if aligned[label]['p']['repeat_share'] is not none %}p={{ '%.3f' % aligned[label]['p']['repeat_share'] }}{% else %}—{% endif %}
+        {% set p = aligned[label]['p']['repeat_share'] %}
+        {% if p is not none %}p={{ '%.3f' % p }}{% else %}—{% endif %}
       </div>
     </div>
   </div>
 {%- endmacro %}
 
-<header>
-  <h1>Weekly Revenue Briefing — {{ brand }}</h1>
-  <div class="muted">Week of {{ aligned['anchor'].strftime('%Y-%m-%d') if aligned.get('anchor') else '' }}</div>
-</header>
+<div class="container">
+  <header class="header">
+    <h1>{{ brand }}</h1>
+    <div class="header-meta">Weekly Growth Briefing • {{ aligned['anchor'].strftime('%B %d, %Y') if aligned.get('anchor') else 'Current Week' }}</div>
+  </header>
 
-<!-- Data Validation Panel - Compact Banner Style -->
-{% if outputs.validation_results %}
-<div class="validation-banner">
-  <div class="validation-score-wrapper">
-    <div class="validation-score-circle {% if outputs.validation_results.validation_score >= 80 %}score-green{% elif outputs.validation_results.validation_score >= 60 %}score-amber{% else %}score-red{% endif %}">
-      {{ outputs.validation_results.validation_score }}
-    </div>
-    <div class="validation-summary">
-      <div class="validation-title">Data Quality Score</div>
-      <div class="validation-message">{{ outputs.validation_results.summary }}</div>
-    </div>
-  </div>
-  
-  <div class="validation-details">
-    {% for check_name, check_result in outputs.validation_results.checks.items() %}
-    <div class="validation-check">
-      <div class="check-icon {% if check_result.status == 'green' %}check-green{% elif check_result.status == 'amber' %}check-amber{% else %}check-red{% endif %}">
-        {% if check_result.status == 'green' %}✓{% elif check_result.status == 'amber' %}!{% else %}✗{% endif %}
+  <div class="content">
+    <!-- Enhanced Data Validation Panel -->
+    {% if outputs.validation_results %}
+    {% set score = outputs.validation_results.validation_score %}
+    {% set status = outputs.validation_results.overall_status %}
+    <div class="validation-banner {% if status == 'green' %}success{% elif status == 'amber' %}warning{% else %}error{% endif %}">
+      <div class="validation-score-wrapper">
+        <div class="validation-score-circle {% if score >= 80 %}score-green{% elif score >= 60 %}score-amber{% else %}score-red{% endif %}">
+          {{ score }}
+        </div>
+        <div class="validation-summary">
+          <div class="validation-title">Data Quality Score</div>
+          <div class="validation-message">{{ outputs.validation_results.summary }}</div>
+        </div>
       </div>
-      <span>{{ check_name }}</span>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-
-<!-- Only show detailed issues if there are problems -->
-{% if outputs.validation_results.overall_status != 'green' %}
-<div style="margin: -8px 0 20px 0;">
-  <a href="#" class="validation-toggle" onclick="toggleValidation(event)">
-    <span>View validation details</span>
-    <span>▼</span>
-  </a>
-  <div class="validation-details-grid" id="validationDetails">
-    {% for check_name, check_result in outputs.validation_results.checks.items() %}
-      {% if check_result.status != 'green' %}
-      <div class="validation-detail-card">
-        <div class="detail-label">{{ check_name }}</div>
-        <div class="detail-value">{{ check_result.message }}</div>
-        {% if check_result.details %}
-          {% for key, value in check_result.details.items() %}
-            {% if value and key != 'recommendation' %}
-            <div style="margin-top: 4px; font-size: 11px; color: #9ca3af;">
-              {{ key.replace('_', ' ').title() }}: {{ value }}
-            </div>
-            {% endif %}
-          {% endfor %}
-        {% endif %}
-      </div>
-      {% endif %}
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-{% endif %}
-
-<section class="section">
-  <h2>KPI Snapshot</h2>
-  <div class="grid">
-    <div>
-      <h3>L7</h3>
-      {{ kpi_block('L7') }}
-    </div>
-    <div>
-      <h3>L28</h3>
-      {{ kpi_block('L28') }}
-    </div>
-  </div>
-</section>
-
-{% if outputs.get('charts') and outputs['charts'] %}
-<section class="section">
-  <h2>Mini Charts</h2>
-  {# Force single line by setting columns == number of charts #}
-  <div class="charts-one-line" style="grid-template-columns: repeat({{ outputs['charts']|length }}, minmax(120px, 1fr));">
-    {% for c in outputs['charts'] %}
-      <div class="chart-card"><img class="chart" src="{{ c }}" alt="chart {{ loop.index }}" /></div>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-<section class="section">
-  <h2>Your Top Actions <span class="pill">Do these this week</span></h2>
-
-  {% if outputs.get('actions') and outputs['actions'] %}
-    <!-- Quick checklist summary -->
-    <ul class="action-checklist">
-      {% for a in outputs['actions'] %}
-        <li>☐ <strong>{{ a.get('title','') }}</strong> — {{ a.get('do_this','') }}</li>
-        {% if a.get('offer') %}
-          <div class="small muted">
-             Offer: {{ a['offer'].get('type') }}{% if a['offer'].get('value') %} ({{ a['offer']['value'] }}%){% endif %}
+      
+      <div class="validation-details">
+        {% for check_name, check_result in outputs.validation_results.checks.items() %}
+        <div class="validation-check">
+          <div class="check-icon {% if check_result.status == 'green' %}check-green{% elif check_result.status == 'amber' %}check-amber{% else %}check-red{% endif %}">
+            {% if check_result.status == 'green' %}✓{% elif check_result.status == 'amber' %}!{% else %}✗{% endif %}
           </div>
-        {% elif a.get('variant_id') %}
-          <div class="small muted">Variant: {{ a['variant_id'] }}</div>
+          <span>{{ check_name.replace('_', ' ').title() }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if status != 'green' %}
+    <a href="#" class="validation-toggle" onclick="toggleValidation(event)">
+      <span>View validation details</span>
+      <span>▼</span>
+    </a>
+    <div class="validation-details-grid" id="validationDetails">
+      {% for check_name, check_result in outputs.validation_results.checks.items() %}
+        {% if check_result.status != 'green' %}
+        <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <div style="font-size: 12px; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px;">{{ check_name }}</div>
+          <div style="font-size: 13px; color: #374151;">{{ check_result.message }}</div>
+        </div>
         {% endif %}
       {% endfor %}
-    </ul>
-
-    {% for a in outputs['actions'] %}
-      <div class="action-card">
-        <div class="actions-header">
-          <div class="num">{{ loop.index }}</div>
-          <div class="action-title">{{ a.get('title','') }}</div>
-          <div class="badges">
-            {% if a.get('expected_$') %}<span class="badge impact">Est. {{ fmt_money(a.get('expected_$')) }}</span>{% endif %}
-            {% if a.get('effort') is not none %}<span class="badge effort">Effort: {{ a.get('effort') }}</span>{% endif %}
-            {% if a.get('confidence_label') %}<span class="badge">{{ a.get('confidence_label') }}</span>{% endif %}
-          </div>
-        </div>
-        <div class="muted">{{ a.get('do_this','') }}</div>
-        {% if a.get('how_to_launch') %}
-          <div class="steps">
-            <div class="small" style="margin-top:6px;"><strong>Steps:</strong></div>
-            <ul>
-              {% for step in a['how_to_launch'][:5] %}<li>{{ step }}</li>{% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-        <div class="cta-row">
-          {% if a.get('attachment') %}<span class="btn">⬇︎ Download: {{ a.get('attachment') }}</span>{% endif %}
-          {% if a.get('targeting') %}<span class="btn">🎯 Targeting</span>{% endif %}
-          {% if a.get('offer') %}<span class="btn">🏷 Offer</span>{% endif %}
-        </div>
-      </div>
-    {% endfor %}
-  {% else %}
-    <div class="muted">No actions passed all gates. See Pilot below.</div>
-  {% endif %}
-</section>
-
-{% if outputs.get('pilot_actions') and outputs['pilot_actions'] %}
-<section class="section">
-  <h2>Pilot (if no top actions)</h2>
-  {% for p in outputs['pilot_actions'] %}
-    <div class="action-card" style="border-left-color:#0ea5e9;">
-      <div class="actions-header">
-        <div class="num">P</div>
-        <div class="action-title">{{ p.get('title','') }}</div>
-        <div class="badges">
-          <span class="badge">Pilot</span>
-          {% if p.get('expected_$') %}<span class="badge impact">Est. {{ fmt_money(p.get('expected_$')) }}</span>{% endif %}
-        </div>
-      </div>
-      <div class="muted">{{ p.get('do_this','') }}</div>
-      {% if p.get('offer') %}
-        <div class="small muted">
-          Offer: {{ p['offer'].get('type') }}{% if p['offer'].get('value') %} ({{ p['offer']['value'] }}%){% endif %}
-        </div>
-      {% elif p.get('variant_id') %}
-        <div class="small muted">Variant: {{ p['variant_id'] }}</div>
-      {% endif %}
-      <div class="small" style="margin-top:6px;">
-        Audience: ~{{ (p.get('pilot_audience_fraction',0.2)*100)|int }}% &nbsp;•&nbsp;
-        Budget cap: {{ fmt_money(p.get('pilot_budget_cap', 0)) }} &nbsp;•&nbsp;
-        Decision rule: {{ p.get('decision_rule','') }}
-      </div>
     </div>
-  {% endfor %}
-</section>
-{% endif %}
+    {% endif %}
+    {% endif %}
 
-{% if outputs.get('watchlist') is not none %}
-<section class="section">
-  <h2>Watchlist (Directional — needs more data or $)</h2>
-  {% if outputs['watchlist'] %}
-    {% for w in outputs['watchlist'] %}
-      <div class="action-card" style="border-left-color:#9ca3af;background:#fcfcfd;">
-        <div class="action-title">{{ w.get('title','') }} <span class="pill">Watch</span></div>
-        <div class="small muted" style="margin-top:4px;">
-          {% if w.get('reasons') %}
-            {{ w['reasons'] | join('; ') }}
-          {% else %}
-            Fails: {{ (w.get('failed', []) or []) | join(', ') }}
-          {% endif %}
+    <!-- KPI Section with L7 and L28 -->
+    <section class="section">
+      <h2>Key Performance Indicators</h2>
+      <div class="grid">
+        <div>
+          <h3>Last 7 Days</h3>
+          {{ kpi_block('L7') }}
+        </div>
+        <div>
+          <h3>Last 28 Days</h3>
+          {{ kpi_block('L28') }}
         </div>
       </div>
-    {% endfor %}
-  {% else %}
-    <div class="muted">No watchlist items this week.</div>
-  {% endif %}
-</section>
-{% endif %}
+    </section>
 
-{% if outputs.get('backlog') is not none %}
-<section class="section">
-  <h2>Backlog (Passed gates — deferred)</h2>
-  {% if outputs['backlog'] %}
-    <ul>
-    {% for b in outputs['backlog'] %}
-      <li><strong>{{ b.get('title','') }}</strong> — <span class="muted">{{ b.get('reason','ranked below top actions') }}</span></li>
-    {% endfor %}
-    </ul>
-  {% else %}
-    <div class="muted">No backlog items.</div>
-  {% endif %}
-</section>
-{% endif %}
+    <!-- Enhanced Charts Section -->
+    {% if outputs.get('charts') and outputs['charts'] %}
+    <section class="section charts-container">
+      <h2>Analytics & Insights</h2>
+      <div class="charts-grid">
+        {% for chart in outputs['charts'] %}
+        <div class="chart-card">
+          <div class="chart-title">
+            {% if 'repurchase' in chart.lower() %}Customer Repurchase Timeline
+            {% elif 'velocity' in chart.lower() %}Product Performance
+            {% elif 'segment' in chart.lower() %}Customer Segments
+            {% elif 'impact' in chart.lower() or 'forecast' in chart.lower() %}Revenue Impact
+            {% else %}Analysis{% endif %}
+          </div>
+          <img class="chart" src="{{ chart }}" alt="Chart" />
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
-<section class="section">
-  <h2>Receipts</h2>
-  <p class="muted">Why we believe this week's actions will work — based on your recent deltas and store baselines.</p>
-  <ul class="receipts">
-   {% if outputs.receipts and outputs.receipts|length > 0 %}
-     {% for r in outputs.receipts %}
-       <li>{{ r }}</li>
-     {% endfor %}
-   {% else %}
-     <li>We selected these actions based on L28 deltas in AOV, orders, discount share, and repeat mix; no single metric dominated the decision.</li>
-   {% endif %}
-  </ul>
+    <!-- Actions Section -->
+    <section class="section">
+      <h2>Your Top Actions <span class="pill">This Week's Focus</span></h2>
 
-</section>
+      {% if outputs.get('actions') and outputs['actions'] %}
+        <ul class="action-checklist">
+          {% for a in outputs['actions'] %}
+            <li>
+              <strong>{{ a.get('title','') }}</strong> — {{ a.get('do_this','') }}
+              {% if a.get('offer') %}
+                <span class="small muted">({{ a['offer'].get('type') }}{% if a['offer'].get('value') %}: {{ a['offer']['value'] }}%{% endif %})</span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
 
-{% if outputs.get('segments_bundle') %}
-<section class="section">
-  <h2>Attachments</h2>
-  <div class="small muted">Segments bundle: <code>{{ outputs['segments_bundle'] }}</code> (upload to Klaviyo as lists/segments)</div>
-</section>
-{% endif %}
+        {% for a in outputs['actions'] %}
+          <div class="action-card">
+            <div class="actions-header">
+              <div class="num">{{ loop.index }}</div>
+              <div class="action-title">{{ a.get('title','') }}</div>
+              <div class="badges">
+                {% if a.get('expected_$') %}<span class="badge impact">+{{ fmt_money(a.get('expected_$')) }}</span>{% endif %}
+                {% if a.get('effort') %}<span class="badge effort">Effort: {{ a.get('effort') }}/5</span>{% endif %}
+                {% if a.get('confidence_label') %}<span class="badge">{{ a.get('confidence_label') }}</span>{% endif %}
+              </div>
+            </div>
+            <div class="muted" style="margin-bottom: 12px;">{{ a.get('do_this','') }}</div>
+            {% if a.get('how_to_launch') %}
+              <div class="steps">
+                <div class="small" style="margin-top:8px;"><strong>Implementation Steps:</strong></div>
+                <ul>
+                  {% for step in a['how_to_launch'][:3] %}<li>{{ step }}</li>{% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+            <div class="cta-row">
+              {% if a.get('attachment') %}<span class="btn">📥 Download Segment</span>{% endif %}
+              {% if a.get('targeting') %}<span class="btn">🎯 View Targeting</span>{% endif %}
+              {% if a.get('offer') %}<span class="btn">🏷 {{ a['offer'].get('type', 'Offer') }}</span>{% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted" style="text-align: center; padding: 20px;">No actions passed all confidence thresholds. See pilot recommendations below.</div>
+      {% endif %}
+    </section>
+
+    <!-- Pilot Actions -->
+    {% if outputs.get('pilot_actions') and outputs['pilot_actions'] %}
+    <section class="section">
+      <h2>Pilot Test <span class="pill" style="background: #fef3c7; color: #92400e;">Experimental</span></h2>
+      {% for p in outputs['pilot_actions'] %}
+        <div class="action-card" style="border-left-color:#f59e0b;">
+          <div class="actions-header">
+            <div class="num" style="background: linear-gradient(135deg, #f59e0b, #d97706);">P</div>
+            <div class="action-title">{{ p.get('title','') }}</div>
+            <div class="badges">
+              <span class="badge" style="background: #fed7aa; color: #92400e;">Pilot</span>
+              {% if p.get('expected_$') %}<span class="badge impact">Est. +{{ fmt_money(p.get('expected_$')) }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="muted">{{ p.get('do_this','') }}</div>
+          <div class="small" style="margin-top:12px; padding: 8px; background: #fffbeb; border-radius: 6px;">
+            <strong>Test Parameters:</strong> {{ (p.get('pilot_audience_fraction',0.2)*100)|int }}% of audience • 
+            Budget: {{ fmt_money(p.get('pilot_budget_cap', 200)) }} • 
+            Duration: 14 days • 
+            Success: {{ p.get('decision_rule','CI excludes 0') }}
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- Watchlist -->
+    {% if outputs.get('watchlist') and outputs['watchlist'] %}
+    <section class="section">
+      <h2>Watchlist <span class="pill" style="background: #f3f4f6;">Monitoring</span></h2>
+      {% for w in outputs['watchlist'] %}
+        <div class="action-card watchlist-card">
+          <div class="action-title">{{ w.get('title','') }}</div>
+          <div class="small muted" style="margin-top:8px;">
+            {% if w.get('reasons') %}
+              {{ w['reasons'] | join(' • ') }}
+            {% else %}
+              Needs: {{ (w.get('failed', []) or ['more data']) | join(', ') }}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- Evidence Section -->
+    <section class="section">
+      <h2>Statistical Evidence</h2>
+      <div style="background: #f9fafb; border-radius: 12px; padding: 20px;">
+        <p class="muted" style="margin-bottom: 16px;">Why we believe this week's actions will drive results:</p>
+        <ul style="margin-left: 20px;">
+          {% if outputs.receipts and outputs.receipts|length > 0 %}
+            {% for r in outputs.receipts %}
+              <li style="margin: 8px 0; color: #374151;">{{ r }}</li>
+            {% endfor %}
+          {% else %}
+            <li>Actions selected based on L28 performance deltas with statistical significance (p < 0.05)</li>
+            <li>Expected impact calculated using your store's historical conversion rates and gross margin</li>
+            <li>Confidence levels determined through Benjamini-Hochberg adjusted testing to minimize false positives</li>
+          {% endif %}
+        </ul>
+      </div>
+    </section>
+
+    <!-- Attachments -->
+    {% if outputs.get('segments_bundle') %}
+    <section class="section">
+      <h2>Attachments</h2>
+      <div style="background: #f9fafb; border-radius: 8px; padding: 16px;">
+        <strong>Segments Bundle:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px;">{{ outputs['segments_bundle'] }}</code>
+        <div class="small muted" style="margin-top: 8px;">Ready for Klaviyo import - contains all customer segments for this week's actions</div>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+
+  <footer class="footer">
+    <strong style="color: #6366f1;">Aura Intelligence</strong><br>
+    Prescriptive Analytics for Beauty & Wellness Brands<br>
+    <div style="margin-top: 8px; font-size: 12px;">
+      Generated {{ aligned['anchor'].strftime('%B %d, %Y at %I:%M %p') if aligned.get('anchor') else 'today' }} • 
+      Analysis window: L28 • 
+      Confidence threshold: 90%
+    </div>
+  </footer>
+</div>
 
 <script>
 function toggleValidation(event) {
