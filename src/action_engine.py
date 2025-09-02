@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np, pandas as pd, json
 from .policy import load_policy, is_eligible
 import datetime
+from enum import Enum
 
 # stats & scoring
 from .stats import (
@@ -27,11 +28,443 @@ from .utils import write_json
 from .utils import subscription_threshold_for_product, categorize_product
 from .features import compute_repeat_curve
 
+class ActionStatus(Enum):
+    """Status tracking for recommended actions"""
+    PENDING = "pending"
+    IMPLEMENTED = "implemented"
+    SKIPPED = "skipped"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+
+class ActionTracker:
+    """
+    Tracks implementation and results of recommended actions.
+    Stores historical performance to improve future predictions.
+    """
+    
+    def __init__(self, receipts_dir: str):
+        self.receipts_dir = Path(receipts_dir)
+        self.outcomes_file = self.receipts_dir / "action_outcomes.json"
+        self.performance_file = self.receipts_dir / "prediction_performance.json"
+        self.receipts_dir.mkdir(parents=True, exist_ok=True)
+        
+    def track_action(
+        self,
+        action_id: str,
+        play_id: str,
+        variant_id: str = "base",
+        status: ActionStatus = ActionStatus.PENDING,
+        predicted_revenue: float = 0.0,
+        predicted_effect: float = 0.0,
+        confidence_score: float = 0.0,
+        timestamp: datetime.datetime = None
+    ) -> Dict[str, Any]:
+        """Initialize tracking for a new action."""
+        timestamp = timestamp or datetime.datetime.now(datetime.timezone.utc)
+        
+        outcome = {
+            "action_id": action_id,
+            "play_id": play_id,
+            "variant_id": variant_id,
+            "status": status.value,
+            "created_at": timestamp.isoformat(),
+            "updated_at": timestamp.isoformat(),
+            "predicted": {
+                "revenue": float(predicted_revenue),
+                "effect": float(predicted_effect),
+                "confidence": float(confidence_score),
+                # Monthly plan: measure over ~28 days
+                "expected_complete_by": (timestamp + datetime.timedelta(days=28)).isoformat()
+            },
+            "actual": {
+                "revenue": None,
+                "effect": None,
+                "implemented_at": None,
+                "completed_at": None,
+                "notes": None
+            },
+            "validation": {
+                "data_quality_at_recommendation": None,
+                "implementation_verified": False,
+                "results_verified": False
+            }
+        }
+        
+        # Load existing outcomes
+        outcomes = self._load_outcomes()
+        outcomes[action_id] = outcome
+        self._save_outcomes(outcomes)
+        
+        return outcome
+    
+    def update_implementation(
+        self,
+        action_id: str,
+        implemented: bool,
+        implementation_notes: str = None,
+        channels_used: List[str] = None,
+        audience_size_actual: int = None
+    ) -> Dict[str, Any]:
+        """Track when an action is actually implemented."""
+        outcomes = self._load_outcomes()
+        
+        if action_id not in outcomes:
+            raise ValueError(f"Action {action_id} not found in tracker")
+        
+        outcome = outcomes[action_id]
+        now = datetime.datetime.now(datetime.timezone.utc)
+        
+        if implemented:
+            outcome["status"] = ActionStatus.IN_PROGRESS.value
+            outcome["actual"]["implemented_at"] = now.isoformat()
+            outcome["actual"]["implementation_notes"] = implementation_notes
+            outcome["actual"]["channels_used"] = channels_used
+            outcome["actual"]["audience_size"] = audience_size_actual
+            outcome["validation"]["implementation_verified"] = True
+        else:
+            outcome["status"] = ActionStatus.SKIPPED.value
+            outcome["actual"]["skipped_reason"] = implementation_notes
+        
+        outcome["updated_at"] = now.isoformat()
+        
+        outcomes[action_id] = outcome
+        self._save_outcomes(outcomes)
+        
+        return outcome
+    
+    def track_results(
+        self,
+        action_id: str,
+        actual_revenue: float,
+        actual_orders: int = None,
+        actual_conversion_rate: float = None,
+        measurement_period_days: int = 14,
+        notes: str = None
+    ) -> Dict[str, Any]:
+        """Track actual results after measurement period."""
+        outcomes = self._load_outcomes()
+        
+        if action_id not in outcomes:
+            raise ValueError(f"Action {action_id} not found in tracker")
+        
+        outcome = outcomes[action_id]
+        now = datetime.datetime.now(datetime.timezone.utc)
+        
+        # Calculate actual effect if we have conversion data
+        actual_effect = None
+        if actual_conversion_rate is not None and outcome["predicted"]["effect"]:
+            # This assumes effect was measured as a rate change
+            baseline = outcome["predicted"].get("baseline_rate", 0.15)
+            actual_effect = actual_conversion_rate - baseline
+        
+        outcome["status"] = ActionStatus.COMPLETED.value
+        outcome["actual"]["revenue"] = float(actual_revenue)
+        outcome["actual"]["orders"] = actual_orders
+        outcome["actual"]["conversion_rate"] = actual_conversion_rate
+        outcome["actual"]["effect"] = actual_effect
+        outcome["actual"]["measurement_period_days"] = measurement_period_days
+        outcome["actual"]["completed_at"] = now.isoformat()
+        outcome["actual"]["notes"] = notes
+        outcome["validation"]["results_verified"] = True
+        
+        # Calculate accuracy metrics
+        predicted_rev = outcome["predicted"]["revenue"]
+        if predicted_rev > 0:
+            accuracy_pct = (actual_revenue / predicted_rev) * 100
+            outcome["validation"]["revenue_accuracy_pct"] = round(accuracy_pct, 1)
+            outcome["validation"]["prediction_quality"] = self._rate_prediction(accuracy_pct)
+        
+        outcome["updated_at"] = now.isoformat()
+        
+        outcomes[action_id] = outcome
+        self._save_outcomes(outcomes)
+        
+        # Update performance tracking
+        self._update_performance_metrics(outcome)
+        
+        return outcome
+    
+    def get_action_status(self, action_id: str) -> Dict[str, Any]:
+        """Get current status of an action."""
+        outcomes = self._load_outcomes()
+        return outcomes.get(action_id)
+    
+    def get_performance_summary(self, play_id: str = None) -> Dict[str, Any]:
+        """Get historical performance summary, optionally filtered by play_id."""
+        outcomes = self._load_outcomes()
+        perf = self._load_performance()
+        
+        # Filter completed actions
+        completed = [
+            o for o in outcomes.values()
+            if o["status"] == ActionStatus.COMPLETED.value
+            and (play_id is None or o["play_id"] == play_id)
+        ]
+        
+        if not completed:
+            return {
+                "n_completed": 0,
+                "message": "No completed actions to analyze"
+            }
+        
+        # Calculate aggregate metrics
+        total_predicted = sum(o["predicted"]["revenue"] for o in completed)
+        total_actual = sum(o["actual"]["revenue"] for o in completed)
+        
+        # Accuracy distribution
+        accuracies = [
+            o["validation"].get("revenue_accuracy_pct", 0)
+            for o in completed
+            if o["validation"].get("revenue_accuracy_pct")
+        ]
+        
+        summary = {
+            "n_completed": len(completed),
+            "total_predicted_revenue": round(total_predicted, 2),
+            "total_actual_revenue": round(total_actual, 2),
+            "aggregate_accuracy_pct": round((total_actual / total_predicted * 100) if total_predicted > 0 else 0, 1),
+            "median_accuracy_pct": round(float(np.median(accuracies)), 1) if accuracies else None,
+            "actions_over_performed": sum(1 for a in accuracies if a > 110),
+            "actions_under_performed": sum(1 for a in accuracies if a < 90),
+            "actions_on_target": sum(1 for a in accuracies if 90 <= a <= 110),
+            "play_id": play_id
+        }
+        
+        # Add play-specific performance if available
+        if play_id and play_id in perf:
+            summary["play_performance"] = perf[play_id]
+        
+        return summary
+    
+    def get_pending_actions(self) -> List[Dict[str, Any]]:
+        """Get all actions awaiting implementation or results."""
+        outcomes = self._load_outcomes()
+        pending = [
+            o for o in outcomes.values()
+            if o["status"] in [ActionStatus.PENDING.value, ActionStatus.IN_PROGRESS.value]
+        ]
+        
+        # Sort by age (oldest first)
+        pending.sort(key=lambda x: x["created_at"])
+        
+        # Add days_waiting for each
+        now = datetime.datetime.now(datetime.timezone.utc)
+        for p in pending:
+            created = datetime.datetime.fromisoformat(p["created_at"].replace("Z", "+00:00"))
+            p["days_waiting"] = (now - created).days
+            
+            # Flag if overdue
+            if p["status"] == ActionStatus.IN_PROGRESS.value:
+                expected = datetime.datetime.fromisoformat(
+                    p["predicted"]["expected_complete_by"].replace("Z", "+00:00")
+                )
+                p["is_overdue"] = now > expected
+        
+        return pending
+    
+    def generate_weekly_performance_report(self) -> str:
+        """Generate a markdown report of prediction performance."""
+        summary = self.get_performance_summary()
+        pending = self.get_pending_actions()
+        
+        report = f"""# Aura Prediction Performance Report
+Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}
+
+## Overall Accuracy
+- **Actions Completed**: {summary['n_completed']}
+- **Aggregate Accuracy**: {summary['aggregate_accuracy_pct']}%
+- **Median Accuracy**: {summary.get('median_accuracy_pct', 'N/A')}%
+
+## Revenue Impact
+- **Total Predicted**: ${summary['total_predicted_revenue']:,.2f}
+- **Total Actual**: ${summary['total_actual_revenue']:,.2f}
+- **Variance**: ${summary['total_actual_revenue'] - summary['total_predicted_revenue']:+,.2f}
+
+## Prediction Quality
+- **Over-performed (>110%)**: {summary['actions_over_performed']} actions
+- **On Target (90-110%)**: {summary['actions_on_target']} actions  
+- **Under-performed (<90%)**: {summary['actions_under_performed']} actions
+
+## Pending Actions
+"""
+        
+        if pending:
+            report += f"**{len(pending)} actions awaiting results:**\n\n"
+            for p in pending[:5]:  # Show top 5
+                status_emoji = "⏳" if p["status"] == ActionStatus.PENDING.value else "🚀"
+                overdue = " ⚠️ OVERDUE" if p.get("is_overdue") else ""
+                report += f"- {status_emoji} {p['play_id']} (Day {p['days_waiting']}){overdue}\n"
+        else:
+            report += "*No pending actions*\n"
+        
+        report += "\n---\n*Use these insights to calibrate future predictions*"
+        
+        return report
+    
+    def _load_outcomes(self) -> Dict[str, Dict[str, Any]]:
+        """Load action outcomes from disk."""
+        if self.outcomes_file.exists():
+            try:
+                with open(self.outcomes_file, 'r') as f:
+                    return json.load(f)
+            except Exception:
+                return {}
+        return {}
+    
+    def _save_outcomes(self, outcomes: Dict[str, Dict[str, Any]]):
+        """Save action outcomes to disk."""
+        write_json(str(self.outcomes_file), outcomes)
+    
+    def _load_performance(self) -> Dict[str, Any]:
+        """Load performance metrics from disk."""
+        if self.performance_file.exists():
+            try:
+                with open(self.performance_file, 'r') as f:
+                    return json.load(f)
+            except Exception:
+                return {}
+        return {}
+    
+    def _save_performance(self, performance: Dict[str, Any]):
+        """Save performance metrics to disk."""
+        write_json(str(self.performance_file), performance)
+    
+    def _update_performance_metrics(self, outcome: Dict[str, Any]):
+        """Update aggregated performance metrics for a play type."""
+        perf = self._load_performance()
+        play_id = outcome["play_id"]
+        
+        if play_id not in perf:
+            perf[play_id] = {
+                "n": 0,
+                "total_predicted": 0.0,
+                "total_actual": 0.0,
+                "accuracies": [],
+                "last_updated": None
+            }
+        
+        p = perf[play_id]
+        p["n"] += 1
+        p["total_predicted"] += outcome["predicted"]["revenue"]
+        p["total_actual"] += outcome["actual"]["revenue"]
+        
+        if outcome["validation"].get("revenue_accuracy_pct"):
+            p["accuracies"].append(outcome["validation"]["revenue_accuracy_pct"])
+        
+        p["avg_accuracy"] = round(float(np.mean(p["accuracies"])), 1) if p["accuracies"] else None
+        p["median_accuracy"] = round(float(np.median(p["accuracies"])), 1) if p["accuracies"] else None
+        p["last_updated"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        
+        self._save_performance(perf)
+    
+    def _rate_prediction(self, accuracy_pct: float) -> str:
+        """Rate prediction quality based on accuracy."""
+        if accuracy_pct >= 90 and accuracy_pct <= 110:
+            return "excellent"
+        elif accuracy_pct >= 75 and accuracy_pct <= 125:
+            return "good"
+        elif accuracy_pct >= 50 and accuracy_pct <= 150:
+            return "fair"
+        else:
+            return "poor"
+
+# Add this to the existing _load_actions_log function
 def _load_actions_log(receipts_dir: str) -> list[dict]:
     p = Path(receipts_dir) / "actions_log.json"
     if not p.exists(): return []
     try: return json.loads(p.read_text())
     except Exception: return []
+
+# Modify the existing select_actions function to initialize tracking
+def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, policy_path: str | None = None) -> Dict[str, Any]:
+    """
+    (Original function content remains the same until the end)
+    """
+    # ... [Keep all existing code] ...
+    
+    # At the end, after building 'out' dictionary, add tracking initialization:
+    
+    # Initialize tracker
+    tracker = ActionTracker(receipts_dir)
+    
+    # Track all selected actions
+    for action in out.get("actions", []):
+        action_id = f"{action.get('play_id')}_{action.get('variant_id', 'base')}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        action["action_id"] = action_id  # Add ID to action for reference
+        
+        tracker.track_action(
+            action_id=action_id,
+            play_id=action.get("play_id"),
+            variant_id=action.get("variant_id", "base"),
+            predicted_revenue=action.get("expected_$", 0.0),
+            predicted_effect=action.get("effect_abs", 0.0),
+            confidence_score=action.get("score", 0.0)
+        )
+    
+    # Also track pilot actions
+    for pilot in out.get("pilot_actions", []):
+        action_id = f"pilot_{pilot.get('play_id')}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        pilot["action_id"] = action_id
+        
+        tracker.track_action(
+            action_id=action_id,
+            play_id=pilot.get("play_id"),
+            variant_id="pilot",
+            predicted_revenue=pilot.get("expected_$", 0.0),
+            predicted_effect=pilot.get("effect_abs", 0.0),
+            confidence_score=pilot.get("score", 0.0)
+        )
+    
+    return out
+
+# Add new function for post-implementation tracking
+def track_implementation_status(
+    receipts_dir: str,
+    action_id: str,
+    implemented: bool,
+    notes: str = None,
+    channels: List[str] = None,
+    audience_size: int = None
+) -> Dict[str, Any]:
+    """
+    Call this after implementing (or skipping) an action.
+    Can be called from CLI or integrated into your workflow.
+    """
+    tracker = ActionTracker(receipts_dir)
+    return tracker.update_implementation(
+        action_id=action_id,
+        implemented=implemented,
+        implementation_notes=notes,
+        channels_used=channels,
+        audience_size_actual=audience_size
+    )
+
+def track_action_results(
+    receipts_dir: str,
+    action_id: str,
+    revenue: float,
+    orders: int = None,
+    conversion_rate: float = None,
+    notes: str = None
+) -> Dict[str, Any]:
+    """
+    Call this after measuring results (typically 14 days later).
+    """
+    tracker = ActionTracker(receipts_dir)
+    return tracker.track_results(
+        action_id=action_id,
+        actual_revenue=revenue,
+        actual_orders=orders,
+        actual_conversion_rate=conversion_rate,
+        # Monthly plan: default measurement period ≈ 28 days
+        measurement_period_days=28,
+        notes=notes
+    )
+
+def get_weekly_performance_report(receipts_dir: str) -> str:
+    """Generate performance report for the weekly briefing."""
+    tracker = ActionTracker(receipts_dir)
+    return tracker.generate_weekly_performance_report()
 
 def _weeks_since_used(
     log: list[dict],
@@ -879,6 +1312,9 @@ def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, poli
 
             vc["expected_$"] = max(0.0, exp_base * lift_mult - incentive_cost)
 
+            # Scale expected impact to a monthly plan (≈4 weeks)
+            vc["expected_$"] *= 4.0
+
             # Non-blocking LTV preference: if audience LTV is top-decile, nudge toward no-discount
             try:
                 aud_ltv = float(cand.get("audience_ltv90") or 0.0)
@@ -960,7 +1396,8 @@ def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, poli
             "pilot_audience_fraction": cfg.get("PILOT_AUDIENCE_FRACTION", 0.2),
             "pilot_budget_cap": cfg.get("PILOT_BUDGET_CAP", 200.0),
             "n_needed": int(n_needed),
-            "decision_rule": "Graduate to full rollout if CI excludes 0 or q ≤ α at 14 days; else rollback.",
+            # Monthly plan: evaluate pilot over ~28 days
+            "decision_rule": "Graduate to full rollout if CI excludes 0 or q ≤ α at 28 days; else rollback.",
             "confidence_label": "Low",
             "expected_range": [
                 round((pilot.get("expected_$", 0) or 0) * 0.6, 2),

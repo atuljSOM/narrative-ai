@@ -15,7 +15,15 @@ from .features import compute_features, aligned_periods_summary
 from .segments import build_segments
 from .charts import generate_charts
 from .briefing import render_briefing
-from .action_engine import select_actions, write_actions_log, build_receipts, evidence_for_action
+from .action_engine import (
+    select_actions,
+    write_actions_log,
+    build_receipts,
+    evidence_for_action,
+    track_implementation_status,
+    track_action_results,
+)
+from .action_engine import ActionTracker
 from .copykit import render_copy_for_actions
 from .validation import DataValidationEngine  # NEW IMPORT
 
@@ -138,6 +146,11 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
         selected_for_copy,
     )
 
+    # --- Performance tracking summary for template (if any)
+    tracker = ActionTracker(str(receipts_dir))
+    performance_summary = tracker.get_performance_summary()
+    pending_actions = tracker.get_pending_actions()
+
     # receipts summary file
     summary_path = receipts_dir / "run_summary.json"
     write_json(str(summary_path), {
@@ -150,6 +163,8 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
         "watchlist": actions.get("watchlist", []),
         "pilot_actions": actions.get("pilot_actions", []),
         "backlog": actions.get("backlog", []),
+        "performance_summary": performance_summary,
+        "pending_actions": pending_actions,
     })
     write_actions_log(str(receipts_dir), actions.get("actions", []))
 
@@ -166,7 +181,9 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
         "copy_assets": copy_assets,
         "receipts": receipts,
         "validation_html": validation_html,  # Pass to template
-        "validation_results": validation_results  # Pass full results too
+        "validation_results": validation_results,  # Pass full results too
+        "performance_summary": performance_summary,
+        "pending_actions": pending_actions,
     }
 
     for a in outputs["actions"]:
@@ -212,13 +229,93 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
     print(f"Segments bundle: {outputs['segments_bundle']}")
     print(f"Briefing: {briefing_out}")
 
+    # --- Example: post-implementation tracking (manual)
+    # Uncomment and edit the following lines when you want to track an implemented action
+    #
+    # from src.action_engine import track_implementation_status, track_action_results
+    #
+    # track_implementation_status(
+    #     receipts_dir=str(receipts_dir),
+    #     action_id="winback_21_45_base_20250102_143022",
+    #     implemented=True,
+    #     notes="Launched in Klaviyo",
+    #     channels=["email", "sms"],
+    #     audience_size=234,
+    # )
+    #
+    # track_action_results(
+    #     receipts_dir=str(receipts_dir),
+    #     action_id="winback_21_45_base_20250102_143022",
+    #     revenue=3250.00,
+    #     orders=18,
+    #     conversion_rate=0.077,
+    #     notes="Slightly below expected but good engagement",
+    # )
+
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--csv", required=True)
-    ap.add_argument("--brand", required=True)
-    ap.add_argument("--out", required=True)
+    # Primary report args
+    ap.add_argument("--csv", required=False)
+    ap.add_argument("--brand", required=False)
+    ap.add_argument("--out", required=False)
+
+    # Tracking: implementation
+    ap.add_argument("--track-implemented", action="store_true", help="Update implementation status for an action")
+    ap.add_argument("--action-id", type=str, help="Action ID to track (from receipts/actions)")
+    ap.add_argument("--implemented", type=str, default="true", help="true|false (default true)")
+    ap.add_argument("--channels", type=str, default=None, help="Comma-separated channels, e.g. email,sms")
+    ap.add_argument("--audience-size", type=int, default=None, help="Audience size actually targeted")
+    ap.add_argument("--notes", type=str, default=None, help="Notes about implementation or results")
+
+    # Tracking: results
+    ap.add_argument("--track-results", action="store_true", help="Record results for an action")
+    ap.add_argument("--revenue", type=float, default=None, help="Actual revenue realized")
+    ap.add_argument("--orders", type=int, default=None, help="Actual orders")
+    ap.add_argument("--conversion-rate", type=float, default=None, help="Actual conversion rate (0-1)")
+
     args = ap.parse_args()
+
+    # Tracking-only modes: allow running without CSV/brand
+    if args.track_implemented or args.track_results:
+        if not args.out:
+            ap.error("--out is required to locate receipts when tracking")
+        receipts_dir = str(Path(args.out) / "receipts")
+
+        if args.track_implemented:
+            if not args.action_id:
+                ap.error("--action-id is required with --track-implemented")
+            implemented_flag = str(args.implemented).strip().lower() in {"1","true","yes","y","on"}
+            channels_list = [c.strip() for c in (args.channels or "").split(",") if c.strip()] if args.channels else None
+            res = track_implementation_status(
+                receipts_dir=receipts_dir,
+                action_id=args.action_id,
+                implemented=implemented_flag,
+                notes=args.notes,
+                channels=channels_list,
+                audience_size=args.audience_size,
+            )
+            print("Implementation tracked:", res.get("action_id"), res.get("status"))
+
+        if args.track_results:
+            if not args.action_id:
+                ap.error("--action-id is required with --track-results")
+            if args.revenue is None:
+                ap.error("--revenue is required with --track-results")
+            res = track_action_results(
+                receipts_dir=receipts_dir,
+                action_id=args.action_id,
+                revenue=float(args.revenue),
+                orders=args.orders,
+                conversion_rate=args.conversion_rate,
+                notes=args.notes,
+            )
+            print("Results tracked:", res.get("action_id"), res.get("status"), "revenue=", res.get("actual",{}).get("revenue"))
+        return
+
+    # Regular report run requires csv/brand/out
+    if not (args.csv and args.brand and args.out):
+        ap.error("--csv, --brand, --out are required for report generation")
     run(args.csv, args.brand, args.out)
 
 

@@ -445,28 +445,28 @@ def action_impact_forecast_chart(actions: List[Dict], aligned: dict, out_path: s
     fig, ax = plt.subplots(figsize=(10, 5))
     
     if actions and len(actions) > 0:
-        # Determine weekly baseline and scale factor for lifts
+        # Determine monthly baseline and leave action impacts in monthly units
         cw = (chosen_window or '').upper()
         if cw == 'L7':
-            baseline_weekly = float(aligned.get('L7', {}).get('net_sales') or 0.0)
-            scale = 1.0
+            # Approximate month as 4x L7
+            baseline_monthly = float(aligned.get('L7', {}).get('net_sales') or 0.0) * 4.0
+        elif cw == 'L56':
+            # 56d ~ 8 weeks ~ 2 months; use L56 directly but scale to monthly
+            base_window = aligned.get('L56', {})
+            baseline_monthly = float((base_window.get('net_sales') or 0.0)) / 2.0
         else:
-            # Default to L28 if not L7; scale to weekly (~/4). If L56, scale by 8.
-            if cw == 'L56':
-                weeks = 8.0
-            else:
-                weeks = 4.0
-            base_window = aligned.get('L28', {}) if cw != 'L56' else aligned.get('L56', {})
-            baseline_weekly = float((base_window.get('net_sales') or 0.0)) / weeks if weeks else 0.0
-            scale = 1.0 / weeks if weeks else 1.0
+            # Default: L28 is already ~monthly
+            base_window = aligned.get('L28', {})
+            baseline_monthly = float(base_window.get('net_sales') or 0.0)
         
         # Build cumulative impact
         action_names = []
-        impacts = [baseline_weekly]
-        cumulative = baseline_weekly
+        impacts = [baseline_monthly]
+        cumulative = baseline_monthly
         
         for action in actions[:3]:  # Top 3 actions
-            expected = float(action.get('expected_$', 0) or 0.0) * scale
+            # expected_$ has been scaled to monthly in the engine
+            expected = float(action.get('expected_$', 0) or 0.0)
             cumulative += expected
             impacts.append(cumulative)
             
@@ -480,10 +480,10 @@ def action_impact_forecast_chart(actions: List[Dict], aligned: dict, out_path: s
         x = range(len(impacts))
         
         # Baseline bar
-        ax.bar(0, baseline_weekly, color='#6b7280', label='Current Baseline (weekly)')
+        ax.bar(0, baseline_monthly, color='#6b7280', label='Current Baseline (monthly)')
         
         # Action bars (stacked)
-        bottom = baseline_weekly
+        bottom = baseline_monthly
         colors = ['#3b82f6', '#10b981', '#8b5cf6']
         for i, (name, impact) in enumerate(zip(action_names, impacts[1:])):
             height = impact - bottom
@@ -498,15 +498,15 @@ def action_impact_forecast_chart(actions: List[Dict], aligned: dict, out_path: s
         # Styling
         ax.set_xticks(x)
         ax.set_xticklabels(['Current'] + [f'+ Action {i+1}' for i in range(len(action_names))])
-        ax.set_ylabel('Expected Weekly Revenue ($)', fontsize=11)
-        ax.set_title('Revenue Impact Forecast - This Week\'s Actions', fontsize=13, fontweight='bold')
+        ax.set_ylabel('Expected Monthly Revenue ($)', fontsize=11)
+        ax.set_title('Revenue Impact Forecast - This Month\'s Actions', fontsize=13, fontweight='bold')
         # Clarify units
-        ax.text(0.5, -0.12, 'Baseline and lifts normalized to weekly values (scaled from chosen window).',
+        ax.text(0.5, -0.12, 'Baseline and lifts normalized to monthly values.',
                 transform=ax.transAxes, ha='center', va='top', fontsize=9, color='#6b7280')
         
         # Add total impact annotation
-        total_lift = impacts[-1] - baseline_weekly
-        lift_pct = (total_lift / baseline_weekly * 100) if baseline_weekly > 0 else 0
+        total_lift = impacts[-1] - baseline_monthly
+        lift_pct = (total_lift / baseline_monthly * 100) if baseline_monthly > 0 else 0
         ax.text(0.98, 0.98, f'Total Expected Lift: +${total_lift:.0f} ({lift_pct:.1f}%)', 
                transform=ax.transAxes, ha='right', va='top', fontsize=11,
                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5))

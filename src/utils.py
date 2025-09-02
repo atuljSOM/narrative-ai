@@ -619,12 +619,16 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
                              seasonal_period: int = 7) -> dict:
     """
     Returns nested structure with recent/prior KPIs for L7/L28, deltas and significance.
+    
+    FIXED: Seasonal adjustments are now stored in metadata, never override actual metrics.
+    
     Values:
       aligned["L7"]["net_sales"|"orders"|"aov"|"discount_rate"|"repeat_share"]
       aligned["L7"]["prior"][same keys]
       aligned["L7"]["delta"][metric]  -> relative change (e.g., +0.062 = +6.2%)
       aligned["L7"]["p"][metric]      -> p-value where applicable (aov, discount_rate, repeat_share)
       aligned["L7"]["sig"][metric]    -> True if p<=alpha and sample floors OK
+      aligned["L7"]["seasonal_expected"] -> Dict with expected values if seasonal adjustment enabled
     Same for "L28".
     """
 
@@ -656,7 +660,7 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         return out
 
     def _order_level_net(row: pd.Series) -> Optional[float]:
-        # Prefer Subtotal - Total Discount; else Total - Shipping - Taxes; else None (line items handled in aggregate)
+        # Prefer Subtotal - Total Discount; else Total - Shipping - Taxes; else None
         if pd.notna(row.get("Subtotal", np.nan)):
             sub = float(row["Subtotal"]); disc = float(row.get("Total Discount", 0.0) or 0.0)
             return sub - disc
@@ -686,7 +690,7 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         key = key.where(key.notna(), fallback)
         return key
 
-    # Use the FULL raw df (d) for first_seen so prior history isn’t censored by refunds
+    # Use the FULL raw df (d) for first_seen so prior history isn't censored by refunds
     all_keys = _identity_key(d)
     first_seen = (
         pd.DataFrame({"key": all_keys, "ts": d["Created at"]})
@@ -697,15 +701,20 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
     anchor = pd.Timestamp(anchor_ts) if anchor_ts is not None else d_kpi_ord["Created at"].max()
 
     # Precompute seasonally adjusted daily series if enabled
-    # Use raw df 'd' for adjustment so refunds (negative) are retained in net_sales
+    # Store these for REFERENCE only - never override actual metrics
+    seasonal_data = {}
     if seasonally_adjust:
         orders_adj_ts, _orders_method = seasonal_adjustment(d, 'orders', seasonal=seasonal_period)
         netsales_adj_ts, _nets_method = seasonal_adjustment(d, 'net_sales', seasonal=seasonal_period)
         seasonal_method = _nets_method or _orders_method or ""
+        seasonal_data = {
+            'orders_ts': orders_adj_ts,
+            'netsales_ts': netsales_adj_ts,
+            'method': seasonal_method
+        }
     else:
-        orders_adj_ts = None
-        netsales_adj_ts = None
         seasonal_method = ""
+        
     def _window(anchor: pd.Timestamp, days:int) -> Tuple[pd.Timestamp,pd.Timestamp,pd.Timestamp,pd.Timestamp]:
         recent_end = anchor.normalize() + pd.Timedelta(hours=23, minutes=59, seconds=59)
         recent_start = recent_end.normalize() - pd.Timedelta(days=days-1)
@@ -719,56 +728,94 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         rec = d_kpi_ord[(d_kpi_ord["Created at"]>=rs) & (d_kpi_ord["Created at"]<=re)].copy()
         pri = d_kpi_ord[(d_kpi_ord["Created at"]>=ps) & (d_kpi_ord["Created at"]<=pe)].copy()
 
-        # orders
-        o1 = int(rec["Name"].nunique()) if "Name" in rec.columns else int(len(rec))
-        o0 = int(pri["Name"].nunique()) if "Name" in pri.columns else int(len(pri))
+        # ACTUAL orders - what really happened
+        o1_actual = int(rec["Name"].nunique()) if "Name" in rec.columns else int(len(rec))
+        o0_actual = int(pri["Name"].nunique()) if "Name" in pri.columns else int(len(pri))
 
         # order-level net sales (prefer order_net; else line items aggregate)
         def _netsales(frame_orders: pd.DataFrame) -> float:
+            # Primary: per-order net already computed at order level
             if "_order_net" in frame_orders.columns and frame_orders["_order_net"].notna().any():
                 return float(frame_orders["_order_net"].dropna().sum())
-            # fallback to line items if needed
-            if all(c in d_kpi.columns for c in ["Lineitem price","Lineitem quantity"]):
-                li = d_kpi[(d_kpi["Created at"]>=frame_orders["Created at"].min()) & (d_kpi["Created at"]<=frame_orders["Created at"].max())]
-                rev = (_money(li["Lineitem price"]) * pd.to_numeric(li["Lineitem quantity"], errors="coerce")).sum(skipna=True)
-                disc = _money(li["Lineitem discount"]).sum(skipna=True) if "Lineitem discount" in li.columns else 0.0
-                return float(rev - (disc if not np.isnan(disc) else 0.0))
+            # Fallback: aggregate line items per order, restricted to the same orders
+            if all(c in d_kpi.columns for c in ["Lineitem price", "Lineitem quantity"]):
+                if "Name" in frame_orders.columns and "Name" in d_kpi.columns:
+                    order_names = set(frame_orders["Name"].astype(str))
+                    li = d_kpi[d_kpi["Name"].astype(str).isin(order_names)].copy()
+                else:
+                    # last resort: time-range filter
+                    li = d_kpi[(d_kpi["Created at"] >= frame_orders["Created at"].min()) & (d_kpi["Created at"] <= frame_orders["Created at"].max())].copy()
+                li_price = _money(li["Lineitem price"]) if "Lineitem price" in li.columns else pd.Series(dtype=float)
+                li_qty = pd.to_numeric(li["Lineitem quantity"], errors="coerce") if "Lineitem quantity" in li.columns else pd.Series(dtype=float)
+                li_disc = _money(li["Lineitem discount"]) if "Lineitem discount" in li.columns else pd.Series(0.0, index=li.index)
+                li["_line_net"] = (li_price * li_qty) - li_disc
+                if "Name" in li.columns:
+                    per_order = li.groupby("Name")["_line_net"].sum()
+                    return float(per_order.dropna().sum())
+                else:
+                    return float(li["_line_net"].dropna().sum())
             return float("nan")
 
-        ns1 = _netsales(rec); ns0 = _netsales(pri)
+        # ACTUAL net sales - what really happened
+        ns1_actual = _netsales(rec)
+        ns0_actual = _netsales(pri)
 
-        # Optional: override orders/net_sales with seasonally adjusted sums over the window
-        if seasonally_adjust and orders_adj_ts is not None and netsales_adj_ts is not None:
+        # Use ACTUAL values for all calculations
+        o1 = o1_actual
+        o0 = o0_actual
+        ns1 = ns1_actual
+        ns0 = ns0_actual
+
+        # Calculate seasonal expectations SEPARATELY (for reference only)
+        seasonal_expected = {}
+        if seasonally_adjust and seasonal_data:
             try:
                 def _sum_range(ts, start, end):
+                    if ts is None: return None
                     return float(ts.loc[start.normalize():end.normalize()].sum())
-                o1_adj = int(round(max(0.0, _sum_range(orders_adj_ts, rs, re))))
-                o0_adj = int(round(max(0.0, _sum_range(orders_adj_ts, ps, pe))))
-                ns1_adj = max(0.0, _sum_range(netsales_adj_ts, rs, re))
-                ns0_adj = max(0.0, _sum_range(netsales_adj_ts, ps, pe))
-                # Only override if adjusted series cover the windows
-                if o1_adj is not None and o0_adj is not None:
-                    o1, o0 = o1_adj, o0_adj
-                if ns1_adj is not None and ns0_adj is not None:
-                    ns1, ns0 = ns1_adj, ns0_adj
-            except Exception:
-                # fall back silently on any indexing error
-                pass
+                
+                if seasonal_data.get('orders_ts') is not None:
+                    o1_expected = int(round(max(0.0, _sum_range(seasonal_data['orders_ts'], rs, re))))
+                    o0_expected = int(round(max(0.0, _sum_range(seasonal_data['orders_ts'], ps, pe))))
+                    seasonal_expected['orders_recent'] = o1_expected
+                    seasonal_expected['orders_prior'] = o0_expected
+                    # Calculate what the model thinks the lift should be
+                    if o0_expected > 0:
+                        seasonal_expected['orders_expected_lift'] = (o1_expected - o0_expected) / o0_expected
+                
+                if seasonal_data.get('netsales_ts') is not None:
+                    ns1_expected = max(0.0, _sum_range(seasonal_data['netsales_ts'], rs, re))
+                    ns0_expected = max(0.0, _sum_range(seasonal_data['netsales_ts'], ps, pe))
+                    seasonal_expected['net_sales_recent'] = ns1_expected
+                    seasonal_expected['net_sales_prior'] = ns0_expected
+                    if ns0_expected > 0:
+                        seasonal_expected['net_sales_expected_lift'] = (ns1_expected - ns0_expected) / ns0_expected
+                
+                # Calculate "surprise" factor - how much actual differs from expected
+                if o1_expected and o1_expected > 0:
+                    seasonal_expected['orders_surprise'] = (o1 - o1_expected) / o1_expected
+                if ns1_expected and ns1_expected > 0:
+                    seasonal_expected['net_sales_surprise'] = (ns1 - ns1_expected) / ns1_expected
+                    
+            except Exception as e:
+                # Silently fall back if seasonal calc fails
+                seasonal_expected = {'error': str(e)}
 
+        # AOV based on ACTUAL values
         aov1 = float(ns1/o1) if (o1 and not np.isnan(ns1)) else None
         aov0 = float(ns0/o0) if (o0 and not np.isnan(ns0)) else None
 
-        # discount rate: total discount / subtotal (when available); else None
+        # discount rate: total discount / subtotal (when available)
         def _disc_rate(frame_orders: pd.DataFrame) -> Optional[float]:
             if "Subtotal" in frame_orders.columns:
                 sub = _money(frame_orders["Subtotal"]).sum(skipna=True)
                 disc = _money(frame_orders["Total Discount"]).sum(skipna=True) if "Total Discount" in frame_orders.columns else 0.0
                 if not np.isnan(sub) and sub>0:
                     return float(disc/(sub+1e-9))
-            # fallback: line-item based mean discount share if available
             return None
 
-        dr1 = _disc_rate(rec); dr0 = _disc_rate(pri)
+        dr1 = _disc_rate(rec)
+        dr0 = _disc_rate(pri)
 
         # repeat share (identified customers only)
         def _repeat_share(frame_orders: pd.DataFrame) -> Tuple[Optional[float], int]:
@@ -782,7 +829,7 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         rr1, id1 = _repeat_share(rec)
         rr0, id0 = _repeat_share(pri)
 
-        # deltas (relative). If prior is None/0/NaN → None
+        # deltas based on ACTUAL values
         def _rel_delta(x1, x0):
             if x1 is None or x0 is None: return None
             if isinstance(x1,float) and (np.isnan(x1) or np.isnan(x0)): return None
@@ -797,14 +844,14 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             "repeat_share":  _rel_delta(rr1, rr0),
         }
 
-        # significance (where it makes sense)
+        # significance testing on ACTUAL values
         p = {"aov": None, "discount_rate": None, "repeat_share": None}
+        
         # AOV: Welch t on per-order net values
         a1 = rec["_order_net"].dropna().values if "_order_net" in rec.columns else np.array([])
         a0 = pri["_order_net"].dropna().values if "_order_net" in pri.columns else np.array([])
 
         def _extract_p(val):
-            # accept float, dict-like, or object with attribute
             if val is None:
                 return None
             if isinstance(val, (int, float)):
@@ -820,23 +867,22 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             p_aov = _extract_p(mt)
             p["aov"] = p_aov
 
-
         # Discount: treat as proportion of orders with any discount > 0
         if "Total Discount" in rec.columns and "Total Discount" in pri.columns:
             x1 = int((_money(rec["Total Discount"])>0).sum()); n1 = int(len(rec))
             x0 = int((_money(pri["Total Discount"])>0).sum()); n0 = int(len(pri))
             if n1>0 and n0>0:
-                pr = two_proportion_test(x1,n1,x0,n0); p["discount_rate"] = float(pr.p_value)
+                pr = two_proportion_test(x1,n1,x0,n0)
+                p["discount_rate"] = float(pr.p_value)
 
         # Repeat share: two-proportion on identified customers
         if rr1 is not None and rr0 is not None and id1>=min_identified and id0>=min_identified:
-            # reconstruct counts
             x1 = int(round(rr1*id1)); n1 = id1
             x0 = int(round(rr0*id0)); n0 = id0
-            pr2 = two_proportion_test(x1,n1,x0,n0); p["repeat_share"] = float(pr2.p_value)
+            pr2 = two_proportion_test(x1,n1,x0,n0)
+            p["repeat_share"] = float(pr2.p_value)
 
         # FDR on available p's
-        # Build p-list (missing -> 1.0 so it won't flag as significant)
         p_list = []
         p_keys = list(p.keys())
         for k in p_keys:
@@ -863,10 +909,7 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             else:
                 sig[k] = (pk is not None and pk <= alpha)
 
-
-        sig = {k: (p[k] is not None and p[k] <= alpha) for k in p.keys()}
-
-        return {
+        result = {
             "net_sales": None if np.isnan(ns1) else float(ns1),
             "orders": o1,
             "aov": aov1,
@@ -888,21 +931,29 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
                 "identified_prior": id0
             }
         }
+        
+        # Add seasonal expectations as metadata (never overrides actual)
+        if seasonal_expected:
+            result["seasonal_expected"] = seasonal_expected
+
+        return result
 
     out = {"anchor": anchor, "L7": _summarize(7), "L28": _summarize(28)}
     out["meta"] = {
         "seasonal_adjusted": bool(seasonally_adjust),
         "seasonal_period": int(seasonal_period) if seasonally_adjust else None,
-        "seasonal_method": seasonal_method,
+        "seasonal_method": seasonal_method if seasonally_adjust else None,
     }
+    
     # convenience: top-level recent values for backward compatibility
     for label in ("L7","L28"):
         for k in ("net_sales","orders","aov","discount_rate","repeat_share"):
             out[label][k] = out[label].get(k)
-    # include direction rule hint for UI: discount is "good when down"
+    
+    # include direction rule hint for UI
     out["direction"] = {"discount_rate": ("down" if discount_positive_is_bad else "up")}
+    
     return out
-
 # --- Safe BH wrapper + fallback (put near top-level helpers in utils.py) ---
 
 def _bh_fallback(pvals: list[float]) -> list[float]:

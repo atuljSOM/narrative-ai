@@ -106,6 +106,87 @@ def test_full_validation_engine():
     print(f"Overall Status: {results['overall_status']}")
     print(f"Summary: {results['summary']}")
 
+
+def test_debug_window_alignment():
+    """Debug helper to print absolute values used in windowed validation comparisons."""
+    import pandas as pd
+    import numpy as np
+
+    # Build a sample df with monetary fields and dates
+    n = 100
+    dates = pd.date_range('2025-06-01', periods=n)
+    df = pd.DataFrame({
+        'Name': [f'#{i}' for i in range(n)],
+        'Created at': dates,
+        'Cancelled at': [np.nan]*n,
+        'Financial Status': ['paid'] * n,
+        'Subtotal': np.random.normal(100, 15, n),
+        'Total Discount': np.random.uniform(0, 20, n),
+        'Total': np.random.normal(105, 15, n),
+        'Shipping': [5.0] * n,
+        'Taxes': [0.0] * n,
+        'Lineitem name': np.random.choice(['Alpha Serum 30ml', 'Beta Cream 50ml', 'Gamma Cleanser'], n),
+        'Lineitem quantity': np.random.randint(1, 3, n),
+        'Customer Email': [f'user{i%25}@example.com' for i in range(n)]
+    })
+
+    # Aligned object stub with anchor and window_days for L28
+    anchor = pd.to_datetime(df['Created at']).max()
+    aligned = {
+        'anchor': anchor,
+        'L28': {
+            'window_days': 28,
+            # For comparability, compute a KPI-like AOV over the same window here
+        }
+    }
+
+    # Compute window bounds as in validation
+    recent_end = anchor.normalize() + pd.Timedelta(hours=23, minutes=59, seconds=59)
+    recent_start = recent_end.normalize() - pd.Timedelta(days=aligned['L28']['window_days'] - 1)
+
+    # Apply KPI-like exclusions (cancelled/refunded)
+    d = df.copy()
+    d['Created at'] = pd.to_datetime(d['Created at'], errors='coerce')
+    d['Cancelled at'] = pd.to_datetime(d['Cancelled at'], errors='coerce')
+    d = d[d['Cancelled at'].isna()]
+    d = d[~d['Financial Status'].astype(str).str.contains('refunded|chargeback', case=False, na=False)]
+    in_win = d[(d['Created at'] >= recent_start) & (d['Created at'] <= recent_end)]
+    d_orders = in_win.drop_duplicates(subset=['Name']) if 'Name' in in_win.columns else in_win
+
+    # KPI-like nets: Subtotal - Total Discount; else Total - Shipping - Taxes
+    def _money(s):
+        return pd.to_numeric(s, errors='coerce')
+    # Compute both variants for visibility
+    nets_sub = None
+    nets_tot = None
+    if all(c in d_orders.columns for c in ['Subtotal', 'Total Discount']):
+        nets_sub = _money(d_orders['Subtotal']) - _money(d_orders['Total Discount'])
+    if all(c in d_orders.columns for c in ['Total', 'Shipping', 'Taxes']):
+        nets_tot = _money(d_orders['Total']) - _money(d_orders['Shipping']) - _money(d_orders['Taxes'])
+    aov_sub = float(nets_sub.dropna().mean()) if nets_sub is not None and not nets_sub.dropna().empty else np.nan
+    aov_tot = float(nets_tot.dropna().mean()) if nets_tot is not None and not nets_tot.dropna().empty else np.nan
+    # Choose KPI-like method (subtotal-discount first)
+    aov_calc = aov_sub if not np.isnan(aov_sub) else aov_tot
+    aligned['L28']['aov'] = aov_calc  # target for check so diff≈0
+
+    # Run the AOVConsistencyCheck (should be green with Δ≈0)
+    check = AOVConsistencyCheck()
+    out = check.run({'df': df, 'aligned': aligned})
+
+    # Print absolute numbers for visibility
+    print("\n[DEBUG] Window alignment and AOV comparison:")
+    print(f"Anchor: {anchor}")
+    print(f"Window: {recent_start.date()} to {recent_end.date()} ({aligned['L28']['window_days']}d)")
+    print(f"Orders in window (pre-dedupe): {len(in_win)}; unique orders: {len(d_orders)}")
+    print(f"AOV_subtotal_minus_discount = {aov_sub:.2f}")
+    print(f"AOV_total_minus_shipping_taxes = {aov_tot:.2f}")
+    print(f"AOV_calc (chosen) = {aov_calc:.2f}")
+    print(f"AOV_aligned (L28) = {aligned['L28']['aov']:.2f}")
+    print(f"Validation check => status={out['status']}, message={out['message']}")
+
+    # Sanity: With aligned derived from the same window, expect green
+    assert out['status'] in ['green', 'amber']
+
 if __name__ == '__main__':
     test_transaction_volume_check()
     print("✓ Transaction volume check passed")

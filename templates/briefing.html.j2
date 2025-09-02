@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>{{ brand }} — Weekly Growth Briefing</title>
+  <title>{{ brand }} — Monthly Growth Briefing</title>
   <style>
     body { 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif; 
@@ -36,7 +36,7 @@
     .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-left: 6px; background: #f2f2f2; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     
-    /* Enhanced KPI Cards */
+    /* KPI Cards */
     .kpi { 
       border: 1px solid #e5e7eb; 
       border-radius: 12px; 
@@ -57,7 +57,6 @@
       font-weight: 600;
       z-index: 2;
     }
-    /* Leave a little headroom so the badge does not sit in the header row */
     .kpi .row.header { margin-top: 18px; }
     .row { 
       display: grid; 
@@ -81,22 +80,85 @@
     .row > div:nth-child(2) { text-align: right; padding-right: 10px; }
     .row > div:nth-child(3) { text-align: left; padding-left: 10px; }
     .row > div:nth-child(4) { text-align: left; }
-    .seasonality-tag { display: inline-block; margin-left: 6px; font-size: 11px; color: #9ca3af; white-space: nowrap; }
     .row:last-child { border-bottom: none; }
     .green { color: #059669; font-weight: 600; } 
     .red { color: #dc2626; font-weight: 600; } 
     .gray { color: #9ca3af; }
     
-    /* Validation Panel - Enhanced */
+    /* Performance Tracking Panel */
+    .performance-panel {
+      background: linear-gradient(to right, #f0f9ff, #e0f2fe);
+      border: 1px solid #7dd3fc;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .performance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .performance-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0c4a6e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .accuracy-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .accuracy-excellent { background: #10b981; }
+    .accuracy-good { background: #3b82f6; }
+    .accuracy-fair { background: #f59e0b; }
+    .accuracy-poor { background: #ef4444; }
+    .accuracy-new { background: #8b5cf6; }
+    
+    .performance-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    
+    .performance-metric {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1e293b;
+    }
+    
+    .metric-label {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    
+    /* Validation Panel */
     .validation-banner {
       background: linear-gradient(to right, #f9fafb, #f3f4f6);
       border: 1px solid #e5e7eb;
       border-radius: 12px;
       padding: 20px 24px;
       margin-bottom: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       position: relative;
       overflow: hidden;
     }
@@ -116,120 +178,205 @@
       border-color: #fecaca;
     }
     
-    .validation-score-wrapper {
+    .validation-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .validation-score-section {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
     }
     
     .validation-score-circle {
-      width: 72px;
-      height: 72px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
       color: white;
       position: relative;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
-    .score-green { 
-      background: linear-gradient(135deg, #10b981, #059669);
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
-    }
-    .score-amber { 
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
-    }
-    .score-red { 
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
-    }
+    .score-green { background: linear-gradient(135deg, #10b981, #059669); }
+    .score-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .score-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
     
-    .validation-summary {
-      flex: 1;
-      padding: 0 20px;
-    }
-    
-    .validation-title {
-      font-size: 14px;
+    .data-grade {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
       font-weight: 600;
-      color: #374151;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 18px;
+      color: white;
+      margin-left: 8px;
     }
     
-    .validation-message {
-      font-size: 14px;
-      color: #4b5563;
-      line-height: 1.5;
+    .grade-a { background: #10b981; }
+    .grade-b-plus { background: #34d399; }
+    .grade-b { background: #fbbf24; }
+    .grade-c { background: #f59e0b; }
+    .grade-d { background: #ef4444; }
+    
+    .validation-issues {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
     }
     
-    .validation-details {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-    }
-    
-    .validation-check {
+    .validation-issue {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 6px;
       font-size: 13px;
-      color: #6b7280;
-      white-space: nowrap;
     }
     
-    .check-icon {
-      width: 22px;
-      height: 22px;
+    .issue-icon {
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
+      flex-shrink: 0;
     }
     
-    .check-green { background: #d1fae5; color: #065f46; }
-    .check-amber { background: #fed7aa; color: #92400e; }
-    .check-red { background: #fee2e2; color: #991b1b; }
+    .issue-critical { background: #fee2e2; color: #991b1b; }
+    .issue-warning { background: #fed7aa; color: #92400e; }
+    .issue-info { background: #dbeafe; color: #1e40af; }
     
-    .validation-toggle {
-      color: #6366f1;
+    .validation-recommendations {
+      margin-top: 16px;
+      padding: 12px;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+    }
+    
+    .validation-recommendations h4 {
+      margin: 0 0 8px 0;
       font-size: 13px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
+      font-weight: 600;
+      color: #92400e;
+    }
+    
+    .validation-recommendations ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .validation-recommendations li {
+      margin: 4px 0;
+      font-size: 12px;
+      color: #78350f;
+    }
+    
+    /* Pending Actions Tracker */
+    .pending-actions {
+      background: #fafafa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 24px;
+    }
+    
+    .pending-header {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 4px;
-      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .pending-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .pending-count {
+      background: #6366f1;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    
+    .pending-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .pending-item:last-child {
+      border-bottom: none;
+    }
+    
+    .pending-info {
+      flex: 1;
+    }
+    
+    .pending-action {
+      font-size: 13px;
+      color: #1f2937;
       font-weight: 500;
     }
     
-    .validation-toggle:hover {
-      text-decoration: underline;
+    .pending-meta {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
     }
     
-    .validation-details-grid {
-      display: none;
-      margin-top: 16px;
-      padding: 16px;
+    .pending-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .status-pending { background: #f3f4f6; color: #6b7280; }
+    .status-in-progress { background: #dbeafe; color: #1e40af; }
+    .status-overdue { background: #fee2e2; color: #991b1b; }
+    
+    .track-button {
+      padding: 4px 12px;
       background: white;
-      border-radius: 8px;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #4b5563;
+      cursor: pointer;
+      text-decoration: none;
     }
     
-    .validation-details-grid.show {
-      display: grid;
+    .track-button:hover {
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
     }
     
-    /* Enhanced Charts Section */
+    /* Charts Section */
     .charts-container {
       margin: 24px 0;
     }
@@ -307,11 +454,21 @@
       padding: 20px;
       margin: 16px 0;
       transition: all 0.2s;
+      position: relative;
     }
     
     .action-card:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       transform: translateX(4px);
+    }
+    
+    .action-id {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 10px;
+      color: #9ca3af;
+      font-family: monospace;
     }
     
     .actions-header { 
@@ -387,6 +544,17 @@
       box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
     }
     
+    .btn-track {
+      background: #fbbf24;
+      border-color: #f59e0b;
+      color: #78350f;
+    }
+    
+    .btn-track:hover {
+      background: #f59e0b;
+      color: white;
+    }
+    
     .steps ul { 
       margin: 8px 0 8px 20px;
       padding-left: 0;
@@ -421,8 +589,8 @@
     @media (max-width: 768px) {
       .grid { grid-template-columns: 1fr; }
       .charts-grid { grid-template-columns: 1fr; }
-      .validation-details { display: none; }
       .content { padding: 20px; }
+      .performance-metrics { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -453,9 +621,6 @@
 
 {% macro kpi_block(label) -%}
   <div class="kpi">
-    {% if aligned.get('meta', {}).get('seasonal_adjusted') %}
-      <span class="kpi-badge">Adjusted for seasonality</span>
-    {% endif %}
     <div class="row header">
       <div>Metric</div><div>Current</div><div>Change</div><div>Notes</div>
     </div>
@@ -471,7 +636,13 @@
         {{ arrow(dlt, True, True) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ fmt_money(prev) }})</span>
       </div>
-      <div class="small muted">—</div>
+      <div class="small muted">
+        {% set se = aligned[label].get('seasonal_expected', {}) %}
+        {% set nss = se.get('net_sales_surprise') %}
+        {% if nss is not none %}
+          vs seasonal {{ fmt_delta_pct(nss) }}
+        {% else %}—{% endif %}
+      </div>
     </div>
 
     {# Orders #}
@@ -485,7 +656,13 @@
         {{ arrow(dlt, True, True) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ prev|int if prev is not none else '—' }})</span>
       </div>
-      <div class="small muted">—</div>
+      <div class="small muted">
+        {% set se = aligned[label].get('seasonal_expected', {}) %}
+        {% set osur = se.get('orders_surprise') %}
+        {% if osur is not none %}
+          vs seasonal {{ fmt_delta_pct(osur) }}
+        {% else %}—{% endif %}
+      </div>
     </div>
 
     {# AOV #}
@@ -544,56 +721,168 @@
 <div class="container">
   <header class="header">
     <h1>{{ brand }}</h1>
-    <div class="header-meta">Weekly Growth Briefing • {{ aligned['anchor'].strftime('%B %d, %Y') if aligned.get('anchor') else 'Current Week' }}</div>
+    <div class="header-meta">Monthly Growth Briefing • {{ aligned['anchor'].strftime('%B %Y') if aligned.get('anchor') else 'Current Month' }}</div>
   </header>
 
   <div class="content">
-    <!-- Enhanced Data Validation Panel -->
-    {% if outputs.validation_results %}
-    {% set score = outputs.validation_results.validation_score %}
-    {% set status = outputs.validation_results.overall_status %}
-    <div class="validation-banner {% if status == 'green' %}success{% elif status == 'amber' %}warning{% else %}error{% endif %}">
-      <div class="validation-score-wrapper">
-        <div class="validation-score-circle {% if score >= 80 %}score-green{% elif score >= 60 %}score-amber{% else %}score-red{% endif %}">
-          {{ score }}
-        </div>
-        <div class="validation-summary">
-          <div class="validation-title">Data Quality Score</div>
-          <div class="validation-message">{{ outputs.validation_results.summary }}</div>
+    <!-- Performance Tracking Panel -->
+    {% if outputs.performance_summary %}
+    <div class="performance-panel">
+      <div class="performance-header">
+        <div class="performance-title">
+          📊 Prediction Performance
+          {% if outputs.performance_summary.n_completed > 0 %}
+            {% set acc = outputs.performance_summary.aggregate_accuracy_pct %}
+            {% if acc >= 90 and acc <= 110 %}
+              <span class="accuracy-badge accuracy-excellent">{{ acc }}% Accurate</span>
+            {% elif acc >= 75 and acc <= 125 %}
+              <span class="accuracy-badge accuracy-good">{{ acc }}% Accurate</span>
+            {% elif acc >= 50 and acc <= 150 %}
+              <span class="accuracy-badge accuracy-fair">{{ acc }}% Accurate</span>
+            {% else %}
+              <span class="accuracy-badge accuracy-poor">{{ acc }}% Accurate</span>
+            {% endif %}
+          {% else %}
+            <span class="accuracy-badge accuracy-new">New Customer</span>
+          {% endif %}
         </div>
       </div>
       
-      <div class="validation-details">
-        {% for check_name, check_result in outputs.validation_results.checks.items() %}
-        <div class="validation-check">
-          <div class="check-icon {% if check_result.status == 'green' %}check-green{% elif check_result.status == 'amber' %}check-amber{% else %}check-red{% endif %}">
-            {% if check_result.status == 'green' %}✓{% elif check_result.status == 'amber' %}!{% else %}✗{% endif %}
+      {% if outputs.performance_summary.n_completed > 0 %}
+      <div class="performance-metrics">
+        <div class="performance-metric">
+          <div class="metric-value">{{ outputs.performance_summary.n_completed }}</div>
+          <div class="metric-label">Actions Tracked</div>
+        </div>
+        <div class="performance-metric">
+          <div class="metric-value">{{ fmt_money(outputs.performance_summary.total_actual_revenue) }}</div>
+          <div class="metric-label">Actual Revenue</div>
+        </div>
+        <div class="performance-metric">
+          <div class="metric-value">{{ outputs.performance_summary.actions_on_target }}</div>
+          <div class="metric-label">On Target</div>
+        </div>
+        <div class="performance-metric">
+          <div class="metric-value">{{ outputs.performance_summary.median_accuracy_pct }}%</div>
+          <div class="metric-label">Median Accuracy</div>
+        </div>
+      </div>
+      {% else %}
+      <p style="margin: 8px 0 0 0; color: #64748b; font-size: 14px;">
+        Track your first action to see prediction accuracy metrics here.
+      </p>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Data Validation Panel -->
+    {% if outputs.validation_results %}
+    {% set score = outputs.validation_results.validation_score %}
+    {% set status = outputs.validation_results.overall_status %}
+    {% set grade = outputs.validation_results.data_quality_grade %}
+    
+    {% if status == 'green' %}
+      {% set banner_class = 'success' %}
+    {% elif status == 'amber' %}
+      {% set banner_class = 'warning' %}
+    {% else %}
+      {% set banner_class = 'error' %}
+    {% endif %}
+    
+    <div class="validation-banner {{ banner_class }}">
+      <div class="validation-header">
+        <div class="validation-score-section">
+          {% if score >= 80 %}
+            {% set score_class = 'score-green' %}
+          {% elif score >= 60 %}
+            {% set score_class = 'score-amber' %}
+          {% else %}
+            {% set score_class = 'score-red' %}
+          {% endif %}
+          
+          <div class="validation-score-circle {{ score_class }}">
+            {{ score }}
           </div>
-          <span>{{ check_name.replace('_', ' ').title() }}</span>
+          <div>
+            <div style="font-size: 16px; font-weight: 600; color: #1f2937;">
+              Data Quality Score
+              {% if grade == 'A' %}
+                <span class="data-grade grade-a">{{ grade }}</span>
+              {% elif grade == 'C' %}
+                <span class="data-grade grade-c">{{ grade }}</span>
+              {% else %}
+                <span class="data-grade grade-d">{{ grade }}</span>
+              {% endif %}
+            </div>
+            <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">
+              {{ outputs.validation_results.summary }}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {% if outputs.validation_results.critical_issues or outputs.validation_results.warnings %}
+      <div class="validation-issues">
+        {% for issue in outputs.validation_results.critical_issues[:3] %}
+        <div class="validation-issue">
+          <div class="issue-icon issue-critical">❌</div>
+          <span>{{ issue }}</span>
+        </div>
+        {% endfor %}
+        {% for warning in outputs.validation_results.warnings[:2] %}
+        <div class="validation-issue">
+          <div class="issue-icon issue-warning">⚠️</div>
+          <span>{{ warning }}</span>
         </div>
         {% endfor %}
       </div>
+      {% endif %}
+      
+      {% if outputs.validation_results.recommendations %}
+      <div class="validation-recommendations">
+        <h4>Recommended Actions:</h4>
+        <ul>
+          {% for rec in outputs.validation_results.recommendations %}
+          <li>{{ rec }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
     </div>
+    {% endif %}
 
-    {% if status != 'green' %}
-    <a href="#" class="validation-toggle" onclick="toggleValidation(event)">
-      <span>View validation details</span>
-      <span>▼</span>
-    </a>
-    <div class="validation-details-grid" id="validationDetails">
-      {% for check_name, check_result in outputs.validation_results.checks.items() %}
-        {% if check_result.status != 'green' %}
-        <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-          <div style="font-size: 12px; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px;">{{ check_name }}</div>
-          <div style="font-size: 13px; color: #374151;">{{ check_result.message }}</div>
+    <!-- Pending Actions Tracker -->
+    {% if outputs.pending_actions and outputs.pending_actions|length > 0 %}
+    <div class="pending-actions">
+      <div class="pending-header">
+        <div class="pending-title">📋 Actions Awaiting Results</div>
+        <div class="pending-count">{{ outputs.pending_actions|length }}</div>
+      </div>
+      {% for action in outputs.pending_actions[:5] %}
+      <div class="pending-item">
+        <div class="pending-info">
+          <div class="pending-action">{{ action.play_id|replace('_', ' ')|title }}</div>
+          <div class="pending-meta">
+            Day {{ action.days_waiting }} • Expected: {{ fmt_money(action.predicted.revenue) }}
+            {% if action.is_overdue %} • <span style="color: #ef4444;">Overdue for measurement</span>{% endif %}
+          </div>
         </div>
-        {% endif %}
+        <div class="pending-status">
+          {% if action.is_overdue %}
+            <span class="status-badge status-overdue">Overdue</span>
+          {% elif action.status == 'in_progress' %}
+            <span class="status-badge status-in-progress">In Progress</span>
+          {% else %}
+            <span class="status-badge status-pending">Pending</span>
+          {% endif %}
+          <a href="#" class="track-button" onclick="alert('Track results for action: {{ action.action_id }}'); return false;">Track</a>
+        </div>
+      </div>
       {% endfor %}
     </div>
     {% endif %}
-    {% endif %}
 
-    <!-- KPI Section with L7 and L28 -->
+    <!-- KPI Section -->
     <section class="section">
       <h2>Key Performance Indicators</h2>
       {% set show_l7 = outputs.cfg.get('SHOW_L7', True) %}
@@ -618,7 +907,7 @@
       {% endif %}
     </section>
 
-    <!-- Enhanced Charts Section -->
+    <!-- Charts Section -->
     {% if outputs.get('charts') and outputs['charts'] %}
     <section class="section charts-container">
       <h2>Analytics & Insights</h2>
@@ -643,7 +932,7 @@
 
     <!-- Actions Section -->
     <section class="section">
-      <h2>Your Top Actions <span class="pill">This Week's Focus</span></h2>
+      <h2>Your Top Actions <span class="pill">This Month's Focus</span></h2>
 
       {% if outputs.get('actions') and outputs['actions'] %}
         <ul class="action-checklist">
@@ -653,22 +942,40 @@
               {% if a.get('offer') %}
                 <span class="small muted">({{ a['offer'].get('type') }}{% if a['offer'].get('value') %}: {{ a['offer']['value'] }}%{% endif %})</span>
               {% endif %}
+              {% if a.get('action_id') %}
+                <span class="small muted" style="font-family: monospace; margin-left: 8px;">[{{ a.action_id[:8] }}...]</span>
+              {% endif %}
             </li>
           {% endfor %}
         </ul>
 
         {% for a in outputs['actions'] %}
           <div class="action-card">
+            {% if a.get('action_id') %}
+              <div class="action-id" title="{{ a.action_id }}">ID: {{ a.action_id[:12] }}...</div>
+            {% endif %}
             <div class="actions-header">
               <div class="num">{{ loop.index }}</div>
               <div class="action-title">{{ a.get('title','') }}</div>
               <div class="badges">
                 {% if a.get('expected_$') %}<span class="badge impact">+{{ fmt_money(a.get('expected_$')) }}</span>{% endif %}
                 {% if a.get('effort') %}<span class="badge effort">Effort: {{ a.get('effort') }}/5</span>{% endif %}
-                {% if a.get('confidence_label') %}<span class="badge">{{ a.get('confidence_label') }}</span>{% endif %}
+                {% if a.get('confidence_label') %}<span class="badge">Confidence: {{ a.get('confidence_label') }}</span>{% endif %}
               </div>
             </div>
             <div class="muted" style="margin-bottom: 12px;">{{ a.get('do_this','') }}</div>
+            
+            {% if a.get('evidence') %}
+              <div style="background: #f0f9ff; border-left: 3px solid #3b82f6; padding: 8px 12px; margin: 12px 0; border-radius: 4px;">
+                <div class="small" style="font-weight: 600; color: #1e40af; margin-bottom: 4px;">Why this will work:</div>
+                <ul style="margin: 4px 0 0 16px; padding: 0;">
+                  {% for e in a['evidence'][:2] %}
+                  <li class="small" style="color: #475569;">{{ e }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+            
             {% if a.get('how_to_launch') %}
               <div class="steps">
                 <div class="small" style="margin-top:8px;"><strong>Implementation Steps:</strong></div>
@@ -681,6 +988,11 @@
               {% if a.get('attachment') %}<span class="btn">📥 Download Segment</span>{% endif %}
               {% if a.get('targeting') %}<span class="btn">🎯 View Targeting</span>{% endif %}
               {% if a.get('offer') %}<span class="btn">🏷 {{ a['offer'].get('type', 'Offer') }}</span>{% endif %}
+              {% if a.get('action_id') %}
+                <span class="btn btn-track" onclick="alert('Mark as implemented: {{ a.action_id }}\\n\\nIn production, this would open a form to track implementation details.'); return false;">
+                  ✓ Mark Implemented
+                </span>
+              {% endif %}
             </div>
           </div>
         {% endfor %}
@@ -695,21 +1007,46 @@
       <h2>Pilot Test <span class="pill" style="background: #fef3c7; color: #92400e;">Experimental</span></h2>
       {% for p in outputs['pilot_actions'] %}
         <div class="action-card" style="border-left-color:#f59e0b;">
+          {% if p.get('action_id') %}
+            <div class="action-id" title="{{ p.action_id }}">ID: {{ p.action_id[:12] }}...</div>
+          {% endif %}
           <div class="actions-header">
             <div class="num" style="background: linear-gradient(135deg, #f59e0b, #d97706);">P</div>
             <div class="action-title">{{ p.get('title','') }}</div>
             <div class="badges">
               <span class="badge" style="background: #fed7aa; color: #92400e;">Pilot</span>
-              {% if p.get('expected_$') %}<span class="badge impact">Est. +{{ fmt_money(p.get('expected_$')) }}</span>{% endif %}
+              {% if p.get('expected_$') %}
+                <span class="badge impact">Est. +{{ fmt_money(p.get('expected_$')) }}</span>
+              {% endif %}
             </div>
           </div>
           <div class="muted">{{ p.get('do_this','') }}</div>
+          
+          {% if p.get('evidence') %}
+            <div style="background: #fffbeb; border-left: 3px solid #f59e0b; padding: 8px 12px; margin: 12px 0; border-radius: 4px;">
+              <div class="small" style="font-weight: 600; color: #92400e; margin-bottom: 4px;">Rationale:</div>
+              <ul style="margin: 4px 0 0 16px; padding: 0;">
+                {% for e in p['evidence'][:2] %}
+                <li class="small" style="color: #78350f;">{{ e }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          
           <div class="small" style="margin-top:12px; padding: 8px; background: #fffbeb; border-radius: 6px;">
             <strong>Test Parameters:</strong> {{ (p.get('pilot_audience_fraction',0.2)*100)|int }}% of audience • 
             Budget: {{ fmt_money(p.get('pilot_budget_cap', 200)) }} • 
-            Duration: 14 days • 
+            Duration: 28 days • 
             Success: {{ p.get('decision_rule','CI excludes 0') }}
           </div>
+          
+          {% if p.get('action_id') %}
+          <div class="cta-row" style="margin-top: 12px;">
+            <span class="btn btn-track" onclick="alert('Start pilot tracking: {{ p.action_id }}'); return false;">
+              🚀 Start Pilot
+            </span>
+          </div>
+          {% endif %}
         </div>
       {% endfor %}
     </section>
@@ -738,7 +1075,7 @@
     <section class="section">
       <h2>Statistical Evidence</h2>
       <div style="background: #f9fafb; border-radius: 12px; padding: 20px;">
-        <p class="muted" style="margin-bottom: 16px;">Why we believe this week's actions will drive results:</p>
+        <p class="muted" style="margin-bottom: 16px;">Why we believe this month's actions will drive results:</p>
         <ul style="margin-left: 20px;">
           {% if outputs.receipts and outputs.receipts|length > 0 %}
             {% for r in outputs.receipts %}
@@ -750,6 +1087,16 @@
             <li>Confidence levels determined through Benjamini-Hochberg adjusted testing to minimize false positives</li>
           {% endif %}
         </ul>
+        
+        {% if outputs.performance_summary and outputs.performance_summary.n_completed > 0 %}
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+          <p class="small muted">
+            <strong>Historical Accuracy:</strong> 
+            Our predictions have been {{ outputs.performance_summary.aggregate_accuracy_pct }}% accurate on average across 
+            {{ outputs.performance_summary.n_completed }} tracked actions.
+          </p>
+        </div>
+        {% endif %}
       </div>
     </section>
 
@@ -759,7 +1106,7 @@
       <h2>Attachments</h2>
       <div style="background: #f9fafb; border-radius: 8px; padding: 16px;">
         <strong>Segments Bundle:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px;">{{ outputs['segments_bundle'] }}</code>
-        <div class="small muted" style="margin-top: 8px;">Ready for Klaviyo import - contains all customer segments for this week's actions</div>
+        <div class="small muted" style="margin-top: 8px;">Ready for Klaviyo import - contains all customer segments for this month's actions</div>
       </div>
     </section>
     {% endif %}
@@ -770,23 +1117,48 @@
     Prescriptive Analytics for Beauty & Wellness Brands<br>
     <div style="margin-top: 8px; font-size: 12px;">
       Generated {{ aligned['anchor'].strftime('%B %d, %Y at %I:%M %p') if aligned.get('anchor') else 'today' }} • 
-      Analysis window: L28 • 
+      Analysis window: {{ outputs.cfg.get('CHOSEN_WINDOW', 'L28') }} • 
+      {% if outputs.validation_results %}
+        Data Quality: {{ outputs.validation_results.data_quality_grade }} • 
+      {% endif %}
       Confidence threshold: 90%
     </div>
   </footer>
 </div>
 
 <script>
-function toggleValidation(event) {
-  event.preventDefault();
-  const details = document.getElementById('validationDetails');
-  const toggle = event.currentTarget;
-  const isShowing = details.classList.contains('show');
-  
-  details.classList.toggle('show');
-  toggle.querySelector('span:last-child').textContent = isShowing ? '▼' : '▲';
-  toggle.querySelector('span:first-child').textContent = isShowing ? 'View validation details' : 'Hide validation details';
+// Action tracking functions
+function markImplemented(actionId) {
+  const modal = confirm(`Mark action ${actionId} as implemented?\n\nThis will start tracking its performance.`);
+  if (modal) {
+    alert('Action marked as implemented. Check back in 28 days to log results.');
+  }
 }
+
+function trackResults(actionId) {
+  const revenue = prompt('Enter actual revenue generated:');
+  if (revenue) {
+    alert(`Results tracked for ${actionId}: ${revenue}`);
+  }
+}
+
+// Copy action ID to clipboard
+function copyActionId(actionId) {
+  navigator.clipboard.writeText(actionId).then(function() {
+    alert('Action ID copied to clipboard');
+  });
+}
+
+// Initialize tooltips for action IDs
+document.addEventListener('DOMContentLoaded', function() {
+  const actionIds = document.querySelectorAll('.action-id');
+  actionIds.forEach(function(el) {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', function() {
+      copyActionId(el.getAttribute('title'));
+    });
+  });
+});
 </script>
 
 </body>
