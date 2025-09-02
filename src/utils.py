@@ -171,6 +171,10 @@ DEFAULTS: Dict[str, Any] = {
     "VERTICAL_MODE": "mixed",     # beauty|supplements|mixed
     "CHARTS_MODE": "detailed",    # detailed|compact
     "SHOW_L7": True,               # show L7 KPI card
+    # interactions (env-driven). Example formats:
+    #  - JSON: {"discount_hygiene->winback_21_45":0.9, "winback_21_45->dormant_multibuyers_60_120":0.92}
+    #  - CSV:  discount_hygiene->winback_21_45:0.9, bestseller_amplify->winback_21_45:0.95
+    "INTERACTION_FACTORS": "",
 }
 
 
@@ -223,7 +227,79 @@ def get_config(env_path: str | None = None) -> Dict[str, Any]:
     if not cfg.get('VERTICAL_MODE'):
         cfg['VERTICAL_MODE'] = get_vertical_mode()
     cfg['VERTICAL'] = get_vertical(cfg)
+    # Parse interaction factors into structured mapping
+    cfg['INTERACTION_FACTORS_PARSED'] = parse_interaction_factors(cfg.get('INTERACTION_FACTORS', ''))
     return cfg
+
+
+def parse_interaction_factors(value: str | dict | None) -> dict[tuple[str, str], float]:
+    """Parse campaign interaction dampening factors from env or dict.
+    Accepts:
+      - JSON string: {"a->b":0.9, "c->d":0.95} or nested {"a":{"b":0.9}}
+      - CSV string:  "a->b:0.9, c->d:0.95"
+      - Dict already parsed
+    Returns dict with keys (prior, current) -> factor (float in (0,1]).
+    """
+    out: dict[tuple[str, str], float] = {}
+    if not value:
+        return out
+    try:
+        if isinstance(value, dict):
+            items = []
+            # nested dict case
+            for k, v in value.items():
+                if isinstance(v, dict):
+                    for k2, f in v.items():
+                        items.append((str(k), str(k2), float(f)))
+                else:
+                    # flat key like "a->b"
+                    prior, curr = str(k).split("->", 1)
+                    items.append((prior.strip(), curr.strip(), float(v)))
+            for prior, curr, f in items:
+                if f <= 0 or f > 1: continue
+                out[(prior, curr)] = float(f)
+            return out
+        # Try JSON
+        import json as _json
+        try:
+            parsed = _json.loads(str(value))
+            return parse_interaction_factors(parsed)
+        except Exception:
+            pass
+        # Fallback: CSV style "a->b:0.9, c->d:0.95"
+        s = str(value)
+        for part in s.split(','):
+            t = part.strip()
+            if not t:
+                continue
+            if ':' not in t or '->' not in t:
+                continue
+            left, f = t.split(':', 1)
+            prior, curr = left.split('->', 1)
+            try:
+                factor = float(f.strip())
+            except Exception:
+                continue
+            if factor <= 0 or factor > 1:
+                continue
+            out[(prior.strip(), curr.strip())] = factor
+    except Exception:
+        return {}
+    return out
+
+def get_interaction_factors(cfg: dict) -> dict[tuple[str, str], float]:
+    """Return parsed interaction mapping, falling back to a conservative default matrix."""
+    parsed = cfg.get('INTERACTION_FACTORS_PARSED') or {}
+    if parsed:
+        return parsed
+    # Defaults used if no env provided
+    return {
+        ("discount_hygiene", "winback_21_45"): 0.90,
+        ("discount_hygiene", "bestseller_amplify"): 0.95,
+        ("discount_hygiene", "subscription_nudge"): 0.95,
+        ("winback_21_45", "dormant_multibuyers_60_120"): 0.92,
+        ("bestseller_amplify", "winback_21_45"): 0.95,
+    }
 
 
 def safe_make_dirs(path: str) -> None:

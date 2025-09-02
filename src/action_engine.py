@@ -699,6 +699,15 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
     n1, n2 = int(aligned["recent_n"] or 0), int(aligned["prior_n"] or 0)
 
     pval = two_proportion_z_test(x1, n1, x2, n2)
+    # Wilson CI for each period; derive conservative CI for difference
+    try:
+        from .stats import wilson_ci
+        r1_lo, r1_hi = wilson_ci(x1, n1, alpha=0.05)
+        r0_lo, r0_hi = wilson_ci(x2, n2, alpha=0.05)
+        ci_lo_diff = r1_lo - r0_hi
+        ci_hi_diff = r1_hi - r0_lo
+    except Exception:
+        ci_lo_diff = None; ci_hi_diff = None
     rate_recent = (x1 / n1) if n1 else 0.0
     rate_prior  = (x2 / n2) if n2 else 0.0
     effect_pts  = rate_recent - rate_prior  # absolute delta in points (e.g., +0.024)
@@ -713,7 +722,7 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
         "effect_abs": effect_pts,
         "p": pval,
         "q": np.nan,                     # set later by BH
-        "ci_low": None, "ci_high": None, # (optional) add CI later if you implement it
+        "ci_low": ci_lo_diff, "ci_high": ci_hi_diff,
         "expected_$": expected,
         "min_n": cfg["MIN_N_WINBACK"],
         "effect_floor": cfg["REPEAT_PTS_FLOOR"],
@@ -765,6 +774,13 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
     x2, n2 = int(np.sum(pri_disc >= 0.05)), int(pri_disc.size)
     if n1 > 0 and n2 > 0:
         pval2 = two_proportion_z_test(x1, n1, x2, n2)
+        try:
+            from .stats import wilson_ci
+            d1_lo, d1_hi = wilson_ci(x1, n1, alpha=0.05)
+            d0_lo, d0_hi = wilson_ci(x2, n2, alpha=0.05)
+            ci2_lo, ci2_hi = d1_lo - d0_hi, d1_hi - d0_lo
+        except Exception:
+            ci2_lo = None; ci2_hi = None
         # effect is negative if discount share increased (we want *reduction*)
         effect_pts2 = (x2 / n2) - (x1 / n1)  # reduction is positive if recent < prior
         expected2 = max(0.0, effect_pts2) * n1 * 0.5 * gross_margin * (float(np.nanmean(g["AOV"])) if not np.isnan(np.nanmean(g["AOV"])) else 0.0)
@@ -777,7 +793,7 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
             "effect_abs": effect_pts2,
             "p": pval2,
             "q": np.nan,
-            "ci_low": None, "ci_high": None,
+            "ci_low": ci2_lo, "ci_high": ci2_hi,
             "expected_$": expected2,
             "min_n": cfg["MIN_N_SKU"],
             "effect_floor": cfg["DISCOUNT_PTS_FLOOR"],
@@ -839,7 +855,9 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
             # Cap at 25% of weekly baseline to avoid spikes
             if weekly_baseline > 0:
                 expected = min(expected, 0.25 * weekly_baseline)
-            # Empirical p-value vs historic cohorts (conversion to any order in next 28d)
+            # Empirical baseline + power check for conversion in next 28d
+            p_sub = np.nan
+            baseline_conv = None
             try:
                 A_start = maxd2 - pd.Timedelta(days=180)
                 A_end   = maxd2 - pd.Timedelta(days=90)
@@ -861,26 +879,38 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
                     return (xloc, nloc)
                 xA, nA = _conv_next28(A_start, A_end)
                 xB, nB = _conv_next28(B_start, B_end)
-                p_sub = two_proportion_z_test(xA, nA, xB, nB) if (nA>0 and nB>0) else (0.05 if audience>=80 else 0.10)
+                if (nA>0 and nB>0):
+                    baseline_conv = (xA + xB) / max(1, (nA + nB))
+                    p_sub = two_proportion_z_test(xA, nA, xB, nB)
             except Exception:
-                p_sub = 0.05 if audience>=80 else 0.10
+                baseline_conv = None
+
+            # Power requirement: ensure audience meets minimum to detect an absolute +5pt lift
+            expected_delta = 0.05
+            baseline_for_power = float(baseline_conv) if baseline_conv is not None else 0.15
+            try:
+                n_needed = int(required_n_for_proportion(baseline_for_power, expected_delta, alpha=0.05, power=0.8))
+            except Exception:
+                n_needed = int(cfg.get("MIN_N_SKU", 60))
+
             if audience >= max(50, int(cfg.get("MIN_N_SKU", 60) // 2)):
                 cands.append({
                     "id": "subscription_nudge",
                     "play_id": "subscription_nudge",
                     "metric": "subscription",
                     "n": audience,
-                    "effect_abs": 0.05,   # weekly proxy effect
-                    "p": p_sub,
+                    "effect_abs": 0.05,   # weekly proxy effect (selection heuristic)
+                    "p": p_sub,           # empirical if available; otherwise NaN
                     "q": np.nan,
                     "ci_low": None, "ci_high": None,
                     "expected_$": expected,
-                    "min_n": int(cfg.get("MIN_N_SKU", 60)),
+                    # Use power-based minimum N if higher than config minimum
+                    "min_n": max(int(cfg.get("MIN_N_SKU", 60)), n_needed),
                     "effect_floor": 0.05,
-                    "rationale": f"Found {audience} customers with ≥3 purchases of the same product in 90d — ideal for subscription.",
+                    "rationale": f"Found {audience} customers with ≥3 purchases of the same product in 90d — ideal for subscription. Power check: need ≈ {n_needed} to detect +5 pts.",
                     "audience_size": audience,
                     "attachment": "segment_subscription_nudge.csv",
-                    "baseline_rate": None,
+                    "baseline_rate": baseline_for_power,
                 })
     except Exception:
         pass
@@ -944,8 +974,16 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
                         xB, nB = conv_rate(B_start, B_end)
                         if nA > 0 and nB > 0:
                             p_sf = two_proportion_z_test(xA, nA, xB, nB)
+                            try:
+                                from .stats import wilson_ci
+                                sA_lo, sA_hi = wilson_ci(xA, nA, alpha=0.05)
+                                sB_lo, sB_hi = wilson_ci(xB, nB, alpha=0.05)
+                                ci_sf_lo, ci_sf_hi = sA_lo - sB_hi, sA_hi - sB_lo
+                            except Exception:
+                                ci_sf_lo = None; ci_sf_hi = None
                         else:
                             p_sf = 0.06 if audience2 < 40 else 0.02
+                            ci_sf_lo = None; ci_sf_hi = None
                     except Exception:
                         p_sf = 0.06 if audience2 < 40 else 0.02
                     cands.append({
@@ -956,7 +994,7 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
                         "effect_abs": effect_sf,
                         "p": p_sf,
                         "q": np.nan,
-                        "ci_low": None, "ci_high": None,
+                        "ci_low": ci_sf_lo, "ci_high": ci_sf_hi,
                         "expected_$": expected_sf,
                         "min_n": int(cfg.get("MIN_N_SKU", 60)),
                         "effect_floor": 0.05,
@@ -1169,9 +1207,21 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
                     B_end   = maxd_all - pd.Timedelta(days=120)
                     xA, nA = _deplete_conv(A_start, A_end)
                     xB, nB = _deplete_conv(B_start, B_end)
-                    p_eb = two_proportion_z_test(xA, nA, xB, nB) if (nA>0 and nB>0) else (0.06 if audience_eb<80 else 0.05)
+                    if (nA>0 and nB>0):
+                        p_eb = two_proportion_z_test(xA, nA, xB, nB)
+                        try:
+                            from .stats import wilson_ci
+                            eA_lo, eA_hi = wilson_ci(xA, nA, alpha=0.05)
+                            eB_lo, eB_hi = wilson_ci(xB, nB, alpha=0.05)
+                            ci_eb_lo, ci_eb_hi = eA_lo - eB_hi, eA_hi - eB_lo
+                        except Exception:
+                            ci_eb_lo = None; ci_eb_hi = None
+                    else:
+                        p_eb = 0.06 if audience_eb<80 else 0.05
+                        ci_eb_lo = None; ci_eb_hi = None
                 except Exception:
                     p_eb = 0.06 if audience_eb<80 else 0.05
+                    ci_eb_lo = None; ci_eb_hi = None
                 cands.append({
                     "id": "empty_bottle",
                     "play_id": "empty_bottle",
@@ -1180,7 +1230,7 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
                     "effect_abs": conv_weekly,
                     "p": p_eb,
                     "q": np.nan,
-                    "ci_low": None, "ci_high": None,
+                    "ci_low": ci_eb_lo, "ci_high": ci_eb_hi,
                     "expected_$": expected_eb,
                     "min_n": int(cfg.get("MIN_N_SKU", 60)),
                     "effect_floor": 0.03,
@@ -1310,10 +1360,34 @@ def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, poli
                 cost_per_order = float(v.get("cost_value", 0.0))
             incentive_cost = cost_per_order * audience
 
+            # Base expected value for one exposure window
             vc["expected_$"] = max(0.0, exp_base * lift_mult - incentive_cost)
 
-            # Scale expected impact to a monthly plan (≈4 weeks)
-            vc["expected_$"] *= 4.0
+            # Monthly scaling with fatigue and light seasonality adjustment
+            # - Fatigue: diminishing weekly multipliers over 4 weeks
+            # - Seasonality: adjust by how L7 compares to avg weekly over L28 (clamped)
+            try:
+                fatigue_schedule = [1.00, 0.85, 0.70, 0.60]
+                monthly_multiplier = float(sum(fatigue_schedule))  # 3.15 instead of 4.0
+
+                l28_ns = float(((aligned or {}).get("L28", {}) or {}).get("net_sales", 0.0) or 0.0)
+                l7_ns  = float(((aligned or {}).get("L7",  {}) or {}).get("net_sales", 0.0) or 0.0)
+                avg_w  = (l28_ns / 4.0) if l28_ns > 0 else 0.0
+                season_ratio = (l7_ns / avg_w) if (avg_w > 0 and l7_ns > 0) else 1.0
+                # clamp to avoid over-reacting
+                season_factor = max(0.9, min(1.1, season_ratio))
+
+                vc["expected_$"] *= (monthly_multiplier * season_factor)
+
+                # Saturation guardrail: cap single-action monthly lift vs baseline
+                monthly_baseline = l28_ns
+                if monthly_baseline > 0:
+                    cap = 0.35 * monthly_baseline
+                    if vc["expected_$"] > cap:
+                        vc["expected_$"] = cap
+            except Exception:
+                # Fallback to simple monthly scaling if inputs are missing
+                vc["expected_$"] *= 4.0
 
             # Non-blocking LTV preference: if audience LTV is top-decile, nudge toward no-discount
             try:
@@ -1404,6 +1478,74 @@ def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, poli
                 round((pilot.get("expected_$", 0) or 0) * 1.3, 2),
             ],
         }]
+
+    # --- Audience overlap adjustment for Top Actions (conservative) ---
+    # Reduce expected_$ for downstream actions in proportion to their audience overlap
+    try:
+        segments_dir = Path(receipts_dir).parent / "segments"
+        seen_customers: set[str] = set()
+
+        def _load_segment_customers(attachment: str) -> set[str]:
+            if not attachment:
+                return set()
+            p = segments_dir / attachment
+            if not p.exists():
+                return set()
+            try:
+                df = pd.read_csv(p)
+                col = None
+                for c in df.columns:
+                    if str(c).lower() in {"customer_id", "customer", "email", "id"}:
+                        col = c; break
+                if col is None:
+                    return set()
+                return set(df[col].astype(str).tolist())
+            except Exception:
+                return set()
+
+        for idx, a in enumerate(out["actions"]):
+            att = a.get("attachment")
+            aud = _load_segment_customers(att)
+            total = len(aud)
+            if total == 0:
+                continue
+            overlap_n = len(aud & seen_customers)
+            overlap_ratio = (overlap_n / total) if total > 0 else 0.0
+            if overlap_ratio > 0:
+                # proportional reduction of expected impact to avoid double counting
+                exp0 = float(a.get("expected_$") or 0.0)
+                exp1 = exp0 * max(0.0, 1.0 - overlap_ratio)
+                a["expected_$"] = round(exp1, 2)
+                a["audience_size_effective"] = total - overlap_n
+                a["overlap_with_prior"] = round(overlap_ratio, 3)
+            # add to seen
+            seen_customers |= aud
+    except Exception:
+        pass
+
+    # --- Campaign interaction effects (pairwise dampening, env-configurable) ---
+    try:
+        from .utils import get_interaction_factors
+        interaction_factors = get_interaction_factors(cfg or {})
+
+        prior_play_ids: list[str] = []
+        for a in out["actions"]:
+            pid = str(a.get("play_id") or "")
+            factor = 1.0
+            notes: list[str] = []
+            for prior in prior_play_ids:
+                f = interaction_factors.get((prior, pid))
+                if f is not None and f < 1.0:
+                    factor *= float(f)
+                    notes.append(f"{prior}→{pid} x{f:.2f}")
+            if factor < 1.0:
+                exp0 = float(a.get("expected_$") or 0.0)
+                a["expected_$"] = round(exp0 * factor, 2)
+                a["interaction_factor"] = round(factor, 3)
+                a["interaction_notes"] = notes
+            prior_play_ids.append(pid)
+    except Exception:
+        pass
 
     return out
 

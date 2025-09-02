@@ -450,24 +450,57 @@ def action_impact_forecast_chart(actions: List[Dict], aligned: dict, out_path: s
         if cw == 'L7':
             # Approximate month as 4x L7
             baseline_monthly = float(aligned.get('L7', {}).get('net_sales') or 0.0) * 4.0
+            baseline_label = '4× L7 (monthly)'
         elif cw == 'L56':
             # 56d ~ 8 weeks ~ 2 months; use L56 directly but scale to monthly
             base_window = aligned.get('L56', {})
             baseline_monthly = float((base_window.get('net_sales') or 0.0)) / 2.0
+            baseline_label = 'L56 ÷ 2 (monthly)'
         else:
             # Default: L28 is already ~monthly
             base_window = aligned.get('L28', {})
             baseline_monthly = float(base_window.get('net_sales') or 0.0)
+            baseline_label = 'L28 (monthly)'
         
-        # Build cumulative impact
+        # Build cumulative impact (adjusted for diminishing returns and channel overlap)
         action_names = []
         impacts = [baseline_monthly]
         cumulative = baseline_monthly
+        used_channels = set()
+        # Position-based diminishing schedule (top 3)
+        pos_schedule = [1.00, 0.90, 0.80]
+        # Global portfolio cap to avoid overstating combined lift
+        portfolio_cap = 0.50 * baseline_monthly if baseline_monthly > 0 else float('inf')
         
-        for action in actions[:3]:  # Top 3 actions
+        for idx, action in enumerate(actions[:3]):  # Top 3 actions
             # expected_$ has been scaled to monthly in the engine
             expected = float(action.get('expected_$', 0) or 0.0)
-            cumulative += expected
+
+            # Channel-overlap interference: penalize by prior-used channel overlap
+            chans = set()
+            try:
+                meta_ch = action.get('channels') or []
+                if isinstance(meta_ch, dict):
+                    # if structured, take keys truthy
+                    meta_ch = [k for k, v in meta_ch.items() if v]
+                chans = set(str(c).lower() for c in meta_ch)
+            except Exception:
+                chans = set()
+            overlap = len(chans & used_channels)
+            channel_factor = (0.90 ** overlap) if overlap > 0 else 1.0
+
+            # Position-based diminishing factor
+            pos_factor = pos_schedule[idx] if idx < len(pos_schedule) else 0.75
+
+            adjusted = expected * channel_factor * pos_factor
+
+            # Apply portfolio cap across combined lifts
+            current_lift = cumulative - baseline_monthly
+            remaining_cap = portfolio_cap - current_lift
+            if remaining_cap < float('inf'):
+                adjusted = max(0.0, min(adjusted, remaining_cap))
+
+            cumulative += adjusted
             impacts.append(cumulative)
             
             # Shorten action names
@@ -475,12 +508,15 @@ def action_impact_forecast_chart(actions: List[Dict], aligned: dict, out_path: s
             if len(name) > 20:
                 name = name[:17] + '...'
             action_names.append(name)
+
+            # Accumulate used channels for interference on subsequent actions
+            used_channels |= chans
         
         # Create waterfall chart
         x = range(len(impacts))
         
         # Baseline bar
-        ax.bar(0, baseline_monthly, color='#6b7280', label='Current Baseline (monthly)')
+        ax.bar(0, baseline_monthly, color='#6b7280', label=f'Baseline ({baseline_label})')
         
         # Action bars (stacked)
         bottom = baseline_monthly
@@ -500,8 +536,8 @@ def action_impact_forecast_chart(actions: List[Dict], aligned: dict, out_path: s
         ax.set_xticklabels(['Current'] + [f'+ Action {i+1}' for i in range(len(action_names))])
         ax.set_ylabel('Expected Monthly Revenue ($)', fontsize=11)
         ax.set_title('Revenue Impact Forecast - This Month\'s Actions', fontsize=13, fontweight='bold')
-        # Clarify units
-        ax.text(0.5, -0.12, 'Baseline and lifts normalized to monthly values.',
+        # Clarify units and interaction assumptions
+        ax.text(0.5, -0.12, f'Units: monthly. Baseline source: {baseline_label}. Combined impact adjusted for channel overlap and diminishing returns; capped at 50% of baseline.',
                 transform=ax.transAxes, ha='center', va='top', fontsize=9, color='#6b7280')
         
         # Add total impact annotation

@@ -961,9 +961,33 @@
                 {% if a.get('expected_$') %}<span class="badge impact">+{{ fmt_money(a.get('expected_$')) }}</span>{% endif %}
                 {% if a.get('effort') %}<span class="badge effort">Effort: {{ a.get('effort') }}/5</span>{% endif %}
                 {% if a.get('confidence_label') %}<span class="badge">Confidence: {{ a.get('confidence_label') }}</span>{% endif %}
+                {% if a.get('overlap_with_prior') %}
+                  <span class="badge" style="background:#fee2e2; color:#991b1b;">Overlap: {{ (a.get('overlap_with_prior')*100)|round(1) }}%</span>
+                {% endif %}
+                {% if a.get('interaction_factor') and a.get('interaction_factor') < 1 %}
+                  <span class="badge" title="{{ (a.get('interaction_notes') or []) | join(', ') }}" style="background:#ffe4e6; color:#9f1239;">Adj: -{{ ((1 - a.get('interaction_factor'))*100)|round(0) }}%</span>
+                {% endif %}
               </div>
             </div>
             <div class="muted" style="margin-bottom: 12px;">{{ a.get('do_this','') }}</div>
+
+            {# Stats summary for this action if available #}
+            {% set p = a.get('p') %}
+            {% set ci_lo = a.get('ci_low') %}
+            {% set ci_hi = a.get('ci_high') %}
+            {% if (p is not none) or (ci_lo is not none and ci_hi is not none) %}
+              <div class="small" style="color:#374151; margin: 6px 0 8px 0;">
+                <strong>Stats:</strong>
+                {% if p is not none and p == p %}p={{ '%.3f' % p }}{% endif %}
+                {% if ci_lo is not none and ci_hi is not none %}
+                  {% if a.get('metric') in ['repeat_rate','discount_rate','subscription'] %}
+                    • 95% CI Δ=[{{ fmt_pct(ci_lo,1) }}, {{ fmt_pct(ci_hi,1) }}]
+                  {% else %}
+                    • 95% CI Δ=[{{ '%.3f' % ci_lo }}, {{ '%.3f' % ci_hi }}]
+                  {% endif %}
+                {% endif %}
+              </div>
+            {% endif %}
             
             {% if a.get('evidence') %}
               <div style="background: #f0f9ff; border-left: 3px solid #3b82f6; padding: 8px 12px; margin: 12px 0; border-radius: 4px;">
