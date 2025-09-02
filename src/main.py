@@ -38,7 +38,7 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
 
     # segments
     seg_dir = Path(out_dir) / "segments"
-    seg_files = build_segments(g, cfg.get("GROSS_MARGIN", 0.70), str(seg_dir))
+    seg_files = build_segments(g, cfg.get("GROSS_MARGIN", 0.70), str(seg_dir), cfg)
 
     # (charts generation moved to after actions are selected)
 
@@ -76,7 +76,8 @@ def run(csv_path: str, brand: str, out_dir: str) -> None:
         actions=actions,
         out_dir=str(chart_out_dir),
         df=df,
-        chosen_window=str(cfg.get("CHOSEN_WINDOW", "L28"))
+        chosen_window=str(cfg.get("CHOSEN_WINDOW", "L28")),
+        charts_mode=str(cfg.get("CHARTS_MODE", "detailed"))
     ) or {}
 
     briefing_dir = Path(out_dir) / "briefings"

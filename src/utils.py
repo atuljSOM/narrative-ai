@@ -11,6 +11,139 @@ import pandas as pd
 import re
 from .stats import welch_t_test, two_proportion_test, benjamini_hochberg, seasonal_adjustment
 
+# ---------------- Vertical config (Beauty/Supplements/Mixed) ----------------
+# These tune audience windows and subscription rules per vertical.
+VERTICAL_CONFIG: Dict[str, Dict[str, Any]] = {
+    'beauty': {
+        'subscription_threshold': 3,           # orders before pushing subscription
+        'winback_window': (21, 45),
+        'dormant_window': (60, 120),
+        'seasonal_adjustment': True,
+        'gift_period_detection': True,
+        'compliance_tracking': False,
+    },
+    'supplements': {
+        'subscription_threshold': 2,           # push subscription faster
+        'winback_window': (35, 50),            # slightly later (after 30-day supply)
+        'dormant_window': (45, 90),            # tighter window
+        'seasonal_adjustment': False,          # less seasonal
+        'gift_period_detection': False,
+        'compliance_tracking': True,           # unique to supplements
+    },
+    'mixed': {                                 # many stores sell both
+        'use_product_detection': True,
+        'apply_category_rules': True,
+        # Fallback windows if product type can't be determined
+        'winback_window': (21, 45),
+        'dormant_window': (60, 120),
+        'subscription_threshold': 3,
+        'compliance_tracking': True,
+    },
+}
+
+def get_vertical_mode() -> str:
+    """Return vertical mode from env: 'beauty' | 'supplements' | 'mixed' (default)."""
+    v = os.getenv('VERTICAL_MODE') or os.getenv('VERTICAL') or 'mixed'
+    v = str(v).strip().lower()
+    return v if v in VERTICAL_CONFIG else 'mixed'
+
+def get_vertical(cfg: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    """Get effective vertical configuration, merged into provided cfg if present."""
+    mode = (cfg or {}).get('VERTICAL_MODE') or get_vertical_mode()
+    return VERTICAL_CONFIG.get(str(mode).lower(), VERTICAL_CONFIG['mixed'])
+
+def categorize_product(product_name: str) -> tuple[str, int]:
+    """Returns (category, typical_days_supply) based on basic token rules.
+
+    Categories: 'supplement' | 'skincare' | 'cosmetics' | 'unknown'
+    """
+    if not product_name:
+        return ('unknown', 60)
+    product_lower = str(product_name).lower()
+
+    # Supplements patterns
+    if any(term in product_lower for term in ['vitamin', 'supplement', 'protein', 'collagen', 'probiotic', 'omega']):
+        if '90' in product_lower or '3 month' in product_lower:
+            return ('supplement', 90)
+        elif '60' in product_lower or '2 month' in product_lower:
+            return ('supplement', 60)
+        else:  # Default 30-day supply
+            return ('supplement', 30)
+
+    # Beauty patterns
+    if any(term in product_lower for term in ['serum', 'cream', 'cleanser', 'moisturizer']):
+        return ('skincare', 45)
+    if any(term in product_lower for term in ['mascara', 'liner', 'brow']):
+        return ('cosmetics', 90)
+    if any(term in product_lower for term in ['foundation', 'concealer']):
+        return ('cosmetics', 180)
+
+    return ('unknown', 60)
+
+def supplement_subscription_urgency(customer_data: pd.DataFrame) -> str:
+    """Supplements need different subscription push timing.
+
+    Expects columns: 'Created at' (datetime), 'product' (string)
+    """
+    if customer_data is None or customer_data.empty:
+        return "LOW: Not ready"
+    last_order = pd.to_datetime(customer_data['Created at'], errors='coerce').max()
+    if pd.isna(last_order):
+        return "LOW: Not ready"
+    days_since = (pd.Timestamp.now() - last_order).days
+    product = str(customer_data.get('product', pd.Series([''])).iloc[0])
+    product_type, supply_days = categorize_product(product)
+
+    if product_type == 'supplement':
+        if days_since >= supply_days - 5:
+            return "URGENT: Likely out of product"
+        elif days_since >= supply_days - 10:
+            return "HIGH: Running low"
+        elif customer_data.shape[0] >= 3:
+            return "MEDIUM: Good subscription candidate"
+    return "LOW: Not ready"
+
+def supplement_compliance_check(customer_orders: pd.DataFrame) -> float:
+    """Estimate compliance for supplements (0.5 poor, 0.75 ok, 1.0 good).
+
+    Expects orders for a single customer/product with 'Created at' and 'product'.
+    If not a supplement, returns 1.0.
+    """
+    if customer_orders is None or customer_orders.empty:
+        return 1.0
+    dd = customer_orders.copy()
+    dd['Created at'] = pd.to_datetime(dd['Created at'], errors='coerce')
+    dd = dd.sort_values('Created at')
+    if dd.empty:
+        return 1.0
+    product = str(dd.get('product', pd.Series([''])).iloc[0])
+    product_type, supply_days = categorize_product(product)
+    if product_type != 'supplement':
+        return 1.0
+    intervals = dd['Created at'].diff().dt.days
+    if intervals.dropna().empty:
+        return 1.0
+    expected_interval = int(supply_days)
+    actual_median = float(pd.to_numeric(intervals, errors='coerce').median())
+    if actual_median > expected_interval * 1.5:
+        return 0.5
+    elif actual_median > expected_interval * 1.2:
+        return 0.75
+    else:
+        return 1.0
+
+def subscription_threshold_for_product(product_name: str, cfg: Dict[str, Any] | None = None) -> int:
+    """Return per-product subscription threshold (orders) using vertical + product detection."""
+    vmode = (cfg or {}).get('VERTICAL_MODE') or get_vertical_mode()
+    v = VERTICAL_CONFIG.get(str(vmode).lower(), VERTICAL_CONFIG['mixed'])
+    if str(vmode).lower() == 'mixed' and v.get('use_product_detection', False):
+        ptype, _ = categorize_product(product_name or '')
+        if ptype == 'supplement':
+            return 2
+        return 3
+    # pure verticals
+    return int(v.get('subscription_threshold', 3))
+
 DEFAULTS: Dict[str, Any] = {
     # thresholds & knobs (sane defaults; .env can override)
     "MIN_N_WINBACK": 150,
@@ -34,6 +167,10 @@ DEFAULTS: Dict[str, Any] = {
     # seasonality knobs
     "SEASONAL_ADJUST": True,
     "SEASONAL_PERIOD": 7,
+    # display/vertical knobs (read also via os.getenv in components)
+    "VERTICAL_MODE": "mixed",     # beauty|supplements|mixed
+    "CHARTS_MODE": "detailed",    # detailed|compact
+    "SHOW_L7": True,               # show L7 KPI card
 }
 
 
@@ -42,12 +179,18 @@ def _parse_bool(v: str) -> bool:
 
 
 def _coerce(k: str, v: str) -> Any:
+    # Strip inline comments and quotes
+    if isinstance(v, str):
+        v = v.split('#', 1)[0].strip().strip('"').strip("'")
+
     if k in {"MIN_N_WINBACK", "MIN_N_SKU", "EFFORT_BUDGET", "L7_MIN_ORDERS", "L28_MIN_ORDERS"}:
         return int(float(v))
     if k in {"AOV_EFFECT_FLOOR", "REPEAT_PTS_FLOOR", "DISCOUNT_PTS_FLOOR", "FDR_ALPHA", "GROSS_MARGIN",
              "FINANCIAL_FLOOR", "FINANCIAL_FLOOR_FIXED", "PILOT_AUDIENCE_FRACTION", "PILOT_BUDGET_CAP"}:
         return float(v)
-    if k in {"WINDOW_POLICY", "FINANCIAL_FLOOR_MODE"}:
+    if k in {"SEASONAL_ADJUST", "SHOW_L7"}:
+        return _parse_bool(v)
+    if k in {"WINDOW_POLICY", "FINANCIAL_FLOOR_MODE", "CHARTS_MODE", "VERTICAL_MODE"}:
         return str(v).strip().lower()
     return v
 
@@ -76,6 +219,10 @@ def get_config(env_path: str | None = None) -> Dict[str, Any]:
         if k in os.environ:
             cfg[k] = _coerce(k, os.environ[k])
 
+    # Attach vertical mode + config
+    if not cfg.get('VERTICAL_MODE'):
+        cfg['VERTICAL_MODE'] = get_vertical_mode()
+    cfg['VERTICAL'] = get_vertical(cfg)
     return cfg
 
 

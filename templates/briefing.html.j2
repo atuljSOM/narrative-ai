@@ -596,6 +596,8 @@
     <!-- KPI Section with L7 and L28 -->
     <section class="section">
       <h2>Key Performance Indicators</h2>
+      {% set show_l7 = outputs.cfg.get('SHOW_L7', True) %}
+      {% if show_l7 %}
       <div class="grid">
         <div>
           <h3>Last 7 Days</h3>
@@ -606,6 +608,14 @@
           {{ kpi_block('L28') }}
         </div>
       </div>
+      {% else %}
+      <div class="grid" style="grid-template-columns: 1fr;">
+        <div>
+          <h3>Last 28 Days (vs prior 28 days)</h3>
+          {{ kpi_block('L28') }}
+        </div>
+      </div>
+      {% endif %}
     </section>
 
     <!-- Enhanced Charts Section -->
@@ -620,6 +630,8 @@
             {% elif 'velocity' in chart.lower() %}Product Performance
             {% elif 'segment' in chart.lower() %}Customer Segments
             {% elif 'impact' in chart.lower() or 'forecast' in chart.lower() %}Revenue Impact
+            {% elif 'cohort' in chart.lower() or 'retention' in chart.lower() %}Cohort Retention
+            {% elif 'first_to_second' in chart.lower() or 'second' in chart.lower() %}First-to-Second Purchase
             {% else %}Analysis{% endif %}
           </div>
           <img class="chart" src="{{ chart }}" alt="Chart" />

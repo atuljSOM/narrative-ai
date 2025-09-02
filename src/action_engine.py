@@ -24,6 +24,7 @@ from .scoring import (
 
 # utils
 from .utils import write_json
+from .utils import subscription_threshold_for_product, categorize_product
 from .features import compute_repeat_curve
 
 def _load_actions_log(receipts_dir: str) -> list[dict]:
@@ -364,7 +365,9 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
                   .nunique()
                   .reset_index(name='orders_product')
             )
-            cohort = rep[rep['orders_product'] >= 3]
+            # Per-product threshold using vertical + product detection
+            rep["_thr"] = rep["lineitem_any"].astype(str).apply(lambda s: subscription_threshold_for_product(s, cfg))
+            cohort = rep[rep['orders_product'] >= rep["_thr"]]
             audience = int(cohort['customer_id'].nunique())
             aov_recent = float(aligned.get("recent_aov") or aligned.get("L28_aov") or np.nan)
             if np.isnan(aov_recent):
@@ -376,6 +379,30 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
             # Conservative weekly uplift rate for subscription (spread over ~12 weeks)
             sub_weekly_uplift = 0.25 / 12.0
             expected = max(0.0, weekly_orders * (aov_recent or 0.0) * sub_weekly_uplift * gross_margin)
+            # Compliance-aware adjustment for supplements: dampen expected if observed intervals imply poor compliance
+            try:
+                # products in cohort
+                products = cohort['lineitem_any'].astype(str).unique().tolist()
+                comp_factors = []
+                for p_name in products:
+                    ptype, supply_days = categorize_product(p_name)
+                    if ptype != 'supplement':
+                        continue
+                    orders_p = gg[gg['lineitem_any'].astype(str) == p_name].copy()
+                    orders_p = orders_p.sort_values('Created at')
+                    med_ipi = orders_p['Created at'].diff().dt.days.median()
+                    if pd.isna(med_ipi):
+                        continue
+                    if med_ipi > supply_days * 1.5:
+                        comp_factors.append(0.5)
+                    elif med_ipi > supply_days * 1.2:
+                        comp_factors.append(0.75)
+                    else:
+                        comp_factors.append(1.0)
+                if comp_factors:
+                    expected *= float(np.mean(comp_factors))
+            except Exception:
+                pass
             # Cap at 25% of weekly baseline to avoid spikes
             if weekly_baseline > 0:
                 expected = min(expected, 0.25 * weekly_baseline)

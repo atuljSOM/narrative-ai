@@ -17,6 +17,8 @@ def compute_features(df: pd.DataFrame) -> pd.DataFrame:
         "Currency":"first"
     }).reset_index().rename(columns={"Lineitem name":"lineitem_any"})
     g = g.sort_values("Created at")
+    # convenient alias for product-dependent utilities
+    g["product"] = g["lineitem_any"].astype(str)
     g["AOV"] = g["net_sales"]
     g["first_seen"] = g.groupby("customer_id")["Created at"].transform("min")
     g["is_repeat"] = (g["Created at"] > g["first_seen"]).astype(int)

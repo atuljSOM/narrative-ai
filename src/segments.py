@@ -2,21 +2,26 @@
 from __future__ import annotations
 import pandas as pd
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
+from .utils import get_vertical, subscription_threshold_for_product
 
-def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str) -> List[str]:
+def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str, cfg: Dict[str, Any] | None = None) -> List[str]:
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     outputs = []
     last_by_cust = g.sort_values("Created at").groupby("customer_id").tail(1)
 
-    winback = last_by_cust[(last_by_cust["days_since_last"]>=21) & (last_by_cust["days_since_last"]<=45)]
+    vcfg = get_vertical(cfg or {})
+    wb_lo, wb_hi = tuple(vcfg.get('winback_window', (21, 45)))
+    dm_lo, dm_hi = tuple(vcfg.get('dormant_window', (60, 120)))
+
+    winback = last_by_cust[(last_by_cust["days_since_last"]>=wb_lo) & (last_by_cust["days_since_last"]<=wb_hi)]
     winback = winback[["customer_id"]].drop_duplicates(); winback["segment"]="winback_21_45"
     winback["segment_n"]=len(winback); winback["baseline_rate"]=g["is_repeat"].mean(); winback["gross_margin"]=gross_margin
     p = Path(out_dir)/"segment_winback_21_45.csv"; winback.to_csv(p, index=False); outputs.append(str(p))
 
     freq = g.groupby("customer_id")["Name"].nunique().rename("orders")
     dormant = last_by_cust.join(freq, on="customer_id")
-    dormant = dormant[(dormant["days_since_last"]>=60)&(dormant["days_since_last"]<=120)&(dormant["orders"]>=2)]
+    dormant = dormant[(dormant["days_since_last"]>=dm_lo)&(dormant["days_since_last"]<=dm_hi)&(dormant["orders"]>=2)]
     dormant = dormant[["customer_id"]].drop_duplicates(); dormant["segment"]="dormant_multibuyers_60_120"
     dormant["segment_n"]=len(dormant); dormant["baseline_rate"]=g["is_repeat"].mean(); dormant["gross_margin"]=gross_margin
     p = Path(out_dir)/"segment_dormant_multibuyers_60_120.csv"; dormant.to_csv(p, index=False); outputs.append(str(p))
@@ -34,7 +39,7 @@ def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str) -> List[s
     disc_df["segment_n"]=len(disc_df); disc_df["baseline_rate"]=g["discount_rate"].mean(); disc_df["gross_margin"]=gross_margin
     p = Path(out_dir)/"segment_discount_hygiene.csv"; disc_df.to_csv(p, index=False); outputs.append(str(p))
 
-    # Subscription nudge: customers with ≥3 orders of the same product in 90 days
+    # Subscription nudge: customers with ≥ threshold orders of the same product in 90 days
     try:
         maxd = pd.to_datetime(g["Created at"]).max()
         start90 = maxd - pd.Timedelta(days=90)
@@ -45,7 +50,9 @@ def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str) -> List[s
                   .nunique()
                   .reset_index(name='orders_product')
             )
-            cohort = rep[rep['orders_product'] >= 3]
+            # Per-product threshold using vertical + product detection
+            rep["_thr"] = rep["lineitem_any"].astype(str).apply(lambda s: subscription_threshold_for_product(s, cfg))
+            cohort = rep[rep['orders_product'] >= rep["_thr"]]
             sub_seg = cohort[["customer_id"]].drop_duplicates()
             sub_seg["segment"] = "subscription_nudge"
             p = Path(out_dir)/"segment_subscription_nudge.csv"; sub_seg.to_csv(p, index=False); outputs.append(str(p))
