@@ -44,6 +44,39 @@ def robust_read_csv(path: str) -> pd.DataFrame:
     # Monetary fields (used in some charts/validations)
     _add_alias('total discount', 'total_discount')
 
+    # Backfill snake_case → Title Case for canonical columns used downstream
+    # This ensures charts/validations that expect Title Case work even when uploads are snake_case.
+    def _backfill(source: str, target: str):
+        if source in df.columns:
+            if target not in df.columns:
+                df[target] = df[source]
+            else:
+                tgt = df[target]
+                src = df[source]
+                empty_mask = tgt.isna() | (tgt.astype(str).str.strip() == '')
+                # Align indices and fill only where target is empty
+                try:
+                    df.loc[empty_mask, target] = src.loc[empty_mask]
+                except Exception:
+                    # Fallback if alignment fails for any reason
+                    df[target] = tgt.where(~empty_mask, src)
+
+    # Identity/time
+    _backfill('order_id', 'Name')
+    _backfill('created_at', 'Created at')
+    _backfill('customer_email', 'Customer Email')
+    _backfill('cancelled_at', 'Cancelled at')
+    # Line items
+    _backfill('lineitem_name', 'Lineitem name')
+    _backfill('lineitem_quantity', 'Lineitem quantity')
+    _backfill('lineitem_price', 'Lineitem price')
+    _backfill('lineitem_discount', 'Lineitem discount')
+    # Monetary
+    _backfill('total_discount', 'Total Discount')
+    _backfill('total', 'Total')
+    _backfill('shipping', 'Shipping')
+    _backfill('taxes', 'Taxes')
+
     def _parse_money_series(s: pd.Series | None) -> pd.Series:
         """Make money columns numeric. Survives $, commas, NBSPs, unicode, (negatives)."""
         if s is None:
@@ -287,6 +320,26 @@ def enhance_order_level(df: pd.DataFrame) -> pd.DataFrame:
                 break
 
     # Ensure essential columns exist post-mapping
+    # Backfill snake_case line item fields into Title Case expected downstream
+    def _backfill(src_key_lower: str, target_col: str):
+        try:
+            if src_key_lower in cols_lower:
+                src_col = cols_lower[src_key_lower]
+                if target_col not in d.columns:
+                    d[target_col] = d[src_col]
+                else:
+                    tgt = d[target_col]
+                    src = d[src_col]
+                    empty_mask = tgt.isna() | (tgt.astype(str).str.strip() == '')
+                    d.loc[empty_mask, target_col] = src.loc[empty_mask]
+        except Exception:
+            pass
+
+    _backfill('lineitem_name', 'Lineitem name')
+    _backfill('lineitem_quantity', 'Lineitem quantity')
+    _backfill('lineitem_price', 'Lineitem price')
+    _backfill('lineitem_discount', 'Lineitem discount')
+
     if 'Currency' not in d.columns:
         d['Currency'] = 'USD'
     if 'Lineitem name' not in d.columns:
