@@ -1,0 +1,10 @@
+product_id,product_name,category,brand,price,cost,stock_quantity,sku,subscription_eligible,created_at,updated_at
+BSML_001,"Daily Vitamin C Serum",Skincare,LocalGlow,45.99,15,130,LO-001-837,true,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_002,"Hydrating Face Moisturizer",Skincare,LocalGlow,38.99,12,120,LO-002-409,true,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_003,"Gentle Daily Cleanser",Skincare,LocalGlow,24.99,8,153,LO-003-900,true,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_004,"Anti-Aging Night Cream",Skincare,LocalGlow,68.99,22,87,LO-004-203,true,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_005,"Tinted Moisturizer SPF",Makeup,NaturalBeauty,32.99,11,100,NA-005-871,false,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_006,"Multi-Use Lip & Cheek Tint",Makeup,NaturalBeauty,22.99,7.5,117,NA-006-117,false,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_007,"Eyebrow Defining Pencil",Makeup,NaturalBeauty,18.99,6,125,NA-007-20,false,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_008,"Rose Quartz Face Roller",Tools,CrystalCare,28.99,10,180,CR-008-135,false,2024-01-15 10:00:00,2024-12-15 15:30:00
+BSML_009,"Starter Skincare Kit",Gift Sets,LocalGlow,89.99,32,153,LO-009-775,false,2024-01-15 10:00:00,2024-12-15 15:30:00

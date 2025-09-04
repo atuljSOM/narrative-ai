@@ -25,8 +25,9 @@ from .scoring import (
 
 # utils
 from .utils import write_json
+from .utils import get_interaction_factors
 from .utils import subscription_threshold_for_product, categorize_product
-from .features import compute_repeat_curve
+from .features import compute_repeat_curve, build_g_items
 
 class ActionStatus(Enum):
     """Status tracking for recommended actions"""
@@ -375,46 +376,580 @@ def _load_actions_log(receipts_dir: str) -> list[dict]:
     try: return json.loads(p.read_text())
     except Exception: return []
 
-# Modify the existing select_actions function to initialize tracking
-def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, policy_path: str | None = None) -> Dict[str, Any]:
+# Primary implementation for action selection (inventory-aware)
+def _select_actions_impl(
+    g,
+    aligned,
+    cfg,
+    playbooks_path: str,
+    receipts_dir: str,
+    policy_path: str | None = None,
+    inventory_metrics: pd.DataFrame | None = None,
+) -> Dict[str, Any]:
+    """Select top actions, backlog, and pilot based on candidates and policy.
+
+    This consolidates gating, scoring, variant expansion, cooldowns, inventory-awareness,
+    overlap adjustments, and interaction effects into a single implementation.
     """
-    (Original function content remains the same until the end)
-    """
-    # ... [Keep all existing code] ...
-    
-    # At the end, after building 'out' dictionary, add tracking initialization:
-    
-    # Initialize tracker
-    tracker = ActionTracker(receipts_dir)
-    
-    # Track all selected actions
-    for action in out.get("actions", []):
-        action_id = f"{action.get('play_id')}_{action.get('variant_id', 'base')}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        action["action_id"] = action_id  # Add ID to action for reference
-        
-        tracker.track_action(
-            action_id=action_id,
-            play_id=action.get("play_id"),
-            variant_id=action.get("variant_id", "base"),
-            predicted_revenue=action.get("expected_$", 0.0),
-            predicted_effect=action.get("effect_abs", 0.0),
-            confidence_score=action.get("score", 0.0)
-        )
-    
-    # Also track pilot actions
-    for pilot in out.get("pilot_actions", []):
-        action_id = f"pilot_{pilot.get('play_id')}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        pilot["action_id"] = action_id
-        
-        tracker.track_action(
-            action_id=action_id,
-            play_id=pilot.get("play_id"),
-            variant_id="pilot",
-            predicted_revenue=pilot.get("expected_$", 0.0),
-            predicted_effect=pilot.get("effect_abs", 0.0),
-            confidence_score=pilot.get("score", 0.0)
-        )
-    
+    # Load playbooks and build quick lookup by id
+    try:
+        plays_list = load_playbooks(playbooks_path)
+    except Exception:
+        plays_list = []
+    plays: Dict[str, Any] = {str(p.get("id")): p for p in plays_list if isinstance(p, dict)}
+
+    # Compute base candidates from recent performance signals
+    base_cands: List[Dict[str, Any]] = _compute_candidates(g, aligned, cfg)
+
+    # LTV signal (non-gating): store-level and top-decile for receipts and tie-breakers
+    ltv_info = compute_repeat_curve(g, horizon_days=[60, 90]) if g is not None else {"store": {}, "per_customer": []}
+    store_ltv90 = float(((ltv_info or {}).get("store", {}) or {}).get(90, {}).get("ltv", 0.0) or 0.0)
+    try:
+        arr = np.array([float(x.get("ltv90", 0.0) or 0.0) for x in (ltv_info.get("per_customer", []) or [])], dtype=float)
+        ltv90_p90 = float(np.quantile(arr, 0.9)) if arr.size > 0 else 0.0
+    except Exception:
+        ltv90_p90 = 0.0
+
+    # FDR adjust (q-values) across base candidates only
+    pvals = [c.get("p", np.nan) for c in base_cands]
+    if any([not np.isnan(p) for p in pvals]):
+        qvals, _ = benjamini_hochberg([p if not np.isnan(p) else 1.0 for p in pvals], cfg["FDR_ALPHA"])
+        for i, c in enumerate(base_cands):
+            c["q"] = qvals[i]
+
+    # Gate + score + attach playbook metadata
+    final: List[Dict[str, Any]] = []
+    for c in base_cands:
+        meta = plays.get(c.get("play_id"), {}) or {}
+        c = c.copy()
+        c["category"] = meta.get("category", "general")
+        c["title"] = meta.get("title", c.get("play_id"))
+        for k in [
+            "do_this","targeting","channels","cadence","offer","copy_snippets","assets",
+            "how_to_launch","success_criteria","risks_mitigations","owner_suggested",
+            "time_to_set_up_minutes","holdout_plan"
+        ]:
+            if k in meta:
+                c[k] = meta.get(k)
+
+        cand = _gate_and_score(c, cfg)
+
+        # Confidence label + expected range
+        if len(cand["failed"]) == 0:
+            cand["confidence_label"] = "High"
+        elif ("min_n" in cand["passed"]) and ("significance" in cand["failed"]) and ("effect_floor" not in cand["failed"]) and ("financial_floor" not in cand["failed"]):
+            cand["confidence_label"] = "Medium"
+        else:
+            cand["confidence_label"] = "Low"
+
+        expv = float(cand.get("expected_$") or 0.0)
+        cand["expected_range"] = [round(expv * 0.6, 2), round(expv * 1.3, 2)]
+
+        # attach LTV estimates (non-gating)
+        cand["audience_ltv90"] = store_ltv90
+        cand["ltv90_top_decile"] = ltv90_p90
+        final.append(cand)
+
+    # Variant expansion + policy eligibility + cooldown/novelty + inventory-aware adjustments
+    try:
+        from .policy import load_policy as _lp, is_eligible as _ie  # optional dependency
+        _load_pol = _lp
+        _is_el = _ie
+    except Exception:
+        def _load_pol(_=None):
+            return {"allow_free_shipping": True, "max_discount_pct": 15, "channel_caps": {"email_per_week": 2, "sms_per_week": 1}}
+        def _is_el(expr, policy):
+            return True
+
+    # Anchor date for week-aware cooldown
+    anchor_dt = None
+    try:
+        val = aligned.get("anchor")
+        if val:
+            anchor_dt = val.date() if hasattr(val, "date") else datetime.date.fromisoformat(str(val)[:10])
+    except Exception:
+        anchor_dt = None
+
+    policy = _load_pol(policy_path)
+    log = _load_actions_log(receipts_dir)
+
+    variant_cands: List[Dict[str, Any]] = []
+
+    # Inventory helpers (soft enforcement by default)
+    inv_df = None
+    try:
+        inv_df = inventory_metrics.copy() if inventory_metrics is not None else None
+    except Exception:
+        inv_df = None
+
+    def _inv_summary():
+        if inv_df is None or inv_df.empty:
+            return None
+        tmp = {}
+        try:
+            tmp['in_stock_ratio14'] = float((inv_df['cover_days'] >= 14).mean()) if 'cover_days' in inv_df.columns else 1.0
+            tmp['cover_min'] = float(inv_df['cover_days'].min()) if 'cover_days' in inv_df.columns else float('inf')
+            tmp['cover_p25'] = float(inv_df['cover_days'].quantile(0.25)) if 'cover_days' in inv_df.columns else float('inf')
+            tf = inv_df.get('trust_factor')
+            tmp['trust_mean'] = float(tf.mean()) if tf is not None else 1.0
+        except Exception:
+            tmp = None
+        return tmp
+
+    inv_sum = _inv_summary()
+    inv_mode = str(cfg.get('INVENTORY_ENFORCEMENT_MODE','soft') or 'soft').lower()
+    cover_map = cfg.get('INVENTORY_MIN_COVER_DAYS') or {}
+    default_cover = int(float((cover_map.get('default') or 21))) if cover_map else 21
+
+    def _targeted_skus_for_play(vc: Dict[str, Any]) -> list[str]:
+        try:
+            play_id = str(vc.get('play_id') or '').lower()
+            if inv_df is None or inv_df.empty:
+                return []
+            if 'lineitem_any' not in g.columns and 'SKU' not in g.columns:
+                return []
+            maxd = pd.to_datetime(g["Created at"]).max()
+            start = maxd - pd.Timedelta(days=int(aligned.get("window_days") or 28) - 1)
+            gg = g[g['Created at'] >= start].copy()
+            def top_n_from(col: str, n: int = 3):
+                ser = gg[col].astype(str)
+                units = pd.to_numeric(gg.get('Lineitem quantity', pd.Series(1, index=gg.index)), errors='coerce').fillna(1)
+                cnt = units.groupby(ser).sum().sort_values(ascending=False)
+                return [str(x) for x in cnt.head(n).index.tolist()]
+            if 'bestseller' in play_id or 'amplify' in play_id:
+                # Prefer g_items for robust per-product targeting
+                try:
+                    gi = build_g_items(gg)
+                    if gi is not None and not gi.empty:
+                        rank = gi.groupby('product_key')['orders_product'].sum().sort_values(ascending=False)
+                        return [str(x) for x in rank.head(3).index.tolist()]
+                except Exception:
+                    pass
+                col = 'sku' if 'sku' in inv_df.columns else 'lineitem_any'
+                return top_n_from(col, 3)
+            if 'subscription_nudge' in play_id:
+                start90 = maxd - pd.Timedelta(days=90)
+                ww = g[g['Created at'] >= start90].copy()
+                try:
+                    rep = build_g_items(ww)
+                    if rep is not None and not rep.empty:
+                        use_col = 'product_key_base' if 'product_key_base' in rep.columns and bool(cfg.get('FEATURES_PRODUCT_NORMALIZATION', False)) else 'product_key'
+                        subs = rep[rep['orders_product'] >= 3][use_col].astype(str).unique().tolist()
+                        return subs[:5]
+                except Exception:
+                    pass
+                if 'lineitem_any' in ww.columns:
+                    rep = (ww.groupby(['customer_id','lineitem_any'])['Name']
+                             .nunique().reset_index(name='orders_product'))
+                    subs = rep[rep['orders_product'] >= 3]['lineitem_any'].astype(str).unique().tolist()
+                    return subs[:5]
+                return []
+            if 'sample_to_full' in play_id:
+                tokens = gg.get('lineitem_any', pd.Series([], dtype=str)).astype(str).str.lower()
+                non_sample = gg.loc[~tokens.str.contains(r"sample|travel|mini|trial", regex=True, na=False), 'lineitem_any']
+                return list(pd.Series(non_sample).astype(str).value_counts().head(3).index)
+            if 'empty_bottle' in play_id:
+                names = gg.get('lineitem_any', pd.Series([], dtype=str)).astype(str).str.lower()
+                mask = names.str.contains(r"30ml|1 oz|1oz|50ml|1.7 oz|1.7oz|100ml|3.4 oz|3.4oz", regex=True, na=False)
+                return list(gg.loc[mask, 'lineitem_any'].astype(str).value_counts().head(5).index)
+        except Exception:
+            return []
+        return []
+
+    def _apply_inventory_to_variant(vc: Dict[str, Any]):
+        if inv_df is None or inv_df.empty:
+            return
+        play_id = str(vc.get('play_id') or '').lower()
+        min_cover = int(float(cover_map.get(play_id, default_cover))) if cover_map else default_cover
+        aov = float(aligned.get('recent_aov') or aligned.get('L28_aov') or 0.0)
+        gm = float(cfg.get('GROSS_MARGIN', 0.70) or 0.70)
+        expected = float(vc.get('expected_$') or 0.0)
+        denom = max(aov * gm, 1e-6)
+        required_units = expected / denom
+        skus = _targeted_skus_for_play(vc)
+        if not skus:
+            return
+        rows = inv_df[inv_df['sku'].astype(str).isin([str(s) for s in skus])].copy()
+        if rows.empty:
+            return
+        available_cap = float(rows.get('available_net', pd.Series(dtype=float)).sum())
+        cover_min = float(rows.get('cover_days', pd.Series([float('inf')])).min())
+        trust_mean = float(rows.get('trust_factor', pd.Series([1.0])).mean())
+        fulfillment = 1.0
+        if required_units > 0:
+            fulfillment = min(1.0, available_cap / max(1.0, required_units))
+        fulfillment *= max(0.5, min(1.0, trust_mean))
+        vc['inv_fulfillment'] = round(fulfillment, 2)
+        vc['inv_cover_min'] = round(cover_min, 1)
+        vc['inv_skus_count'] = int(len(rows))
+        vc['expected_$'] = max(0.0, expected * fulfillment)
+        if cover_min < min_cover:
+            if inv_mode == 'hard':
+                vc['__skip_due_inventory__'] = True
+            else:
+                vc.setdefault('notes', []).append(f"Low coverage for targeted SKUs (min≈{cover_min:.0f}d < {min_cover}d)")
+                vc['score'] = (vc.get('score') or 0.0) * 0.9
+
+    for cand in final:
+        pmeta = plays.get(cand.get("play_id"), {})
+        variants = pmeta.get("variants", [{"id": "base", "offer_type": "no_discount", "lift_multiplier": 1.0}])
+        cooldown_weeks = int(pmeta.get("cooldown_weeks", 1))
+
+        for v in variants:
+            if not _is_el(v.get("eligible_if", "True"), policy):
+                continue
+
+            vc = cand.copy()
+            vc.setdefault("variant_id", v.get("id", "base"))
+            vc["variant_id"] = v.get("id", vc["variant_id"]) or "base"
+            # Expected impact adjustment by variant lift
+            lift = float(v.get("lift_multiplier", 1.0) or 1.0)
+            vc["expected_$"] = float(vc.get("expected_$") or 0.0) * lift
+            # Soft monthly scaling fallback if needed
+            try:
+                if (aligned.get('window_days') or 28) < 28:
+                    vc["expected_$"] *= (28.0 / max(1.0, float(aligned.get('window_days') or 28)))
+            except Exception:
+                vc["expected_$"] *= 4.0
+
+            # High-LTV nudge toward no-discount
+            try:
+                aud_ltv = float(cand.get("audience_ltv90") or 0.0)
+                top_dec = float(cand.get("ltv90_top_decile") or 0.0)
+                high_ltv = (aud_ltv >= top_dec) and (top_dec > 0)
+            except Exception:
+                high_ltv = False
+            offer_type = str(v.get("offer_type", "")).lower()
+            if high_ltv and ("discount" in offer_type or "percent_of_aov" in str(v.get("cost_type",""))):
+                vc["expected_$"] *= 0.97
+            elif high_ltv and (offer_type == "no_discount"):
+                vc["expected_$"] *= 1.03
+
+            # Novelty & cooldown (week-aware)
+            weeks_variant = _weeks_since_used(log, vc["play_id"], vc["variant_id"], asof_date=anchor_dt)
+            weeks_family  = _weeks_since_used(log, vc["play_id"], None,           asof_date=anchor_dt)
+
+            penalty = 0.0
+            if weeks_variant == 0: penalty = 0.25
+            elif weeks_variant == 1: penalty = 0.15
+            elif weeks_variant == 2: penalty = 0.05
+
+            # Cooldown applies across weeks (>=1)
+            if (weeks_family is not None) and (weeks_family >= 1) and (weeks_family < cooldown_weeks):
+                continue
+
+            # Inventory-aware adjustments (soft by default)
+            if inv_sum is not None:
+                play_id = str(vc.get('play_id') or '').lower()
+                min_cover = int(float(cover_map.get(play_id, default_cover))) if cover_map else default_cover
+                cover_health = inv_sum.get('cover_min', float('inf'))
+                trust_mean = float(inv_sum.get('trust_mean', 1.0))
+                vc["expected_$"] *= trust_mean
+                vc['inv_trust'] = round(trust_mean, 2)
+                if 'discount_hygiene' in play_id:
+                    v_id = str(vc.get('variant_id') or '').lower()
+                    if v_id.startswith('targeted'):
+                        skus = _targeted_skus_for_play(vc)
+                        if skus:
+                            rows = inv_df[inv_df['sku'].astype(str).isin([str(s) for s in skus])].copy()
+                            if not rows.empty and 'cover_days' in rows.columns:
+                                total = int(len(rows)) or 1
+                                low = int((rows['cover_days'] < 14).sum())
+                                keep_ratio = max(0.0, min(1.0, (total - low) / total))
+                                vc['expected_$'] *= keep_ratio
+                                vc.setdefault('notes', []).append(f"Discount scope: product-specific — excluded {low}/{total} low-stock SKUs (≥14d cover required)")
+                    else:
+                        in_stock_ratio = float(inv_sum.get('in_stock_ratio14', 1.0))
+                        vc['inv_in_stock_ratio14'] = round(in_stock_ratio, 2)
+                        vc["expected_$"] *= in_stock_ratio
+                        vc.setdefault('notes', []).append(f"Discount scope: sitewide — in-stock≥14d ratio≈{in_stock_ratio:.0%}")
+                if cover_health < min_cover:
+                    if inv_mode == 'hard':
+                        continue
+                    vc.setdefault('notes', []).append(f"Inventory cover low (min≈{cover_health:.0f}d < {min_cover}d)")
+                    vc['score'] = (vc.get('score') or 0.0) * 0.9
+                    vc['inv_cover_min'] = float(cover_health)
+
+            _apply_inventory_to_variant(vc)
+            if vc.get('__skip_due_inventory__'):
+                continue
+
+            vc["score"] = (vc.get("score") or 0.0) * (1.0 - penalty)
+            variant_cands.append(vc)
+
+    # If cooldown filtered everything, fall back to base candidates (ignore cooldown)
+    if not variant_cands:
+        for cand in final:
+            if cand.get("failed"):
+                continue
+            vc = cand.copy()
+            vc.setdefault("variant_id", "base")
+            variant_cands.append(vc)
+
+    finals_for_selection = variant_cands if variant_cands else final
+
+    # Partition & select (soft diversity + effort budget)
+    budget = cfg.get("EFFORT_BUDGET", 8)
+    top_actions, backlog, watchlist = _partition_candidates(finals_for_selection, effort_budget=budget)
+
+    out = {
+        "actions": top_actions,
+        "watchlist": [c for c in final if c.get("failed")],
+        "no_call": [],
+        "backlog": [],
+        "pilot_actions": [],
+    }
+
+    # Backlog: passed all gates but deferred
+    for b in backlog:
+        out["backlog"].append({
+            **b,
+            "reason": b.get("defer_reason", "ranked below top actions"),
+        })
+
+    # Confidence Mode: conservative (default), aggressive, learning
+    mode = str((cfg or {}).get("CONFIDENCE_MODE", "conservative")).strip().lower()
+
+    def _mk_pilot(pilot: dict, note: str) -> dict:
+        n_needed = pilot.get("min_n", 0)
+        if pilot.get("metric") in ("repeat_rate", "discount_rate"):
+            p = pilot.get("baseline_rate", 0.15) or 0.15
+            delta = pilot.get("effect_floor", 0.02) or 0.02
+            n_needed = required_n_for_proportion(p, delta, alpha=0.05, power=0.8)
+        exp = float(pilot.get("expected_$", 0.0) or 0.0)
+        return {
+            **pilot,
+            "tier": "Pilot",
+            "pilot_audience_fraction": cfg.get("PILOT_AUDIENCE_FRACTION", 0.2),
+            "pilot_budget_cap": cfg.get("PILOT_BUDGET_CAP", 200.0),
+            "n_needed": int(n_needed),
+            "decision_rule": "Graduate if CI excludes 0 or q ≤ α at 28 days; else rollback.",
+            "confidence_label": pilot.get("confidence_label", "Low"),
+            "expected_range": [round(exp * 0.6, 2), round(exp * 1.3, 2)],
+            "notes": (pilot.get("notes") or []) + [note],
+        }
+
+    finals_pool = finals_for_selection if finals_for_selection else final
+
+    if mode == 'conservative':
+        # Pilot fallback only if no actions
+        if len(out["actions"]) == 0 and len(final) > 0:
+            pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
+            out["pilot_actions"] = [_mk_pilot(pilot, "Conservative fallback pilot")]
+    elif mode == 'aggressive':
+        # Include up to 2 medium-confidence items (fails significance only; min_n + effect + financial pass)
+        meds = []
+        for c in finals_pool:
+            failed = set(c.get('failed', [])); passed = set(c.get('passed', []))
+            if ('significance' in failed) and ('min_n' in passed) and ('effect_floor' not in failed) and ('financial_floor' not in failed):
+                meds.append(c)
+        meds = sorted(meds, key=lambda x: x.get('score', 0), reverse=True)[:2]
+        out["pilot_actions"] = [_mk_pilot(m, "Aggressive mode: medium-confidence (fails significance only)") for m in meds]
+        if not out["pilot_actions"] and len(out["actions"]) == 0 and len(final) > 0:
+            pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
+            out["pilot_actions"] = [_mk_pilot(pilot, "Aggressive fallback pilot")]
+    elif mode == 'learning':
+        # Show up to 3 directional candidates as pilots
+        dir_list = []
+        for c in finals_pool:
+            n_ok = c.get('n', 0) >= 0.5 * (c.get('min_n', 0) or 0)
+            p_ok = (c.get('p') is not None) and (not np.isnan(c.get('p'))) and (c.get('p') < 0.25)
+            eff_ok = abs(c.get('effect_abs', 0.0)) >= 0.5 * (c.get('effect_floor', 0.0) or 0.0)
+            fin_ok = (c.get('expected_$', 0.0) or 0.0) >= 0.5 * float(cfg.get('FINANCIAL_FLOOR', 0.0) or 0.0)
+            if n_ok or p_ok or eff_ok or fin_ok:
+                dir_list.append(c)
+        dir_list = sorted(dir_list, key=lambda x: x.get('score', 0), reverse=True)[:3]
+        out["pilot_actions"] = [_mk_pilot(d, "Learning mode: experimental candidate") for d in dir_list]
+        # If none found, provide a fallback pilot regardless of Actions presence
+        if not out["pilot_actions"] and len(final) > 0:
+            pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
+            out["pilot_actions"] = [_mk_pilot(pilot, "Learning fallback pilot")]
+
+    out["confidence_mode"] = mode
+
+    # Relaxed pilot fallback (concierge MVP): propose Pilots when min_n passed,
+    # but only for plays that do NOT already have an Action; also dedupe by (play_id, variant_id)
+    if not out.get("pilot_actions"):
+        actions_pairs = {(str(a.get('play_id')), str(a.get('variant_id', 'base'))) for a in out.get('actions', [])}
+        actions_plays = {str(a.get('play_id')) for a in out.get('actions', [])}
+        backlog_pairs = {(str(b.get('play_id')), str(b.get('variant_id', 'base'))) for b in out.get('backlog', [])}
+
+        eligible_min_n = []
+        for c in finals_pool:
+            passed = set(c.get('passed', []))
+            has_basic = (c.get('n', 0) or 0) > 0 and bool(c.get('metric'))
+            pid = str(c.get('play_id'))
+            vid = str(c.get('variant_id', 'base'))
+            if not has_basic:
+                continue
+            if 'min_n' not in passed:
+                continue
+            # Skip plays already selected as Actions, and skip exact pairs already in Actions/Backlog
+            if pid in actions_plays:
+                continue
+            if (pid, vid) in actions_pairs or (pid, vid) in backlog_pairs:
+                continue
+            eligible_min_n.append(c)
+
+        if eligible_min_n:
+            eligible_min_n = sorted(eligible_min_n, key=lambda x: x.get('score', 0), reverse=True)[:2]
+            pilots = [_mk_pilot(c, "Concierge MVP: min_n met; significance shown as confidence badge") for c in eligible_min_n]
+            # Final self-dedupe across pilots by (play_id, variant_id)
+            seen: set[tuple[str, str]] = set()
+            deduped = []
+            for p in pilots:
+                key = (str(p.get('play_id')), str(p.get('variant_id', 'base')))
+                if key in seen:
+                    continue
+                seen.add(key)
+                deduped.append(p)
+            out["pilot_actions"] = deduped
+
+    # Global dedupe rule: remove any pilots that duplicate Actions/Backlog by play or exact variant pair
+    if out.get("pilot_actions"):
+        actions_pairs = {(str(a.get('play_id')), str(a.get('variant_id', 'base'))) for a in out.get('actions', [])}
+        actions_plays = {str(a.get('play_id')) for a in out.get('actions', [])}
+        backlog_pairs = {(str(b.get('play_id')), str(b.get('variant_id', 'base'))) for b in out.get('backlog', [])}
+        new_pilots = []
+        seen_pairs: set[tuple[str, str]] = set()
+        for p in out.get('pilot_actions', []):
+            pid = str(p.get('play_id'))
+            vid = str(p.get('variant_id', 'base'))
+            pair = (pid, vid)
+            if pid in actions_plays:
+                continue
+            if pair in actions_pairs or pair in backlog_pairs:
+                continue
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+            new_pilots.append(p)
+        # Collapse to at most one variant per play: keep highest-score variant
+        best_by_play: dict[str, dict] = {}
+        for p in new_pilots:
+            pid = str(p.get('play_id'))
+            if pid not in best_by_play:
+                best_by_play[pid] = p
+            else:
+                if float(p.get('score', 0) or 0) > float(best_by_play[pid].get('score', 0) or 0):
+                    best_by_play[pid] = p
+        out['pilot_actions'] = list(best_by_play.values())
+
+    # Audience overlap adjustment for Top Actions (conservative)
+    try:
+        segments_dir = Path(receipts_dir).parent / "segments"
+        seen_customers: set[str] = set()
+
+        def _load_segment_customers(attachment: str) -> set[str]:
+            if not attachment:
+                return set()
+            p = segments_dir / attachment
+            if not p.exists():
+                return set()
+            try:
+                df = pd.read_csv(p)
+                col = None
+                for c in df.columns:
+                    if str(c).lower() in {"customer_id", "customer", "email", "id"}:
+                        col = c; break
+                if col is None:
+                    return set()
+                return set(df[col].astype(str).tolist())
+            except Exception:
+                return set()
+
+        for idx, a in enumerate(out["actions"]):
+            att = a.get("attachment")
+            aud = _load_segment_customers(att)
+            total = len(aud)
+            if total == 0:
+                continue
+            overlap_n = len(aud & seen_customers)
+            overlap_ratio = (overlap_n / total) if total > 0 else 0.0
+            if overlap_ratio > 0:
+                exp0 = float(a.get("expected_$") or 0.0)
+                exp1 = exp0 * max(0.0, 1.0 - overlap_ratio)
+                a["expected_$"] = round(exp1, 2)
+                a["audience_size_effective"] = total - overlap_n
+                a["overlap_with_prior"] = round(overlap_ratio, 3)
+            seen_customers |= aud
+    except Exception:
+        pass
+
+    # Campaign interaction effects (pairwise dampening, env-configurable)
+    try:
+        interaction_factors = get_interaction_factors(cfg or {})
+        prior_play_ids: list[str] = []
+        for a in out["actions"]:
+            pid = str(a.get("play_id") or "")
+            factor = 1.0
+            notes: list[str] = []
+            for prior in prior_play_ids:
+                f = interaction_factors.get((prior, pid))
+                if f is not None and f < 1.0:
+                    factor *= float(f)
+                    notes.append(f"{prior}→{pid} x{f:.2f}")
+            if factor < 1.0:
+                exp0 = float(a.get("expected_$") or 0.0)
+                a["expected_$"] = round(exp0 * factor, 2)
+                a["interaction_factor"] = round(factor, 3)
+                a["interaction_notes"] = notes
+            prior_play_ids.append(pid)
+    except Exception:
+        pass
+
+    # Optional: log selections for cooldown tracking
+    try:
+        write_actions_log(receipts_dir, out.get("actions", []))
+    except Exception:
+        pass
+
+    # Phase 0: emit candidate_debug.json for observability (no behavior change)
+    try:
+        debug = {
+            "window_days": int(aligned.get("window_days") or 28),
+            "confidence_mode": mode,
+            "counts": {
+                "base_candidates": int(len(final)),
+                "variants": int(len(finals_for_selection)),
+                "actions": int(len(out.get("actions", []))),
+                "pilots": int(len(out.get("pilot_actions", []))),
+                "watchlist": int(len(out.get("watchlist", []))),
+            },
+            "candidates": [
+                {
+                    k: c.get(k)
+                    for k in (
+                        "id","play_id","metric","n","effect_abs","p","q","ci_low","ci_high",
+                        "expected_$","min_n","effect_floor","audience_size","passed","failed","score","tier","reasons"
+                    )
+                }
+                for c in final
+            ],
+            "actions": [
+                {
+                    k: a.get(k)
+                    for k in (
+                        "id","play_id","variant_id","metric","expected_$","score","notes","confidence_label"
+                    )
+                }
+                for a in out.get("actions", [])
+            ],
+            "pilot_actions": [
+                {
+                    k: p.get(k)
+                    for k in (
+                        "id","play_id","variant_id","metric","expected_$","score","notes","confidence_label","pilot_audience_fraction","pilot_budget_cap"
+                    )
+                }
+                for p in out.get("pilot_actions", [])
+            ],
+        }
+        from .utils import write_json as _wj
+        _wj(str(Path(receipts_dir) / "candidate_debug.json"), debug)
+    except Exception:
+        pass
+
     return out
 
 # Add new function for post-implementation tracking
@@ -692,27 +1227,42 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
     except Exception:
         weekly_baseline = 0.0
 
-    # Repeat rate
-   # Repeat rate (recent vs prior window)
-    x1 = int(round((aligned["recent_repeat_rate"] or 0) * (aligned["recent_n"] or 0)))
-    x2 = int(round((aligned["prior_repeat_rate"]  or 0) * (aligned["prior_n"]  or 0)))
-    n1, n2 = int(aligned["recent_n"] or 0), int(aligned["prior_n"] or 0)
+    # Repeat rate (in-window definition: share of customers with 2+ orders within the window)
+    # Build recent/prior windows aligned with win_days
+    recent_end = maxd_all
+    recent_start = recent_end - pd.Timedelta(days=win_days - 1)
+    prior_end = recent_start - pd.Timedelta(seconds=1)
+    prior_start = prior_end - pd.Timedelta(days=win_days - 1)
 
-    pval = two_proportion_z_test(x1, n1, x2, n2)
+    def _repeat_share_in_window(df: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp):
+        w = df[(df["Created at"] >= start) & (df["Created at"] <= end)].copy()
+        if w.empty:
+            return 0, 0, 0.0
+        per = (w.groupby("customer_id")["Name"].nunique() if 'Name' in w.columns else w.groupby("customer_id").size())
+        x = int((per > 1).sum())
+        n = int(per.shape[0])
+        rate = float(x / n) if n > 0 else 0.0
+        return x, n, rate
+
+    x1, n1, rate_recent = _repeat_share_in_window(g, recent_start, recent_end)
+    x2, n2, rate_prior  = _repeat_share_in_window(g, prior_start, prior_end)
+
+    pval = two_proportion_z_test(x1, n1, x2, n2) if (n1 and n2) else 1.0
     # Wilson CI for each period; derive conservative CI for difference
     try:
         from .stats import wilson_ci
-        r1_lo, r1_hi = wilson_ci(x1, n1, alpha=0.05)
-        r0_lo, r0_hi = wilson_ci(x2, n2, alpha=0.05)
+        r1_lo, r1_hi = wilson_ci(x1, n1, alpha=0.05) if n1 else (0.0, 0.0)
+        r0_lo, r0_hi = wilson_ci(x2, n2, alpha=0.05) if n2 else (0.0, 0.0)
         ci_lo_diff = r1_lo - r0_hi
         ci_hi_diff = r1_hi - r0_lo
     except Exception:
         ci_lo_diff = None; ci_hi_diff = None
-    rate_recent = (x1 / n1) if n1 else 0.0
-    rate_prior  = (x2 / n2) if n2 else 0.0
     effect_pts  = rate_recent - rate_prior  # absolute delta in points (e.g., +0.024)
 
-    expected = max(0.0, effect_pts) * (n1) * (aligned["prior_repeat_rate"] or 0.15) * gross_margin
+    # Heuristic expected value: convert repeat rate delta into revenue proxy.
+    # Use recent customer count (n1) and prior repeat as a baseline scaler.
+    prior_repeat_baseline = rate_prior if rate_prior > 0 else 0.15
+    expected = max(0.0, effect_pts) * n1 * prior_repeat_baseline * gross_margin
 
     cands.append({
         "id": "repeat_rate_improve",
@@ -729,7 +1279,7 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
         "rationale": f"Repeat share {rate_recent:.1%} vs {rate_prior:.1%} (Δ {effect_pts:+.1%}).",
         "audience_size": n1,
         "attachment": "segment_winback_21_45.csv",
-        "baseline_rate": rate_prior or 0.15,
+        "baseline_rate": prior_repeat_baseline,
     })
 
 
@@ -808,14 +1358,17 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
         maxd2 = maxd_all
         start90 = maxd2 - pd.Timedelta(days=90)
         gg = g[g["Created at"] >= start90].copy()
-        if "lineitem_any" in gg.columns:
-            rep = (
-                gg.groupby(["customer_id", "lineitem_any"])['Name']
-                  .nunique()
-                  .reset_index(name='orders_product')
-            )
+        if ("lineitem_any" in gg.columns) or ("products_concat" in gg.columns) or ("Lineitem name" in gg.columns):
+            rep = build_g_items(gg)
+            # Choose product column: prefer base when normalization is enabled
+            prod_col = 'product_key'
+            try:
+                if bool(cfg.get('FEATURES_PRODUCT_NORMALIZATION', False)) and 'product_key_base' in rep.columns:
+                    prod_col = 'product_key_base'
+            except Exception:
+                pass
             # Per-product threshold using vertical + product detection
-            rep["_thr"] = rep["lineitem_any"].astype(str).apply(lambda s: subscription_threshold_for_product(s, cfg))
+            rep["_thr"] = rep[prod_col].astype(str).apply(lambda s: subscription_threshold_for_product(s, cfg))
             cohort = rep[rep['orders_product'] >= rep["_thr"]]
             audience = int(cohort['customer_id'].nunique())
             aov_recent = float(aligned.get("recent_aov") or aligned.get("L28_aov") or np.nan)
@@ -831,7 +1384,7 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
             # Compliance-aware adjustment for supplements: dampen expected if observed intervals imply poor compliance
             try:
                 # products in cohort
-                products = cohort['lineitem_any'].astype(str).unique().tolist()
+                products = cohort[prod_col].astype(str).unique().tolist()
                 comp_factors = []
                 for p_name in products:
                     ptype, supply_days = categorize_product(p_name)
@@ -1022,12 +1575,20 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
         if cand_ids:
             gl = g[(g["Created at"] >= lookback_start)].copy()
             gl["customer_id"] = gl["customer_id"].astype(str)
-            # Distinct products in lookback per customer
-            if "lineitem_any" in gl.columns:
-                k = gl.groupby("customer_id")["lineitem_any"].nunique()
-                single_prod_ids = set(k[k <= 1].index)
-            else:
-                single_prod_ids = set()
+            # Distinct products in lookback per customer (prefer g_items)
+            try:
+                gi2 = build_g_items(gl)
+                if gi2 is not None and not gi2.empty:
+                    k = gi2.groupby("customer_id")["product_key"].nunique()
+                    single_prod_ids = set(k[k <= 1].index)
+                else:
+                    raise ValueError('g_items empty')
+            except Exception:
+                if "lineitem_any" in gl.columns:
+                    k = gl.groupby("customer_id")["lineitem_any"].nunique()
+                    single_prod_ids = set(k[k <= 1].index)
+                else:
+                    single_prod_ids = set()
             targets = list(cand_ids.intersection(single_prod_ids))
             audience_rb = int(len(targets))
             if audience_rb > 0:
@@ -1246,17 +1807,12 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
 
     
 
-def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, policy_path: str | None = None) -> Dict[str, Any]:
+def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, policy_path: str | None = None,
+                   inventory_metrics: pd.DataFrame | None = None) -> Dict[str, Any]:
+    """Wrapper to maintain a single exported select_actions symbol.
+    Delegates to the primary implementation that supports inventory-aware logic.
     """
-    1) Build base candidates (same as before)
-    2) Gate + score (same as before)
-    3) Expand into variants; apply cooldown + novelty penalty
-    4) Partition with soft diversity + effort budget
-    5) Pilot fallback if nothing passes
-    """
-    # --- load playbook + base candidates ---
-    plays = {p["id"]: p for p in load_playbooks(playbooks_path)}
-    base_cands = _compute_candidates(g, aligned, cfg)
+    return _select_actions_impl(g, aligned, cfg, playbooks_path, receipts_dir, policy_path, inventory_metrics)
 
     # LTV signal (non-blocking): compute once
     ltv_info = compute_repeat_curve(g, horizon_days=[60, 90]) if g is not None else {"store": {}, "per_customer": []}
@@ -1334,6 +1890,8 @@ def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, poli
     log = _load_actions_log(receipts_dir)
 
     variant_cands: List[Dict[str, Any]] = []
+
+    # (helper functions already defined earlier in this function; avoid duplicate definitions)
     for cand in final:
         pmeta = plays.get(cand["play_id"], {})
         variants = pmeta.get("variants", [{"id": "base", "offer_type": "no_discount", "lift_multiplier": 1.0}])
@@ -1417,6 +1975,53 @@ def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, poli
                 # skip this family this week due to cooldown
                 continue
 
+            # Inventory-aware adjustments (soft by default)
+            if inv_sum is not None:
+                play_id = str(vc.get('play_id') or '').lower()
+                min_cover = int(float(cover_map.get(play_id, default_cover))) if cover_map else default_cover
+                cover_health = inv_sum.get('cover_min', float('inf'))
+                trust_mean = float(inv_sum.get('trust_mean', 1.0))
+                # Base trust scaling
+                vc["expected_$"] *= trust_mean
+                vc['inv_trust'] = round(trust_mean, 2)
+                # Play-specific logic
+                if 'discount_hygiene' in play_id:
+                    # Determine scope: product_specific if variant id starts with 'targeted', else sitewide
+                    v_id = str(vc.get('variant_id') or '').lower()
+                    if v_id.startswith('targeted'):
+                        # Product-specific: exclude low-stock SKUs among targeted set
+                        skus = _targeted_skus_for_play(vc)
+                        if skus:
+                            rows = inv_df[inv_df['sku'].astype(str).isin([str(s) for s in skus])].copy()
+                            if not rows.empty and 'cover_days' in rows.columns:
+                                total = int(len(rows)) or 1
+                                low = int((rows['cover_days'] < 14).sum())
+                                keep_ratio = max(0.0, min(1.0, (total - low) / total))
+                                vc['expected_$'] *= keep_ratio
+                                vc.setdefault('notes', []).append(f"Discount scope: product-specific — excluded {low}/{total} low-stock SKUs (≥14d cover required)")
+                    else:
+                        # Sitewide: apply in-stock ratio across catalog
+                        in_stock_ratio = float(inv_sum.get('in_stock_ratio14', 1.0))
+                        vc['inv_in_stock_ratio14'] = round(in_stock_ratio, 2)
+                        vc["expected_$"] *= in_stock_ratio
+                        vc.setdefault('notes', []).append(f"Discount scope: sitewide — in-stock≥14d ratio≈{in_stock_ratio:.0%}")
+                # Coverage check
+                if cover_health < min_cover:
+                    if inv_mode == 'hard':
+                        # skip this variant due to low coverage
+                        continue
+                    # soft: penalize score and annotate
+                    vc.setdefault('notes', []).append(f"Inventory cover low (min≈{cover_health:.0f}d < {min_cover}d)")
+                    # small penalty
+                    vc['score'] = (vc.get('score') or 0.0) * 0.9
+                    vc['inv_cover_min'] = float(cover_health)
+
+            # Apply targeted-SKU inventory logic (fulfillment and per-play cover)
+            _apply_inventory_to_variant(vc)
+            if vc.get('__skip_due_inventory__'):
+                # hard skip if coverage too low for targeted SKUs
+                continue
+
             vc["score"] = (vc.get("score") or 0.0) * (1.0 - penalty)
             variant_cands.append(vc)
 
@@ -1455,29 +2060,58 @@ def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, poli
             "reason": b.get("defer_reason", "ranked below top actions"),
         })
 
-    # Pilot fallback (if nothing made it into Top Actions)
-    if len(out["actions"]) == 0 and len(final) > 0:
-        pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
+    # Confidence Mode handling
+    mode = str((cfg or {}).get("CONFIDENCE_MODE", "conservative")).strip().lower()
+
+    def _mk_pilot(pilot: dict, note: str) -> dict:
         n_needed = pilot.get("min_n", 0)
         if pilot.get("metric") in ("repeat_rate", "discount_rate"):
             p = pilot.get("baseline_rate", 0.15) or 0.15
             delta = pilot.get("effect_floor", 0.02) or 0.02
             n_needed = required_n_for_proportion(p, delta, alpha=0.05, power=0.8)
-
-        out["pilot_actions"] = [{
+        exp = float(pilot.get("expected_$", 0.0) or 0.0)
+        return {
             **pilot,
             "tier": "Pilot",
             "pilot_audience_fraction": cfg.get("PILOT_AUDIENCE_FRACTION", 0.2),
             "pilot_budget_cap": cfg.get("PILOT_BUDGET_CAP", 200.0),
             "n_needed": int(n_needed),
-            # Monthly plan: evaluate pilot over ~28 days
             "decision_rule": "Graduate to full rollout if CI excludes 0 or q ≤ α at 28 days; else rollback.",
-            "confidence_label": "Low",
-            "expected_range": [
-                round((pilot.get("expected_$", 0) or 0) * 0.6, 2),
-                round((pilot.get("expected_$", 0) or 0) * 1.3, 2),
-            ],
-        }]
+            "confidence_label": pilot.get("confidence_label", "Low"),
+            "expected_range": [round(exp * 0.6, 2), round(exp * 1.3, 2)],
+            "notes": (pilot.get("notes") or []) + [note],
+        }
+
+    finals_pool = finals_for_selection if finals_for_selection else final
+
+    if mode == 'conservative':
+        if len(out["actions"]) == 0 and len(final) > 0:
+            pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
+            out["pilot_actions"] = [_mk_pilot(pilot, "Conservative fallback pilot")]
+    elif mode == 'aggressive':
+        meds = []
+        for c in finals_pool:
+            failed = set(c.get('failed', [])); passed = set(c.get('passed', []))
+            if ('significance' in failed) and ('min_n' in passed) and ('effect_floor' not in failed) and ('financial_floor' not in failed):
+                meds.append(c)
+        meds = sorted(meds, key=lambda x: x.get('score', 0), reverse=True)[:2]
+        out["pilot_actions"] = [_mk_pilot(m, "Aggressive mode: medium-confidence (fails significance only)") for m in meds]
+        if not out["pilot_actions"] and len(out["actions"]) == 0 and len(final) > 0:
+            pilot = sorted(final, key=lambda x: x.get("score", 0), reverse=True)[0]
+            out["pilot_actions"] = [_mk_pilot(pilot, "Aggressive fallback pilot")]
+    elif mode == 'learning':
+        dir_list = []
+        for c in finals_pool:
+            n_ok = c.get('n', 0) >= 0.5 * (c.get('min_n', 0) or 0)
+            p_ok = (c.get('p') is not None) and (not np.isnan(c.get('p'))) and (c.get('p') < 0.25)
+            eff_ok = abs(c.get('effect_abs', 0.0)) >= 0.5 * (c.get('effect_floor', 0.0) or 0.0)
+            fin_ok = (c.get('expected_$', 0.0) or 0.0) >= 0.5 * float(cfg.get('FINANCIAL_FLOOR', 0.0) or 0.0)
+            if n_ok or p_ok or eff_ok or fin_ok:
+                dir_list.append(c)
+        dir_list = sorted(dir_list, key=lambda x: x.get('score', 0), reverse=True)[:3]
+        out["pilot_actions"] = [_mk_pilot(d, "Learning mode: experimental candidate") for d in dir_list]
+
+    out["confidence_mode"] = mode
 
     # --- Audience overlap adjustment for Top Actions (conservative) ---
     # Reduce expected_$ for downstream actions in proportion to their audience overlap

@@ -1,0 +1,9 @@
+product_id,product_name,category,brand,price,cost,stock_quantity,sku,subscription_eligible,serving_count,created_at,updated_at
+SSML_001,"Daily Multivitamin",Vitamins,HealthyLife,29.99,10,254,HE-001-723,true,60,2024-01-15 10:00:00,2024-12-15 15:30:00
+SSML_002,"Vitamin D3 2000 IU",Vitamins,HealthyLife,19.99,6.5,203,HE-002-433,true,90,2024-01-15 10:00:00,2024-12-15 15:30:00
+SSML_003,"Omega-3 Essential",Vitamins,HealthyLife,27.99,9,113,HE-003-714,true,60,2024-01-15 10:00:00,2024-12-15 15:30:00
+SSML_004,"Vitamin C 1000mg",Vitamins,HealthyLife,16.99,5.5,198,HE-004-331,true,100,2024-01-15 10:00:00,2024-12-15 15:30:00
+SSML_005,"Whey Protein 1lb",Protein,FitBasics,39.99,15,170,FI-005-562,true,16,2024-01-15 10:00:00,2024-12-15 15:30:00
+SSML_006,"Probiotic Daily",Digestive,HealthyLife,34.99,12,146,HE-006-730,true,30,2024-01-15 10:00:00,2024-12-15 15:30:00
+SSML_007,"Magnesium 200mg",Vitamins,HealthyLife,22.99,7.5,107,HE-007-580,true,100,2024-01-15 10:00:00,2024-12-15 15:30:00
+SSML_008,"Basic Health Bundle",Bundles,HealthyLife,79.99,28,238,HE-008-262,true,60,2024-01-15 10:00:00,2024-12-15 15:30:00

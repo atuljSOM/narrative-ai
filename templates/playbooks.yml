@@ -124,6 +124,9 @@ playbooks:
     time_to_set_up_minutes: 15
     holdout_plan: "Monitor for 7 days; compare against prior policy."
     variants:
+      # scope metadata for inventory handling
+      # scope: sitewide (policy/guardrail), product_specific (targeted SKUs)
+      # This play is effectively sitewide
       - id: tighten_policy_no_discount
         offer_type: no_discount
         eligible_if: "True"

@@ -715,6 +715,23 @@
         {% if p is not none %}p={{ '%.3f' % p }}{% else %}—{% endif %}
       </div>
     </div>
+
+    {# Returning Customers % #}
+    {% set curr = aligned[label].get('returning_rate') %}
+    {% set dlt = aligned[label]['delta'].get('returning_rate') %}
+    {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
+    <div class="row">
+      <div><strong>Returning Customers</strong></div>
+      <div>{{ fmt_pct(curr, 1) }}</div>
+      <div>
+        {{ arrow(dlt, True, (aligned[label]['sig'].get('returning_rate') if aligned[label].get('sig') else True)) }} {{ fmt_delta_pct(dlt) }}
+        <span class="small prev">(prev {{ fmt_pct(prev, 1) }})</span>
+      </div>
+      <div class="small muted">
+        {% set p = aligned[label]['p'].get('returning_rate') if aligned[label].get('p') else none %}
+        {% if p is not none %}p={{ '%.3f' % p }}{% else %}—{% endif %}
+      </div>
+    </div>
   </div>
 {%- endmacro %}
 
@@ -725,6 +742,19 @@
   </header>
 
   <div class="content">
+    {# Confidence Mode Banner #}
+    {% set cmode = (outputs.get('confidence_mode') or 'conservative') | lower %}
+    {% set mode_label = 'Conservative' if cmode=='conservative' else ('Aggressive' if cmode=='aggressive' else 'Learning') %}
+    {% set mode_desc =
+        'High‑confidence actions only; add pilot if none pass.' if cmode=='conservative' else
+        ('Includes medium‑confidence pilots (fails significance only).' if cmode=='aggressive' else
+        'Surfaces experimental pilots to learn faster.')
+    %}
+    <div style="margin-bottom:16px; padding:10px 14px; border-radius:10px; border:1px solid #e5e7eb; background:#f9fafb; display:flex; align-items:center; gap:10px;">
+      <span class="pill" style="background:#eef2ff; color:#4f46e5; font-weight:700;">Confidence Mode</span>
+      <span style="font-weight:600;">{{ mode_label }}</span>
+      <span class="small muted">— {{ mode_desc }}</span>
+    </div>
     <!-- Performance Tracking Panel -->
     {% if outputs.performance_summary %}
     <div class="performance-panel">
@@ -967,6 +997,12 @@
                 {% if a.get('interaction_factor') and a.get('interaction_factor') < 1 %}
                   <span class="badge" title="{{ (a.get('interaction_notes') or []) | join(', ') }}" style="background:#ffe4e6; color:#9f1239;">Adj: -{{ ((1 - a.get('interaction_factor'))*100)|round(0) }}%</span>
                 {% endif %}
+                {% if a.get('inv_trust') %}
+                  <span class="badge" title="Inventory freshness/trust" style="background:#ecfccb; color:#365314;">Inv trust: {{ (a.get('inv_trust')*100)|round(0) }}%</span>
+                {% endif %}
+                {% if a.get('inv_in_stock_ratio14') %}
+                  <span class="badge" title="Share of SKUs with ≥14 days cover" style="background:#fffbeb; color:#92400e;">In-stock≥14d: {{ (a.get('inv_in_stock_ratio14')*100)|round(0) }}%</span>
+                {% endif %}
               </div>
             </div>
             <div class="muted" style="margin-bottom: 12px;">{{ a.get('do_this','') }}</div>
@@ -1006,6 +1042,11 @@
                 <ul>
                   {% for step in a['how_to_launch'][:3] %}<li>{{ step }}</li>{% endfor %}
                 </ul>
+              </div>
+            {% endif %}
+            {% if a.get('notes') %}
+              <div class="small" style="margin: 6px 0; color:#374151;">
+                <strong>Notes:</strong> {{ a.get('notes') | join(' • ') }}
               </div>
             {% endif %}
             <div class="cta-row">
@@ -1135,6 +1176,33 @@
     </section>
     {% endif %}
   </div>
+
+  {% if outputs.get('inventory_summary') %}
+  <section class="section">
+    <h2>Inventory Constraints</h2>
+    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
+      <div class="small muted">Threshold: {{ outputs.inventory_summary.default_cover_days }} days minimum cover</div>
+      {% set low = outputs.inventory_summary.low_cover %}
+      {% if low and low|length > 0 %}
+        <div style="margin-top:8px; font-weight:600;">Low Cover SKUs</div>
+        <ul style="margin:6px 0 0 20px;">
+        {% for r in low %}
+          <li class="small">{{ r.sku }} — {{ r.product or 'SKU' }} • Cover: {{ r.cover_days|round(1) }}d • Avail: {{ r.available }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+      {% set rop = outputs.inventory_summary.reorder_alerts %}
+      {% if rop and rop|length > 0 %}
+        <div style="margin-top:12px; font-weight:600;">Reorder Alerts</div>
+        <ul style="margin:6px 0 0 20px;">
+        {% for r in rop %}
+          <li class="small">{{ r.sku }} — {{ r.product or 'SKU' }} • Avail: {{ r.available }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
 
   <footer class="footer">
     <strong style="color: #6366f1;">Aura Intelligence</strong><br>

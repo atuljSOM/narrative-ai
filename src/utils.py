@@ -171,11 +171,80 @@ DEFAULTS: Dict[str, Any] = {
     "VERTICAL_MODE": "mixed",     # beauty|supplements|mixed
     "CHARTS_MODE": "detailed",    # detailed|compact
     "SHOW_L7": True,               # show L7 KPI card
+    # confidence selection mode for actions: conservative|aggressive|learning
+    "CONFIDENCE_MODE": "conservative",
     # interactions (env-driven). Example formats:
     #  - JSON: {"discount_hygiene->winback_21_45":0.9, "winback_21_45->dormant_multibuyers_60_120":0.92}
     #  - CSV:  discount_hygiene->winback_21_45:0.9, bestseller_amplify->winback_21_45:0.95
     "INTERACTION_FACTORS": "",
+    # Inventory knobs
+    "INVENTORY_ENFORCEMENT_MODE": "soft",   # soft|hard
+    "INVENTORY_MAX_AGE_DAYS": 7,
+    "INVENTORY_SAFETY_STOCK": 0,
+    "INVENTORY_LEAD_TIME_DAYS": 14,
+    "INVENTORY_SAFETY_Z": 1.64,            # ~90% service level
+    # JSON/CSV map: {"subscription_nudge":60,"sample_to_full":45,"default":21}
+    "INVENTORY_MIN_COVER_DAYS_MAP": "",
+    "INVENTORY_ALLOW_BACKORDER": True,
+    # Feature flags (Phase 1 shims)
+    "FEATURES_DYNAMIC_PRODUCTS": False,
+    # Product normalization (base + size parsing)
+    "FEATURES_PRODUCT_NORMALIZATION": False,
 }
+
+
+def normalize_product_name(name: str) -> tuple[str, str]:
+    """Return (base_product, size_token) from a product title.
+
+    Examples:
+      "Vitamin C Serum 30ml" -> ("vitamin c serum", "30ml")
+      "Protein Powder (5 lb)" -> ("protein powder", "5lb")
+      "Omega-3 90 ct" -> ("omega-3", "90ct")
+    """
+    if not isinstance(name, str):
+        return ("", "")
+    s = name.strip().lower()
+    # Remove brackets content that often carries size
+    import re
+    paren = re.findall(r"\(([^)]+)\)", s)
+    size = ""
+    # Common size patterns
+    patterns = [
+        r"\b(\d+\s?ml)\b",
+        r"\b(\d+(?:\.\d+)?\s?oz)\b",
+        r"\b(\d+\s?lb)s?\b",
+        r"\b(\d+\s?g)\b",
+        r"\b(\d+\s?kg)\b",
+        r"\b(\d+\s?ct)\b",
+        r"\b(\d+\s?(?:pack|pk))\b",
+        r"\b(\d+\s?(?:day|month))\b",
+        r"\b((?:1|1\.7|3\.4)\s?oz)\b",  # common beauty sizes
+    ]
+    # Check parentheses first
+    for p in paren:
+        ps = p.strip()
+        for pat in patterns:
+            m = re.search(pat, ps)
+            if m:
+                size = m.group(1).replace(" ", "")
+                break
+        if size:
+            break
+    # If no size found, scan full string
+    if not size:
+        for pat in patterns:
+            m = re.search(pat, s)
+            if m:
+                size = m.group(1).replace(" ", "")
+                break
+    # Remove size token from base
+    base = s
+    if size:
+        base = base.replace(size, "")
+    # Remove parentheses and extra spaces/punctuation around sizes
+    base = re.sub(r"\([^)]*\)", " ", base)
+    base = re.sub(r"\s+", " ", base).strip()
+    return (base, size)
 
 
 def _parse_bool(v: str) -> bool:
@@ -192,9 +261,10 @@ def _coerce(k: str, v: str) -> Any:
     if k in {"AOV_EFFECT_FLOOR", "REPEAT_PTS_FLOOR", "DISCOUNT_PTS_FLOOR", "FDR_ALPHA", "GROSS_MARGIN",
              "FINANCIAL_FLOOR", "FINANCIAL_FLOOR_FIXED", "PILOT_AUDIENCE_FRACTION", "PILOT_BUDGET_CAP"}:
         return float(v)
-    if k in {"SEASONAL_ADJUST", "SHOW_L7"}:
+    if k in {"SEASONAL_ADJUST", "SHOW_L7", "INVENTORY_ALLOW_BACKORDER"}:
         return _parse_bool(v)
-    if k in {"WINDOW_POLICY", "FINANCIAL_FLOOR_MODE", "CHARTS_MODE", "VERTICAL_MODE"}:
+    if k in {"WINDOW_POLICY", "FINANCIAL_FLOOR_MODE", "CHARTS_MODE", "VERTICAL_MODE",
+             "INVENTORY_ENFORCEMENT_MODE", "CONFIDENCE_MODE"}:
         return str(v).strip().lower()
     return v
 
@@ -229,6 +299,8 @@ def get_config(env_path: str | None = None) -> Dict[str, Any]:
     cfg['VERTICAL'] = get_vertical(cfg)
     # Parse interaction factors into structured mapping
     cfg['INTERACTION_FACTORS_PARSED'] = parse_interaction_factors(cfg.get('INTERACTION_FACTORS', ''))
+    # Parse inventory cover days map
+    cfg['INVENTORY_MIN_COVER_DAYS'] = parse_cover_days_map(cfg.get('INVENTORY_MIN_COVER_DAYS_MAP', ''))
     return cfg
 
 
@@ -301,16 +373,107 @@ def get_interaction_factors(cfg: dict) -> dict[tuple[str, str], float]:
         ("bestseller_amplify", "winback_21_45"): 0.95,
     }
 
+def parse_cover_days_map(value: str | dict | None) -> dict[str, int]:
+    """Parse per-play minimum cover days mapping from JSON/CSV or dict.
+    Returns dict like {"subscription_nudge": 60, "sample_to_full": 45, "default": 21}.
+    """
+    out: dict[str, int] = {}
+    if not value:
+        return out
+    try:
+        if isinstance(value, dict):
+            for k, v in value.items():
+                try:
+                    out[str(k)] = int(float(v))
+                except Exception:
+                    continue
+            return out
+        import json as _json
+        try:
+            parsed = _json.loads(str(value))
+            return parse_cover_days_map(parsed)
+        except Exception:
+            pass
+        # CSV form: key:val, key:val
+        s = str(value)
+        for part in s.split(','):
+            t = part.strip()
+            if not t or ':' not in t:
+                continue
+            k, v = t.split(':', 1)
+            try:
+                out[k.strip()] = int(float(v.strip()))
+            except Exception:
+                continue
+    except Exception:
+        return {}
+    return out
+
 
 def safe_make_dirs(path: str) -> None:
     Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def write_json(path: str, payload: Dict[str, Any]) -> None:
+    """Write JSON with safe defaults for Pandas/NumPy types.
+    - Falls back to str() for objects like pd.Timestamp, Path, etc.
+    - Keeps indentation for readability.
+    """
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     with open(p, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2)
+        json.dump(payload, f, indent=2, default=str)
+
+# ---------------- Identity helpers (Phase 0 observability) ---------------- #
+def standardize_order_key(df: pd.DataFrame) -> pd.Series:
+    """Return a robust order key Series mapped to 'Name' semantics.
+    Priority: 'Name' -> 'order_id' -> 'Order ID' -> index as string.
+    Does not mutate input; safe for logging/coverage only.
+    """
+    if df is None or df.empty:
+        return pd.Series([], dtype=str)
+    cols = {str(c).strip().lower(): c for c in df.columns}
+    if 'name' in cols:
+        return df[cols['name']].astype(str)
+    for k in ('order_id', 'order id', 'order number'):
+        if k in cols:
+            return df[cols[k]].astype(str)
+    return pd.Series(df.index.astype(str), index=df.index)
+
+def standardize_customer_key(df: pd.DataFrame) -> pd.Series:
+    """Return a robust customer key Series used for customer-level metrics.
+    Priority: email (lowercased, stripped; supports aliases) -> explicit customer_id -> fallback name|province.
+    """
+    if df is None or df.empty:
+        return pd.Series([], dtype=str)
+    idx = df.index
+    # Accept common aliases for email: 'Customer Email' | 'customer_email' | 'email'
+    email_series = None
+    for cand in ['Customer Email', 'customer_email', 'email']:
+        if cand in df.columns:
+            email_series = df[cand]
+            break
+    em = email_series.astype(str).str.strip().str.lower() if email_series is not None else pd.Series(np.nan, index=idx)
+    em = em.replace({'': np.nan})
+    cid = df['customer_id'].astype(str).str.strip().str.lower() if 'customer_id' in df.columns else pd.Series(np.nan, index=idx)
+    cid = cid.replace({'': np.nan})
+    name = df['Billing Name'].astype(str).str.strip().str.lower() if 'Billing Name' in df.columns else pd.Series('', index=idx)
+    prov = df['Shipping Province'].astype(str).str.strip().str.lower() if 'Shipping Province' in df.columns else pd.Series('', index=idx)
+    fallback = (name.fillna('') + '|' + prov.fillna('')).replace({'|': np.nan}).infer_objects(copy=False)
+    key = em.where(em.notna(), cid.where(cid.notna(), fallback))
+    return key
+
+def identity_coverage(df: pd.DataFrame) -> dict:
+    """Basic coverage indicators for identities and product presence.
+    Returns: {customer_key_coverage: float, order_key_coverage: float}
+    """
+    if df is None or df.empty:
+        return {"customer_key_coverage": 0.0, "order_key_coverage": 0.0}
+    ck = standardize_customer_key(df)
+    ok = standardize_order_key(df)
+    ck_cov = float((ck.notna() & (ck.astype(str).str.strip() != '')).mean()) if len(ck) else 0.0
+    ok_cov = float((ok.notna() & (ok.astype(str).str.strip() != '')).mean()) if len(ok) else 0.0
+    return {"customer_key_coverage": ck_cov, "order_key_coverage": ok_cov}
 
 
 def read_yaml(path: str) -> dict:
@@ -755,15 +918,24 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
     d_kpi_ord = d_kpi.drop_duplicates(subset=["Name"]) if "Name" in d_kpi.columns else d_kpi.copy()
 
     def _identity_key(frame: pd.DataFrame) -> pd.Series:
-        # email primary
-        em = frame["Customer Email"].astype(str).str.strip().str.lower() if "Customer Email" in frame.columns else pd.Series(np.nan, index=frame.index)
+        """Construct a robust customer identity key.
+        Priority: Customer Email, then explicit customer_id if present,
+        then Billing Name | Shipping Province fallback. Returns a Series aligned to frame.index.
+        """
+        idx = frame.index
+        # email (primary)
+        em = frame["Customer Email"].astype(str).str.strip().str.lower() if "Customer Email" in frame.columns else pd.Series(np.nan, index=idx)
         em = em.replace({"": np.nan})
-        # fallback name|province
-        name = frame["Billing Name"].astype(str).str.strip().str.lower() if "Billing Name" in frame.columns else ""
-        prov = frame["Shipping Province"].astype(str).str.strip().str.lower() if "Shipping Province" in frame.columns else ""
-        fallback = (name + "|" + prov).replace({"|": np.nan})
-        key = em.copy()
-        key = key.where(key.notna(), fallback)
+        # explicit customer_id (secondary)
+        cid = frame["customer_id"].astype(str).str.strip().str.lower() if "customer_id" in frame.columns else pd.Series(np.nan, index=idx)
+        cid = cid.replace({"": np.nan})
+        # name/province fallback
+        name_s = frame["Billing Name"].astype(str).str.strip().str.lower() if "Billing Name" in frame.columns else pd.Series("", index=idx)
+        prov_s = frame["Shipping Province"].astype(str).str.strip().str.lower() if "Shipping Province" in frame.columns else pd.Series("", index=idx)
+        fallback = name_s.fillna("") + "|" + prov_s.fillna("")
+        # Avoid FutureWarning for silent downcasting; keep types stable
+        fallback = fallback.replace({"|": np.nan}).infer_objects(copy=False)
+        key = em.where(em.notna(), cid.where(cid.notna(), fallback))
         return key
 
     # Use the FULL raw df (d) for first_seen so prior history isn't censored by refunds
@@ -893,17 +1065,27 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         dr1 = _disc_rate(rec)
         dr0 = _disc_rate(pri)
 
-        # repeat share (identified customers only)
-        def _repeat_share(frame_orders: pd.DataFrame) -> Tuple[Optional[float], int]:
+        # Customer metrics: repeat within window and returning before window
+        def _customer_metrics(frame_orders: pd.DataFrame, window_start: pd.Timestamp) -> Tuple[Optional[float], Optional[float], int]:
             keys = _identity_key(frame_orders).dropna()
-            denom = int(keys.shape[0])
-            if denom < min_identified:
-                return None, denom
-            repeats = keys.map(first_seen).lt(rs).sum()
-            return float(repeats/denom), denom
+            if keys.empty:
+                return None, None, 0
+            # Unique identified customers in this window
+            unique = keys.dropna().unique()
+            total = int(len(unique))
+            if total < int(min_identified or 0):
+                return None, None, total
+            # Repeat purchase rate within window: customers with 2+ orders in this window
+            counts = keys.value_counts()
+            repeat_customers = int((counts > 1).sum())
+            repeat_rate = float(repeat_customers / len(counts)) if len(counts) > 0 else None
+            # Returning customer rate: had any order before the window start
+            returning = int(sum((first_seen.get(k, window_start) < window_start) for k in unique))
+            returning_rate = float(returning / total) if total > 0 else None
+            return repeat_rate, returning_rate, total
 
-        rr1, id1 = _repeat_share(rec)
-        rr0, id0 = _repeat_share(pri)
+        rep1, ret1, id1 = _customer_metrics(rec, rs)
+        rep0, ret0, id0 = _customer_metrics(pri, ps)
 
         # deltas based on ACTUAL values
         def _rel_delta(x1, x0):
@@ -917,11 +1099,14 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             "orders":    _rel_delta(o1, o0),
             "aov":       _rel_delta(aov1, aov0),
             "discount_rate": _rel_delta(dr1, dr0),
-            "repeat_share":  _rel_delta(rr1, rr0),
+            # Back-compat: repeat_share refers to repeat_rate
+            "repeat_share":  _rel_delta(rep1, rep0),
+            "repeat_rate":   _rel_delta(rep1, rep0),
+            "returning_rate": _rel_delta(ret1, ret0),
         }
 
         # significance testing on ACTUAL values
-        p = {"aov": None, "discount_rate": None, "repeat_share": None}
+        p = {"aov": None, "discount_rate": None, "repeat_share": None, "repeat_rate": None, "returning_rate": None}
         
         # AOV: Welch t on per-order net values
         a1 = rec["_order_net"].dropna().values if "_order_net" in rec.columns else np.array([])
@@ -951,12 +1136,19 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
                 pr = two_proportion_test(x1,n1,x0,n0)
                 p["discount_rate"] = float(pr.p_value)
 
-        # Repeat share: two-proportion on identified customers
-        if rr1 is not None and rr0 is not None and id1>=min_identified and id0>=min_identified:
-            x1 = int(round(rr1*id1)); n1 = id1
-            x0 = int(round(rr0*id0)); n0 = id0
-            pr2 = two_proportion_test(x1,n1,x0,n0)
-            p["repeat_share"] = float(pr2.p_value)
+        # Repeat rate: two-proportion on identified customers within window
+        if rep1 is not None and rep0 is not None and id1>=min_identified and id0>=min_identified:
+            x1 = int(round(rep1*id1)); n1 = id1
+            x0 = int(round(rep0*id0)); n0 = id0
+            pr_rep = two_proportion_test(x1,n1,x0,n0)
+            p["repeat_rate"] = float(pr_rep.p_value)
+            p["repeat_share"] = float(pr_rep.p_value)  # back-compat alias
+        # Returning rate: two-proportion on identified customers
+        if ret1 is not None and ret0 is not None and id1>=min_identified and id0>=min_identified:
+            x1r = int(round(ret1*id1)); n1r = id1
+            x0r = int(round(ret0*id0)); n0r = id0
+            pr_ret = two_proportion_test(x1r,n1r,x0r,n0r)
+            p["returning_rate"] = float(pr_ret.p_value)
 
         # FDR on available p's
         p_list = []
@@ -990,13 +1182,18 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             "orders": o1,
             "aov": aov1,
             "discount_rate": dr1,
-            "repeat_share": rr1,
+            # Back-compat: repeat_share now equals repeat_rate
+            "repeat_share": rep1,
+            "repeat_rate": rep1,
+            "returning_rate": ret1,
             "prior": {
                 "net_sales": None if np.isnan(ns0) else float(ns0),
                 "orders": o0,
                 "aov": aov0,
                 "discount_rate": dr0,
-                "repeat_share": rr0,
+                "repeat_share": rep0,
+                "repeat_rate": rep0,
+                "returning_rate": ret0,
             },
             "delta": delta,
             "p": p,
@@ -1023,7 +1220,7 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
     
     # convenience: top-level recent values for backward compatibility
     for label in ("L7","L28"):
-        for k in ("net_sales","orders","aov","discount_rate","repeat_share"):
+        for k in ("net_sales","orders","aov","discount_rate","repeat_share","repeat_rate","returning_rate"):
             out[label][k] = out[label].get(k)
     
     # include direction rule hint for UI

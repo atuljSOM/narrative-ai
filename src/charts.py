@@ -73,8 +73,12 @@ def repurchase_curve_chart(g: pd.DataFrame, aligned: dict, out_path: str) -> str
     
     else:
         # Fallback if no days_since_last data
-        ax.text(0.5, 0.5, 'Insufficient repurchase data', 
-                ha='center', va='center', transform=ax.transAxes)
+        ax.text(
+            0.5,
+            0.5,
+            "Repurchase timeline needs 'days_since_last' (derived from Created at + Customer Email/customer_id)",
+            ha='center', va='center', transform=ax.transAxes, wrap=True
+        )
     
     plt.tight_layout()
     plt.savefig(out_path, dpi=120, bbox_inches='tight')
@@ -100,10 +104,17 @@ def product_velocity_chart(g: pd.DataFrame, aligned: dict, out_path: str, df: Op
             d = df.copy()
             d['Created at'] = pd.to_datetime(d['Created at'], errors='coerce')
             recent_li = d[d['Created at'] >= d['Created at'].max() - pd.Timedelta(days=30)]
-            product_counts = recent_li.groupby('Lineitem name').agg({
-                'Lineitem quantity': 'sum',
-                'Customer Email': 'nunique'
-            }).sort_values('Lineitem quantity', ascending=False).head(8)
+            # Choose identity column dynamically for customer counts
+            id_col = 'Customer Email' if 'Customer Email' in recent_li.columns else ('customer_id' if 'customer_id' in recent_li.columns else None)
+            if id_col is not None:
+                product_counts = recent_li.groupby('Lineitem name').agg({
+                    'Lineitem quantity': 'sum',
+                    id_col: 'nunique'
+                }).rename(columns={id_col: 'customers'}).sort_values('Lineitem quantity', ascending=False).head(8)
+            else:
+                product_counts = recent_li.groupby('Lineitem name').agg({
+                    'Lineitem quantity': 'sum'
+                }).sort_values('Lineitem quantity', ascending=False).head(8)
             top_index = product_counts.index
         elif 'lineitem_any' in g.columns:
             product_counts = recent_30.groupby('lineitem_any').agg({
@@ -136,7 +147,14 @@ def product_velocity_chart(g: pd.DataFrame, aligned: dict, out_path: str, df: Op
         # Chart 2: Repeat purchase rate by product
         # Compute repeat rates for top 5 products
         repeat_rates = []
-        if df is not None and all(c in df.columns for c in ['Lineitem name','Name','Customer Email','Created at']):
+        # Use email or customer_id for repeat rate computation
+        id_col = None
+        if df is not None:
+            if 'Customer Email' in df.columns:
+                id_col = 'Customer Email'
+            elif 'customer_id' in df.columns:
+                id_col = 'customer_id'
+        if df is not None and id_col is not None and all(c in df.columns for c in ['Lineitem name','Name','Created at']):
             d_all = df.copy()
             d_all['Created at'] = pd.to_datetime(d_all['Created at'], errors='coerce')
             # Use a 180-day horizon to measure repeats; adjust if needed
@@ -145,7 +163,7 @@ def product_velocity_chart(g: pd.DataFrame, aligned: dict, out_path: str, df: Op
             for product in list(top_index)[:5]:
                 sub = d_win[d_win['Lineitem name'] == product]
                 # Count unique orders per customer for this product
-                per_cust_orders = sub.groupby('Customer Email')['Name'].nunique()
+                per_cust_orders = sub.groupby(id_col)['Name'].nunique()
                 if per_cust_orders.shape[0] == 0:
                     rr = 0.0
                 else:
@@ -187,10 +205,14 @@ def product_velocity_chart(g: pd.DataFrame, aligned: dict, out_path: str, df: Op
         if df is not None and 'Lineitem name' in df.columns and 'Created at' in df.columns:
             dfx = df.copy()
             dfx['Created at'] = pd.to_datetime(dfx['Created at'], errors='coerce')
-            grp = dfx.dropna(subset=['Created at']).groupby(['Customer Email', 'Lineitem name'])['Created at'].apply(list)
+            id_col = 'Customer Email' if 'Customer Email' in dfx.columns else ('customer_id' if 'customer_id' in dfx.columns else None)
+            group_keys = [id_col, 'Lineitem name'] if id_col is not None else ['Lineitem name']
+            grp = dfx.dropna(subset=['Created at']).groupby(group_keys)['Created at'].apply(list)
 
             replenishment_data = []
-            for (customer, product), dates in grp.items():
+            for key, dates in grp.items():
+                # key may be a tuple (customer, product) or just product if id_col missing
+                product = key[1] if isinstance(key, tuple) else key
                 if len(dates) > 1:
                     dates_sorted = sorted(pd.to_datetime(dates))
                     intervals = [(dates_sorted[i+1] - dates_sorted[i]).days for i in range(len(dates_sorted)-1)]
@@ -230,28 +252,34 @@ def product_velocity_chart(g: pd.DataFrame, aligned: dict, out_path: str, df: Op
     try:
         subscription_scores: List[float] = []
         prod_labels: List[str] = []
-        if df is not None and 'Lineitem name' in df.columns and 'Name' in df.columns and 'Created at' in df.columns:
+        if df is not None and 'Lineitem name' in df.columns and 'Created at' in df.columns:
             dfx2 = df.copy()
             dfx2['Created at'] = pd.to_datetime(dfx2['Created at'], errors='coerce')
-            for product in list(top_index)[:5]:
-                product_data = dfx2[dfx2['Lineitem name'] == product]
-                if product_data.empty:
-                    continue
-                repeat_rate = float((product_data.groupby('Customer Email')['Name'].nunique() > 1).mean())
-                intervals: List[float] = []
-                for customer in product_data['Customer Email'].dropna().unique():
-                    cust_dates = pd.to_datetime(product_data[product_data['Customer Email'] == customer]['Created at']).dropna()
-                    if cust_dates.shape[0] > 1:
-                        cust_intervals = cust_dates.sort_values().diff().dt.days.dropna()
-                        intervals.extend(cust_intervals.tolist())
-                if intervals and np.mean(intervals) > 0:
-                    consistency = 1 - (np.std(intervals) / np.mean(intervals))
-                    consistency = float(max(0.0, min(1.0, consistency)))
-                else:
-                    consistency = 0.0
-                score = (repeat_rate * 0.6 + consistency * 0.4) * 100.0
-                subscription_scores.append(float(score))
-                prod_labels.append(str(product))
+            # Determine identity and order columns
+            id_col_sr = 'Customer Email' if 'Customer Email' in dfx2.columns else ('customer_id' if 'customer_id' in dfx2.columns else None)
+            order_col_sr = 'Name' if 'Name' in dfx2.columns else ('order_id' if 'order_id' in dfx2.columns else None)
+            if id_col_sr is not None and order_col_sr is not None:
+                for product in list(top_index)[:5]:
+                    product_data = dfx2[dfx2['Lineitem name'] == product]
+                    if product_data.empty:
+                        continue
+                    # Repeat rate based on unique orders per customer for this product
+                    repeat_rate = float((product_data.groupby(id_col_sr)[order_col_sr].nunique() > 1).mean())
+                    intervals: List[float] = []
+                    customers_iter = product_data[id_col_sr].dropna().unique()
+                    for customer in customers_iter:
+                        cust_dates = pd.to_datetime(product_data[product_data[id_col_sr] == customer]['Created at']).dropna()
+                        if cust_dates.shape[0] > 1:
+                            cust_intervals = cust_dates.sort_values().diff().dt.days.dropna()
+                            intervals.extend(cust_intervals.tolist())
+                    if intervals and np.mean(intervals) > 0:
+                        consistency = 1 - (np.std(intervals) / np.mean(intervals))
+                        consistency = float(max(0.0, min(1.0, consistency)))
+                    else:
+                        consistency = 0.0
+                    score = (repeat_rate * 0.6 + consistency * 0.4) * 100.0
+                    subscription_scores.append(float(score))
+                    prod_labels.append(str(product))
         colors4 = ['#10b981' if s > 60 else '#f59e0b' if s > 40 else '#ef4444' for s in subscription_scores]
         ax4.bar(range(len(subscription_scores)), subscription_scores, color=colors4)
         ax4.set_xticks(range(len(subscription_scores)))
@@ -311,27 +339,31 @@ def product_performance_compact_chart(g: pd.DataFrame, aligned: dict, out_path: 
     # Right panel: subscription readiness (repeat + consistency proxy)
     subscription_scores: List[float] = []
     prod_labels: List[str] = []
-    if df is not None and 'Lineitem name' in df.columns and 'Name' in df.columns and 'Created at' in df.columns:
+    if df is not None and 'Lineitem name' in df.columns and 'Created at' in df.columns:
         dfx2 = df.copy(); dfx2['Created at'] = pd.to_datetime(dfx2['Created at'], errors='coerce')
-        for product in list(top_index)[:top_n]:
-            product_data = dfx2[dfx2['Lineitem name'] == product]
-            if product_data.empty:
-                continue
-            repeat_rate = float((product_data.groupby('Customer Email')['Name'].nunique() > 1).mean())
-            intervals: List[float] = []
-            for customer in product_data['Customer Email'].dropna().unique():
-                cust_dates = pd.to_datetime(product_data[product_data['Customer Email'] == customer]['Created at']).dropna()
-                if cust_dates.shape[0] > 1:
-                    cust_intervals = cust_dates.sort_values().diff().dt.days.dropna()
-                    intervals.extend(cust_intervals.tolist())
-            if intervals and np.mean(intervals) > 0:
-                consistency = 1 - (np.std(intervals) / np.mean(intervals))
-                consistency = float(max(0.0, min(1.0, consistency)))
-            else:
-                consistency = 0.0
-            score = (repeat_rate * 0.6 + consistency * 0.4) * 100.0
-            subscription_scores.append(float(score))
-            prod_labels.append(str(product))
+        id_col_comp = 'Customer Email' if 'Customer Email' in dfx2.columns else ('customer_id' if 'customer_id' in dfx2.columns else None)
+        order_col_comp = 'Name' if 'Name' in dfx2.columns else ('order_id' if 'order_id' in dfx2.columns else None)
+        if id_col_comp is not None and order_col_comp is not None:
+            for product in list(top_index)[:top_n]:
+                product_data = dfx2[dfx2['Lineitem name'] == product]
+                if product_data.empty:
+                    continue
+                repeat_rate = float((product_data.groupby(id_col_comp)[order_col_comp].nunique() > 1).mean())
+                intervals: List[float] = []
+                customers_iter = product_data[id_col_comp].dropna().unique()
+                for customer in customers_iter:
+                    cust_dates = pd.to_datetime(product_data[product_data[id_col_comp] == customer]['Created at']).dropna()
+                    if cust_dates.shape[0] > 1:
+                        cust_intervals = cust_dates.sort_values().diff().dt.days.dropna()
+                        intervals.extend(cust_intervals.tolist())
+                if intervals and np.mean(intervals) > 0:
+                    consistency = 1 - (np.std(intervals) / np.mean(intervals))
+                    consistency = float(max(0.0, min(1.0, consistency)))
+                else:
+                    consistency = 0.0
+                score = (repeat_rate * 0.6 + consistency * 0.4) * 100.0
+                subscription_scores.append(float(score))
+                prod_labels.append(str(product))
     colors = ['#10b981' if s > 60 else '#f59e0b' if s > 40 else '#ef4444' for s in subscription_scores]
     ax2.bar(range(len(subscription_scores)), subscription_scores, color=colors)
     ax2.set_xticks(range(len(subscription_scores)))
@@ -560,6 +592,51 @@ def action_impact_forecast_chart(actions: List[Dict], aligned: dict, out_path: s
     return out_path
 
 
+def stock_vs_demand_chart(inventory_metrics: pd.DataFrame, out_path: str, top_n: int = 10) -> str:
+    """Visualize stock (available_net) vs projected monthly demand for top SKUs by velocity.
+    - Colors indicate coverage: green (>=28d), amber (14-28d), red (<14d).
+    - Adds shortfall labels where demand exceeds stock.
+    Expects columns: sku, product, available_net, daily_velocity, cover_days.
+    """
+    fig, ax = plt.subplots(figsize=(12, 6))
+    try:
+        inv = inventory_metrics.copy()
+        if inv is None or inv.empty:
+            ax.text(0.5, 0.5, 'No inventory data', ha='center', va='center', transform=ax.transAxes)
+        else:
+            # Compute projected monthly demand (28 days)
+            inv['proj_demand'] = pd.to_numeric(inv.get('daily_velocity', 0), errors='coerce').fillna(0) * 28.0
+            inv['available_net'] = pd.to_numeric(inv.get('available_net', 0), errors='coerce').fillna(0)
+            inv['cover_days'] = pd.to_numeric(inv.get('cover_days', np.inf), errors='coerce')
+            # Top by highest projected demand
+            top = inv.sort_values('proj_demand', ascending=False).head(top_n).copy()
+            labels = [str(x)[:18] + ('…' if len(str(x))>18 else '') for x in (top.get('product').fillna(top.get('sku')))]
+            x = np.arange(len(top))
+            width = 0.4
+            bars1 = ax.bar(x - width/2, top['available_net'], width=width, label='Available (net)', color='#10b981')
+            bars2 = ax.bar(x + width/2, top['proj_demand'], width=width, label='Projected Demand (28d)', color='#3b82f6')
+            ax.set_xticks(x)
+            ax.set_xticklabels(labels, rotation=45, ha='right')
+            ax.set_ylabel('Units')
+            ax.set_title('Stock vs Projected Monthly Demand (Top SKUs)', fontsize=13, fontweight='bold')
+            ax.legend()
+            # Coverage color markers atop bars
+            for i, (cv, an, dm) in enumerate(zip(top['cover_days'], top['available_net'], top['proj_demand'])):
+                color = '#10b981' if cv >= 28 else ('#f59e0b' if cv >= 14 else '#ef4444')
+                ax.plot([x[i], x[i]], [max(an, dm) * 1.02, max(an, dm) * 1.06], color=color, linewidth=4)
+                # Shortfall annotation
+                if dm > an:
+                    short = float(dm - an)
+                    ax.text(x[i] + width/2, dm + max(1.0, dm*0.02), f'-{int(short)}', ha='center', va='bottom', fontsize=9, color='#ef4444')
+            ax.margins(y=0.2)
+    except Exception as e:
+        ax.text(0.5, 0.5, f'Error: {e}', ha='center', va='center', transform=ax.transAxes)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=120, bbox_inches='tight')
+    plt.close()
+    return out_path
+
+
 def cohort_retention_chart(df: pd.DataFrame, out_path: str) -> str:
     """
     Shows cohort retention — essential for Beauty/Supplements LTV.
@@ -569,35 +646,50 @@ def cohort_retention_chart(df: pd.DataFrame, out_path: str) -> str:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
     try:
-        required = ['Customer Email', 'Created at', 'Name']
-        if df is not None and all(c in df.columns for c in required):
+        required_any_id = ['Customer Email', 'customer_id']
+        required_common = ['Created at']
+        if df is not None and all(c in df.columns for c in required_common) and any(c in df.columns for c in required_any_id):
             d = df.copy()
             d['Created at'] = pd.to_datetime(d['Created at'], errors='coerce')
             d = d.dropna(subset=['Created at'])
             if d.empty:
                 raise ValueError('no dates')
 
+            # Use email if available; else customer_id
+            id_col = 'Customer Email' if 'Customer Email' in d.columns else 'customer_id'
             # First purchase (cohort) per customer
-            first = d.groupby('Customer Email')['Created at'].min().reset_index()
-            first.columns = ['Customer Email', 'cohort_date']
+            first = d.groupby(id_col)['Created at'].min().reset_index()
+            first.columns = [id_col, 'cohort_date']
             first['cohort'] = first['cohort_date'].dt.to_period('M')
-
-            dc = d.merge(first, on='Customer Email', how='left')
+            dc = d.merge(first, on=id_col, how='left')
             dc['order_month'] = dc['Created at'].dt.to_period('M')
-            # Months since first purchase as integer
-            dc['months_since'] = (dc['order_month'].astype('period[M]') - dc['cohort'].astype('period[M]')).astype(int)
+            # Months since first purchase as integer (robust to pandas period arithmetic)
+            try:
+                dc['months_since'] = (dc['order_month'].astype(int) - dc['cohort'].astype(int)).astype(int)
+            except Exception:
+                # Fallback: compute via start-of-month timestamps
+                om_start = dc['order_month'].dt.start_time
+                co_start = dc['cohort'].dt.start_time
+                dc['months_since'] = ((om_start.dt.year - co_start.dt.year) * 12 + (om_start.dt.month - co_start.dt.month)).astype(int)
 
             # Retention matrix
-            ret = dc.groupby(['cohort', 'months_since'])['Customer Email'].nunique().reset_index()
-            cohort_sizes = dc.groupby('cohort')['Customer Email'].nunique()
+            ret = dc.groupby(['cohort', 'months_since'])[id_col].nunique().reset_index()
+            cohort_sizes = dc.groupby('cohort')[id_col].nunique()
             ret = ret.merge(cohort_sizes.rename('cohort_size'), left_on='cohort', right_index=True)
-            ret['retention_rate'] = ret['Customer Email'] / ret['cohort_size']
+            # Use the same ID column for counts to avoid KeyError on 'Customer Email'
+            ret['retention_rate'] = ret[id_col] / ret['cohort_size']
 
             pivot = ret.pivot(index='cohort', columns='months_since', values='retention_rate').fillna(0.0)
 
             # Heatmap: last 6 cohorts, first 6 months
             rows = list(pivot.index)[-6:]
-            cols = [c for c in pivot.columns if isinstance(c, (int, np.integer)) and 0 <= int(c) <= 5]
+            # Ensure integer-like month offsets
+            def _to_int_safe(x):
+                try:
+                    return int(x)
+                except Exception:
+                    return None
+            cols = [c for c in pivot.columns if (_to_int_safe(c) is not None and 0 <= _to_int_safe(c) <= 5)]
             data = pivot.loc[rows, cols] if rows else pivot.iloc[[], :]
 
             if sns is not None and not data.empty:
@@ -618,9 +710,14 @@ def cohort_retention_chart(df: pd.DataFrame, out_path: str) -> str:
 
             # Average retention curve (first 12 months)
             avg_ret = pivot.mean(axis=0)
-            # Ensure integer-like x for plotting
-            xs = sorted([int(c) for c in avg_ret.index if isinstance(c, (int, np.integer)) and 0 <= int(c) <= 11])
-            ys = [float(avg_ret.get(x, 0.0)) * 100.0 for x in xs]
+            xs = []
+            ys = []
+            for c, v in avg_ret.items():
+                ci = _to_int_safe(c)
+                if ci is not None and 0 <= ci <= 11:
+                    xs.append(ci)
+                    ys.append(float(v) * 100.0)
+            xs, ys = (list(zip(*sorted(zip(xs, ys)))) if xs else ([], []))
             ax2.plot(xs, ys, marker='o', linewidth=2, markersize=6, color='#6366f1')
             ax2.fill_between(xs, [0]*len(xs), ys, alpha=0.25, color='#6366f1')
             ax2.set_xlabel('Months Since First Purchase')
@@ -636,7 +733,14 @@ def cohort_retention_chart(df: pd.DataFrame, out_path: str) -> str:
                     val = ys[xs.index(month)]
                     ax2.annotate(f'{val:.0f}%', xy=(month, val), xytext=(month, val + 5), ha='center', fontweight='bold')
         else:
-            ax1.text(0.5, 0.5, 'Raw df with Customer Email, Name, Created at required', ha='center', va='center', transform=ax1.transAxes)
+            missing = []
+            if df is not None:
+                if 'Created at' not in df.columns:
+                    missing.append('Created at')
+                if ('Customer Email' not in df.columns) and ('customer_id' not in df.columns):
+                    missing.append('Customer Email or customer_id')
+            msg = 'Missing columns: ' + ', '.join(missing) if missing else 'Missing required columns'
+            ax1.text(0.5, 0.5, f"{msg}. Use exact column names.", ha='center', va='center', transform=ax1.transAxes, wrap=True)
             ax2.axis('off')
     except Exception as e:
         ax1.text(0.5, 0.5, f'Error: {e}', ha='center', va='center', transform=ax1.transAxes)
@@ -657,15 +761,39 @@ def first_to_second_purchase_chart(df: pd.DataFrame, out_path: str) -> str:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
     try:
-        if df is not None and 'Customer Email' in df.columns and 'Created at' in df.columns:
+        id_col = 'Customer Email' if (df is not None and 'Customer Email' in df.columns) else ('customer_id' if (df is not None and 'customer_id' in df.columns) else None)
+        order_col = 'order_id' if (df is not None and 'order_id' in df.columns) else ('Name' if (df is not None and 'Name' in df.columns) else None)
+        if df is not None and id_col is not None and 'Created at' in df.columns:
             d = df.copy()
             d['Created at'] = pd.to_datetime(d['Created at'], errors='coerce')
             d = d.dropna(subset=['Created at'])
 
-            # Purchase sequences per customer
+            # Optional recent windowing via env (days). Example: F2S_WINDOW_DAYS=365
+            try:
+                win_days = int(os.getenv('F2S_WINDOW_DAYS', '0') or '0')
+            except Exception:
+                win_days = 0
+            if win_days and win_days > 0:
+                cutoff = d['Created at'].max() - pd.Timedelta(days=win_days)
+                d = d[d['Created at'] >= cutoff]
+
+            # De-duplicate to one record per order per customer to avoid line-item duplicates
+            if order_col is not None and order_col in d.columns:
+                # Keep the first timestamp per (customer, order)
+                d = (
+                    d[[id_col, order_col, 'Created at']]
+                    .sort_values(['Created at'])
+                    .groupby([id_col, order_col], as_index=False)['Created at']
+                    .min()
+                )
+            else:
+                # Fallback: drop duplicates on (customer, timestamp)
+                d = d[[id_col, 'Created at']].drop_duplicates([id_col, 'Created at'])
+
+            # Purchase sequences per customer using de-duplicated orders
             seq = (
                 d.sort_values('Created at')
-                 .groupby('Customer Email')['Created at']
+                 .groupby(id_col)['Created at']
                  .apply(list)
                  .reset_index()
             )
@@ -707,7 +835,14 @@ def first_to_second_purchase_chart(df: pd.DataFrame, out_path: str) -> str:
                     ax2.text(i - 0.5, values[i-1] / 2, f'{conv_rate:.0f}%',
                              ha='center', va='center', fontweight='bold', color='red', fontsize=12)
         else:
-            ax1.text(0.5, 0.5, 'Raw df with Customer Email and Created at required', ha='center', va='center', transform=ax1.transAxes)
+            need = []
+            if df is not None:
+                if 'Created at' not in df.columns:
+                    need.append('Created at')
+                if ('Customer Email' not in df.columns) and ('customer_id' not in df.columns):
+                    need.append('Customer Email or customer_id')
+            msg = 'Missing columns: ' + ', '.join(need) if need else 'Missing required columns'
+            ax1.text(0.5, 0.5, f"{msg}. Use exact column names.", ha='center', va='center', transform=ax1.transAxes, wrap=True)
             ax2.axis('off')
     except Exception as e:
         ax1.text(0.5, 0.5, f'Error: {e}', ha='center', va='center', transform=ax1.transAxes)
@@ -722,7 +857,8 @@ def first_to_second_purchase_chart(df: pd.DataFrame, out_path: str) -> str:
 def generate_charts(g: pd.DataFrame, aligned: dict, actions: List[Dict], out_dir: str,
                    df: Optional[pd.DataFrame] = None,
                    chosen_window: Optional[str] = None,
-                   charts_mode: Optional[str] = None) -> Dict[str, str]:
+                   charts_mode: Optional[str] = None,
+                   inventory_metrics: Optional[pd.DataFrame] = None) -> Dict[str, str]:
     """Enhanced chart generation for Beauty/Supplements"""
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     charts = {}
@@ -762,6 +898,15 @@ def generate_charts(g: pd.DataFrame, aligned: dict, actions: List[Dict], out_dir
         )
     except Exception as e:
         print(f"Warning: Could not generate impact forecast chart: {e}")
+
+    # Inventory: Stock vs Demand chart
+    try:
+        if inventory_metrics is not None and not getattr(inventory_metrics, 'empty', False):
+            charts['stock_vs_demand'] = stock_vs_demand_chart(
+                inventory_metrics, str(Path(out_dir) / "stock_vs_demand.png"), top_n=10
+            )
+    except Exception as e:
+        print(f"Warning: Could not generate stock vs demand chart: {e}")
 
     if df is not None:
         try:

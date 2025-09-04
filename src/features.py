@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Dict, Any
 import numpy as np, pandas as pd
-from .utils import aligned_windows, estimate_expected_orders
+from .utils import aligned_windows, estimate_expected_orders, normalize_product_name
 
 def compute_features(df: pd.DataFrame) -> pd.DataFrame:
     d = df.copy()
@@ -122,3 +122,88 @@ def compute_repeat_curve(g: pd.DataFrame, horizon_days: list[int] = [60, 90], by
         store[int(H)] = {"ltv": (num/den if den else 0.0)}
 
     return {"categories": stats_by_cat, "store": store, "per_customer": per_cust}
+
+
+# Phase 0.5: Lightweight g_items builder for product plays
+def build_g_items(df: pd.DataFrame) -> pd.DataFrame:
+    """Return per-(customer, product) aggregates from an order-level frame.
+    Accepts either:
+      - df with 'lineitem_any' (from compute_features), or
+      - df/orders with 'Lineitem name', or
+      - df with 'products_concat' (pipe-delimited product keys) which will be exploded.
+
+    Output columns:
+      - customer_id, product_key, orders_product, last_date, median_ipi_days
+      - product_key_raw, product_key_base, size_token (additive)
+    """
+    if df is None or df.empty:
+        return pd.DataFrame(columns=[
+            'customer_id','product_key','orders_product','last_date','median_ipi_days',
+            'product_key_raw','product_key_base','size_token'
+        ])
+    d = df.copy()
+    # Normalize required columns
+    d['Created at'] = pd.to_datetime(d.get('Created at'), errors='coerce')
+    d = d.dropna(subset=['Created at'])
+    if 'customer_id' not in d.columns:
+        return pd.DataFrame(columns=['customer_id','product_key','orders_product','last_date','median_ipi_days','product_key_raw','product_key_base','size_token'])
+    # Determine product source
+    prod_series = None
+    explode = False
+    if 'products_concat' in d.columns:
+        prod_series = d['products_concat'].astype(str)
+        explode = True
+    elif 'lineitem_any' in d.columns:
+        prod_series = d['lineitem_any'].astype(str)
+    elif 'Lineitem name' in d.columns:
+        prod_series = d['Lineitem name'].astype(str)
+    else:
+        return pd.DataFrame(columns=['customer_id','product_key','orders_product','last_date','median_ipi_days','product_key_raw','product_key_base','size_token'])
+
+    tmp = d[[
+        c for c in ['customer_id','Name','Created at'] if c in d.columns
+    ]].copy()
+    if 'Name' not in tmp.columns:
+        # Fallback to index if no order key
+        tmp['Name'] = d.index.astype(str)
+    tmp['product_key'] = prod_series
+
+    if explode:
+        # products_concat: split and explode to per-product rows per order
+        tmp['product_key'] = tmp['product_key'].fillna('')
+        tmp = tmp.assign(product_key=tmp['product_key'].str.split('|')).explode('product_key')
+        tmp['product_key'] = tmp['product_key'].astype(str).str.strip()
+        tmp = tmp[tmp['product_key'] != '']
+
+    # Normalized fields (raw/base/size)
+    tmp['product_key_raw'] = tmp['product_key'].astype(str)
+    base_size = tmp['product_key_raw'].apply(normalize_product_name)
+    tmp['product_key_base'] = base_size.apply(lambda t: t[0])
+    tmp['size_token'] = base_size.apply(lambda t: t[1])
+
+    # Per (customer, product): distinct orders, last date, median IPI
+    tmp = tmp.sort_values(['customer_id','product_key','Created at'])
+    grp = tmp.groupby(['customer_id','product_key'], dropna=False)
+    orders_product = grp['Name'].nunique().rename('orders_product')
+    last_date = grp['Created at'].max().rename('last_date')
+    # Compute IPI per group
+    def _median_ipi(x: pd.Series) -> float:
+        diffs = x.sort_values().diff().dt.days.dropna()
+        return float(diffs.median()) if not diffs.empty else float('nan')
+    ipi = grp['Created at'].apply(_median_ipi).rename('median_ipi_days')
+    out = pd.concat([orders_product, last_date, ipi], axis=1).reset_index()
+    # Keep normalized columns (first value in group)
+    for col in ['product_key_raw','product_key_base','size_token']:
+        if col in tmp.columns:
+            out = out.merge(tmp.groupby(['customer_id','product_key'])[col].first().reset_index(), on=['customer_id','product_key'], how='left')
+    # Optional base-level counts windows (28d/90d)
+    try:
+        maxd = pd.to_datetime(d['Created at']).max()
+        for H, colname in [(28,'counts_28d_base'), (90,'counts_90d_base')]:
+            start = maxd - pd.Timedelta(days=H)
+            ww = tmp[(tmp['Created at'] >= start)]
+            cnt = (ww.groupby(['customer_id','product_key_base'])['Name'].nunique().rename(colname).reset_index())
+            out = out.merge(cnt, left_on=['customer_id','product_key_base'], right_on=['customer_id','product_key_base'], how='left')
+    except Exception:
+        pass
+    return out

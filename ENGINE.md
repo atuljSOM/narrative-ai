@@ -113,6 +113,12 @@ Notes
 - Accuracy metrics (e.g., revenue accuracy %) and performance summaries (aggregate/median) are computed.
 - Pending items and overdue detection help operational follow-up.
 
+## Validation Enhancements
+- Inventory validation:
+  - Schema presence, snapshot freshness (INVENTORY_MAX_AGE_DAYS), count of low-cover SKUs.
+  - Reorder point alerts (below reorder with no incoming) highlighted.
+  - Seasonal stockout risk (heuristic): in peak months (Nov/Dec), SKUs with cover < 14d and daily_velocity ≥ 1 are flagged.
+
 ## Configuration Reference (.env)
 - Thresholds: `MIN_N_WINBACK`, `MIN_N_SKU`, `AOV_EFFECT_FLOOR`, `REPEAT_PTS_FLOOR`, `DISCOUNT_PTS_FLOOR`.
 - Financials: `FINANCIAL_FLOOR_MODE` (auto|fixed), `FINANCIAL_FLOOR_FIXED`, `FINANCIAL_FLOOR`, `GROSS_MARGIN`.

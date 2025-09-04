@@ -603,6 +603,81 @@ class TransactionVolumeCheck(ValidationCheck):
         }
 
 
+class InventoryValidationCheck(ValidationCheck):
+    """Validate inventory schema, freshness, and coverage basics."""
+
+    def __init__(self):
+        super().__init__(
+            "Inventory",
+            "Checks inventory schema, freshness, and coverage vs demand"
+        )
+
+    def run(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        inv = data.get('inventory')
+        invm = data.get('inventory_metrics')
+        cfg = data.get('config') or {}
+        if inv is None or (isinstance(inv, pd.DataFrame) and inv.empty):
+            return {'status':'amber','message':'Inventory not provided','details':{},'severity':'warning'}
+        df = inv if isinstance(inv, pd.DataFrame) else pd.DataFrame(inv)
+        missing = [c for c in ['sku','available','incoming','updated_at'] if c not in df.columns]
+        if missing:
+            return {'status':'red','message':f'Missing inventory columns: {", ".join(missing)}','details':{},'severity':'critical'}
+        # Freshness
+        try:
+            upd = pd.to_datetime(df['updated_at'], errors='coerce')
+            age_days = int((pd.Timestamp.now() - upd.max()).days)
+        except Exception:
+            age_days = 999
+        max_age = int((cfg or {}).get('INVENTORY_MAX_AGE_DAYS', 7) or 7)
+        freshness_ok = age_days <= max_age
+        # Coverage summary if metrics present
+        low_cover_count = 0
+        season_risk = []
+        reorder_alerts = []
+        if invm is not None:
+            mm = invm if isinstance(invm, pd.DataFrame) else pd.DataFrame(invm)
+            default_cover = float(((cfg or {}).get('INVENTORY_MIN_COVER_DAYS') or {}).get('default', 21) or 21)
+            if 'cover_days' in mm.columns:
+                low_cover_count = int((pd.to_numeric(mm['cover_days'], errors='coerce') < default_cover).sum())
+            # Reorder point warnings
+            try:
+                if 'below_reorder' in mm.columns:
+                    rr = mm[mm['below_reorder'] == True][['sku','product','available']].head(10)
+                    reorder_alerts = rr.to_dict(orient='records')
+            except Exception:
+                pass
+            # Seasonal stockout risk (heuristic): if cover < 14d and daily_velocity >= 1 in peak months
+            try:
+                now_m = pd.Timestamp.now().month
+                peak = {11, 12}
+                if 'cover_days' in mm.columns and 'daily_velocity' in mm.columns:
+                    risk = mm[(pd.to_numeric(mm['cover_days'], errors='coerce') < 14) &
+                              (pd.to_numeric(mm['daily_velocity'], errors='coerce') >= 1.0)]
+                    if now_m in peak:
+                        season_risk = risk[['sku','product','cover_days','daily_velocity']].head(10).to_dict(orient='records')
+            except Exception:
+                pass
+        status = 'green'
+        msg = f"Inventory ok; age={age_days}d; low-cover SKUs≈{low_cover_count}"
+        sev = 'info'
+        if not freshness_ok:
+            status, msg, sev = 'amber', f"Inventory stale ({age_days}d old) — consider updating", 'warning'
+        if missing:
+            status, msg, sev = 'red', msg, 'critical'
+        return {
+            'status': status,
+            'message': msg,
+            'details': {
+                'age_days': age_days,
+                'low_cover_count': low_cover_count,
+                'max_age_days': max_age,
+                'reorder_alerts': reorder_alerts,
+                'seasonal_risk': season_risk,
+            },
+            'severity': sev
+        }
+
+
 class DataValidationEngine:
     """Orchestrates all validation checks and renders results."""
 
@@ -614,7 +689,9 @@ class DataValidationEngine:
             MetricConsistencyCheck(),
         ]
 
-    def run_all_checks(self, df: pd.DataFrame, aligned: Dict[str, Any], actions: List[Dict[str,Any]] | None = None, qa: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def run_all_checks(self, df: pd.DataFrame, aligned: Dict[str, Any], actions: List[Dict[str,Any]] | None = None, qa: Dict[str, Any] | None = None,
+                        inventory: pd.DataFrame | None = None, inventory_metrics: pd.DataFrame | None = None, config: Dict[str, Any] | None = None,
+                        orders_df: pd.DataFrame | None = None, items_df: pd.DataFrame | None = None) -> Dict[str, Any]:
         results: Dict[str, Any] = {
             'checks': {}, 'overall_status': 'green', 'validation_score': 100,
             'critical_issues': [], 'warnings': [], 'summary': '', 'data_quality_grade': 'A'
@@ -625,6 +702,7 @@ class DataValidationEngine:
         def worse(a,b):
             order = {'green':0,'amber':1,'red':2}
             return a if order[a] >= order[b] else b
+        # Run base checks
         for chk in self.checks:
             out = chk.run({'df': df, 'aligned': aligned, 'actions': actions, 'qa': qa})
             results['checks'][chk.name] = out
@@ -636,7 +714,48 @@ class DataValidationEngine:
             elif st == 'amber':
                 results['warnings'].append(out.get('message',''))
         avg = int(round(sum(scores)/len(scores))) if scores else 70
-        results['validation_score'] = max(0, min(100, avg))
+        # Optional: Inventory checks
+        if inventory is not None:
+            try:
+                inv_out = InventoryValidationCheck().run({
+                    'inventory': inventory, 'inventory_metrics': inventory_metrics, 'config': config or {}
+                })
+                results['checks']['Inventory'] = inv_out
+                st = inv_out.get('status','amber')
+                scores.append(status_map.get(st,70))
+                worst = worse(worst, st)
+                if st == 'red':
+                    results['critical_issues'].append(inv_out.get('message',''))
+                elif st == 'amber':
+                    results['warnings'].append(inv_out.get('message',''))
+            except Exception:
+                pass
+
+        # Optional: Orders/Items consistency
+        if orders_df is not None and items_df is not None:
+            try:
+                ci = validate_order_items_consistency(orders_df, items_df)
+                if ci:
+                    status_ci = 'red' if any(sev == 'critical' for sev, _ in ci) else 'amber'
+                    msg_ci = '; '.join(m for _, m in ci[:3])
+                    results['checks']['Orders/Items Consistency'] = {
+                        'status': status_ci,
+                        'message': msg_ci,
+                        'details': {'issues': [m for _, m in ci]},
+                        'severity': 'critical' if status_ci == 'red' else 'warning'
+                    }
+                    stv = status_ci
+                    scores.append(status_map.get(stv, 70))
+                    worst = worse(worst, stv)
+                    for sev, m in ci:
+                        if sev == 'critical':
+                            results['critical_issues'].append(m)
+                        else:
+                            results['warnings'].append(m)
+            except Exception:
+                pass
+
+        results['validation_score'] = max(0, min(100, int(round(sum(scores)/len(scores))) if scores else 70))
         results['overall_status'] = worst
         results['summary'] = (
             'All checks passed' if worst=='green' else
@@ -648,11 +767,88 @@ class DataValidationEngine:
         return results
 
     def to_html_panel(self, results: Dict[str, Any]) -> str:
-        status = results.get('overall_status','amber')
-        score = results.get('validation_score',0)
+        """Render a compact HTML panel summarizing validation results.
+
+        Expected keys in results: overall_status, validation_score, summary, checks.
+        """
+        status = (results or {}).get('overall_status', 'amber')
+        score = int((results or {}).get('validation_score', 0) or 0)
+        summary = (results or {}).get('summary', '')
+        grade = (results or {}).get('data_quality_grade', '')
+        crit = (results or {}).get('critical_issues', []) or []
+        warns = (results or {}).get('warnings', []) or []
+
+        # Build small list of top messages
+        def _li(items):
+            return ''.join(f"<li>{str(x)}</li>" for x in items)
+
+        issues_html = ''
+        if crit:
+            issues_html += f"<h4>Critical</h4><ul>{_li(crit[:3])}</ul>"
+        if warns and not crit:
+            issues_html += f"<h4>Warnings</h4><ul>{_li(warns[:3])}</ul>"
+
         return f"""
         <div class='validation-panel validation-{status}'>
           <h3>Data Validation Report</h3>
-          <p>Overall status: <strong>{status.upper()}</strong> — Score: <strong>{score}/100</strong></p>
+          <p>Overall status: <strong>{status.upper()}</strong> — Score: <strong>{score}/100</strong> — Grade: <strong>{grade}</strong></p>
+          <p>{summary}</p>
+          {issues_html}
         </div>
         """
+
+
+def validate_order_items_consistency(orders_df: pd.DataFrame, items_df: pd.DataFrame) -> list[tuple[str, str]]:
+    """Validate order/items relationship.
+    Returns list of (severity, message).
+    """
+    checks: list[tuple[str,str]] = []
+    try:
+        oids = orders_df.get('Name') if 'Name' in orders_df.columns else orders_df.get('order_id')
+        iids = items_df.get('order_id')
+        if iids is not None and oids is not None:
+            orphan = (~iids.astype(str).isin(oids.astype(str))).sum()
+            if orphan > 0:
+                checks.append(('critical', f"{int(orphan)} items without matching orders"))
+        # Compare item-level totals to order-level nets with a tolerant threshold
+        if iids is not None and oids is not None and 'line_item_price' in items_df.columns:
+            # Compute per-order items subtotal and discount
+            price = pd.to_numeric(items_df['line_item_price'], errors='coerce').fillna(0.0)
+            qty   = pd.to_numeric(items_df.get('quantity', 1), errors='coerce').fillna(1.0)
+            discl = pd.to_numeric(items_df.get('line_item_discount', 0.0), errors='coerce').fillna(0.0)
+            items_sub = (price * qty).groupby(iids.astype(str)).sum(min_count=1)
+            items_disc= discl.groupby(iids.astype(str)).sum(min_count=1)
+            items_net = (items_sub - items_disc).rename('items_net')
+
+            # Build comparable order-level net: prefer Subtotal - Total Discount; else Total - Shipping - Taxes; else Subtotal
+            odf = orders_df.copy()
+            for c in ['Subtotal','Total Discount','Total','Shipping','Taxes']:
+                if c in odf.columns:
+                    odf[c] = pd.to_numeric(odf[c], errors='coerce')
+            order_net = None
+            if 'Subtotal' in odf.columns:
+                order_net = (odf['Subtotal'] - odf.get('Total Discount', 0.0)).rename('order_net')
+            elif 'Total' in odf.columns:
+                order_net = (odf['Total'] - odf.get('Shipping', 0.0) - odf.get('Taxes', 0.0)).rename('order_net')
+            if order_net is not None:
+                merged = odf.set_index(oids.astype(str)).join(items_net)
+                if 'order_net' not in merged.columns:
+                    merged = merged.join(order_net)
+                # Tolerance: 5% ratio difference for orders with positive net, else <= $1 absolute
+                on = pd.to_numeric(merged.get('order_net'), errors='coerce')
+                it = pd.to_numeric(merged.get('items_net'), errors='coerce')
+                valid = (on > 0) & (it > 0)
+                ratio_ok = pd.Series(True, index=merged.index)
+                ratio_ok.loc[valid] = ((it[valid] / on[valid]).between(0.95, 1.05))
+                abs_ok = (on - it).abs() <= 1.0
+                mism = ~(ratio_ok | abs_ok)
+                n_bad = int(mism.sum())
+                if n_bad > 0:
+                    checks.append(('warning', f"{n_bad} orders with price mismatches vs items (within 5% tolerance)"))
+        if 'sku' in items_df.columns:
+            invalid = (items_df['sku'].isna() | (items_df['sku'].astype(str).str.strip() == '')).sum()
+            if invalid > 0:
+                checks.append(('warning', f"{int(invalid)} items missing SKUs"))
+    except Exception:
+        pass
+    return checks

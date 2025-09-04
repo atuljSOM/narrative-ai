@@ -1,0 +1,21 @@
+product_id,product_name,category,brand,price,cost,stock_quantity,sku,subscription_eligible,created_at,updated_at
+BEAU_001,Vitamin C Brightening Serum,Skincare,GlowLux,89.99,25,97,GL-001-210,TRUE,1/15/24 10:00,12/15/24 15:30
+BEAU_002,Hyaluronic Acid Moisturizer,Skincare,HydraGlow,64.99,18.5,271,HY-002-68,TRUE,1/15/24 10:00,12/15/24 15:30
+BEAU_003,Retinol Night Treatment,Skincare,GlowLux,124.99,35,314,GL-003-458,TRUE,1/15/24 10:00,12/15/24 15:30
+BEAU_004,Gentle Foaming Cleanser,Skincare,PureSkin,32.99,8.5,132,PU-004-313,TRUE,1/15/24 10:00,12/15/24 15:30
+BEAU_005,Niacinamide Pore Minimizer,Skincare,ClearTone,54.99,16,104,CL-005-868,TRUE,1/15/24 10:00,12/15/24 15:30
+BEAU_006,Liquid Foundation SPF 30,Makeup,FlawlessBase,48.99,14.5,256,FL-006-427,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_007,Waterproof Mascara,Makeup,LashPerfect,28.99,8,115,LA-007-556,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_008,12-Color Eyeshadow Palette,Makeup,ColorCraft,76.99,22,216,CO-008-355,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_009,Matte Liquid Lipstick Set,Makeup,VelvetLips,39.99,11.5,199,VE-009-143,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_010,Highlighting Contour Kit,Makeup,SculptGlow,59.99,17,324,SC-010-222,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_011,Jade Facial Roller & Gua Sha Set,Tools,ZenBeauty,34.99,12,63,ZE-011-430,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_012,LED Light Therapy Mask,Tools,TechGlow,199.99,75,311,TE-012-854,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_013,Makeup Brush Set Professional,Tools,BrushCraft,89.99,28,93,BR-013-990,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_014,Complete Skincare Routine Bundle,Gift Sets,GlowLux,249.99,70,211,GL-014-781,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_015,Holiday Makeup Collection,Gift Sets,ColorCraft,159.99,48,97,CO-015-791,FALSE,1/15/24 10:00,12/15/24 15:30
+BEAU_001,Vitamin C Brightening Serum,Skincare,GlowLux,89.99,25,645,GL-VC-30ML,TRUE,1/15/24 0:00,12/30/24 15:30
+BEAU_002,Hyaluronic Acid Moisturizer,Skincare,HydraGlow,64.99,18.5,589,HG-HA-50ML,TRUE,1/15/24 0:00,12/30/24 15:30
+BEAU_003,Retinol Night Treatment,Skincare,GlowLux,124.99,35,556,GL-RT-30ML,TRUE,1/15/24 0:00,12/30/24 15:30
+BEAU_004,Gentle Foaming Cleanser,Skincare,PureSkin,32.99,8.5,712,PS-FC-150ML,TRUE,1/15/24 0:00,12/30/24 15:30
+BEAU_005,Niacinamide Pore Minimizer,Skincare,ClearTone,54.99,16,598,CT-NM-30ML,TRUE,1/15/24 0:00,12/30/24 15:30

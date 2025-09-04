@@ -1,0 +1,18 @@
+product_id,product_name,category,brand,price,cost,stock_quantity,sku,subscription_eligible,serving_count,created_at,updated_at
+SUPP_001,"Vitamin D3 5000 IU",Vitamins,VitalCore,24.99,6.5,110,VI-001-994,true,90,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_002,"Omega-3 Fish Oil 1000mg",Vitamins,PureOmega,34.99,9,238,PU-002-774,true,120,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_003,"Multivitamin Complete",Vitamins,VitalCore,39.99,11,289,VI-003-739,true,60,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_004,"Vitamin B12 Methylcobalamin",Vitamins,EnergyPlus,19.99,5.5,85,EN-004-635,true,100,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_005,"Magnesium Glycinate 400mg",Vitamins,RelaxWell,28.99,8,64,RE-005-342,true,90,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_006,"Whey Protein Isolate 2lbs",Protein,MuscleMax,64.99,22,346,MU-006-832,true,32,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_007,"Plant-Based Protein 1.5lbs",Protein,GreenPower,49.99,16,190,GR-007-148,true,24,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_008,"Pre-Workout Energy Blend",Fitness,PowerFuel,44.99,14,144,PO-008-982,true,30,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_009,"BCAA Recovery Formula",Fitness,RecoverMax,34.99,11.5,51,RE-009-44,true,45,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_010,"Creatine Monohydrate 300g",Fitness,MuscleMax,29.99,9,76,MU-010-615,true,60,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_011,"Probiotics 50 Billion CFU",Digestive,GutHealth,54.99,18,147,GU-011-94,true,30,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_012,"Adaptogenic Stress Support",Herbal,ZenBalance,49.99,16.5,59,ZE-012-346,true,60,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_013,"Collagen Peptides Powder",Beauty,YouthGlow,59.99,19,257,YO-013-378,true,30,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_014,"Sleep Support Complex",Sleep,RestEasy,39.99,13,249,RE-014-500,true,60,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_015,"Brain Focus Nootropic",Cognitive,MindSharp,69.99,23,122,MI-015-110,true,30,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_016,"Essential Health Stack",Bundles,VitalCore,149.99,45,196,VI-016-817,true,90,2024-01-15 10:00:00,2024-12-15 15:30:00
+SUPP_017,"Fitness Performance Pack",Bundles,MuscleMax,199.99,65,249,MU-017-708,true,30,2024-01-15 10:00:00,2024-12-15 15:30:00

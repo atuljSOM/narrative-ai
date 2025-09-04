@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Any
 from .utils import get_vertical, subscription_threshold_for_product
+from .features import build_g_items
 
 def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str, cfg: Dict[str, Any] | None = None) -> List[str]:
     Path(out_dir).mkdir(parents=True, exist_ok=True)
@@ -26,9 +27,24 @@ def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str, cfg: Dict
     dormant["segment_n"]=len(dormant); dormant["baseline_rate"]=g["is_repeat"].mean(); dormant["gross_margin"]=gross_margin
     p = Path(out_dir)/"segment_dormant_multibuyers_60_120.csv"; dormant.to_csv(p, index=False); outputs.append(str(p))
 
-    top_sku = g.groupby("lineitem_any")["net_sales"].sum().sort_values(ascending=False).head(1)
-    sku_name = top_sku.index[0] if len(top_sku)>0 else "unknown"
-    top_buyers = g[g["lineitem_any"]==sku_name][["customer_id"]].drop_duplicates()
+    # Bestseller amplify: prefer g_items (per-customer×per-product), fallback to lineitem_any
+    try:
+        gi = build_g_items(g)
+        if gi is not None and not gi.empty:
+            # choose top product by total orders across customers
+            prod_rank = gi.groupby('product_key')['orders_product'].sum().sort_values(ascending=False)
+            top_prod = str(prod_rank.index[0]) if len(prod_rank) > 0 else None
+            if top_prod:
+                buyers = gi[gi['product_key'].astype(str) == top_prod][['customer_id']].drop_duplicates()
+                top_buyers = buyers.copy()
+            else:
+                top_buyers = pd.DataFrame(columns=['customer_id'])
+        else:
+            raise ValueError('g_items empty')
+    except Exception:
+        top_sku = g.groupby("lineitem_any")["net_sales"].sum().sort_values(ascending=False).head(1)
+        sku_name = top_sku.index[0] if len(top_sku)>0 else "unknown"
+        top_buyers = g[g["lineitem_any"]==sku_name][["customer_id"]].drop_duplicates()
     top_buyers["segment"]="bestseller_amplify"; top_buyers["segment_n"]=len(top_buyers)
     top_buyers["baseline_rate"]=g["units_per_order"].mean(); top_buyers["gross_margin"]=gross_margin
     p = Path(out_dir)/"segment_bestseller_amplify.csv"; top_buyers.to_csv(p, index=False); outputs.append(str(p))
@@ -44,18 +60,24 @@ def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str, cfg: Dict
         maxd = pd.to_datetime(g["Created at"]).max()
         start90 = maxd - pd.Timedelta(days=90)
         gg = g[g["Created at"] >= start90].copy()
-        if "lineitem_any" in gg.columns:
-            rep = (
-                gg.groupby(["customer_id", "lineitem_any"])['Name']
-                  .nunique()
-                  .reset_index(name='orders_product')
-            )
+        rep = build_g_items(gg)
+        if rep is not None and not rep.empty:
+            # Choose product column: prefer base when normalization is enabled
+            prod_col = 'product_key'
+            try:
+                from .utils import get_config
+                # cfg is passed in; still guard for presence
+                if (cfg or {}).get('FEATURES_PRODUCT_NORMALIZATION') and 'product_key_base' in rep.columns:
+                    prod_col = 'product_key_base'
+            except Exception:
+                pass
             # Per-product threshold using vertical + product detection
-            rep["_thr"] = rep["lineitem_any"].astype(str).apply(lambda s: subscription_threshold_for_product(s, cfg))
+            rep["_thr"] = rep[prod_col].astype(str).apply(lambda s: subscription_threshold_for_product(s, cfg))
             cohort = rep[rep['orders_product'] >= rep["_thr"]]
             sub_seg = cohort[["customer_id"]].drop_duplicates()
-            sub_seg["segment"] = "subscription_nudge"
-            p = Path(out_dir)/"segment_subscription_nudge.csv"; sub_seg.to_csv(p, index=False); outputs.append(str(p))
+            if not sub_seg.empty:
+                sub_seg["segment"] = "subscription_nudge"
+                p = Path(out_dir)/"segment_subscription_nudge.csv"; sub_seg.to_csv(p, index=False); outputs.append(str(p))
     except Exception:
         pass
 
@@ -131,11 +153,19 @@ def build_segments(g: pd.DataFrame, gross_margin: float, out_dir: str, cfg: Dict
         if cand_ids:
             gl = g[(g["Created at"] >= lookback_start)].copy()
             gl["customer_id"] = gl["customer_id"].astype(str)
-            if "lineitem_any" in gl.columns:
-                k = gl.groupby("customer_id")["lineitem_any"].nunique()
-                single_prod_ids = set(k[k <= 1].index)
-            else:
-                single_prod_ids = set()
+            try:
+                gi2 = build_g_items(gl)
+                if gi2 is not None and not gi2.empty:
+                    k = gi2.groupby("customer_id")["product_key"].nunique()
+                    single_prod_ids = set(k[k <= 1].index)
+                else:
+                    raise ValueError('g_items empty')
+            except Exception:
+                if "lineitem_any" in gl.columns:
+                    k = gl.groupby("customer_id")["lineitem_any"].nunique()
+                    single_prod_ids = set(k[k <= 1].index)
+                else:
+                    single_prod_ids = set()
             targets = list(cand_ids.intersection(single_prod_ids))
             if targets:
                 df_rb = pd.DataFrame({"customer_id": targets}); df_rb["segment"] = "routine_builder"
