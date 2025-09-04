@@ -455,7 +455,7 @@ class MetricConsistencyCheck(ValidationCheck):
                     warnings.append(f"AOV ${aov:.2f} unusually high - verify not B2B")
             
             # Repeat rate sanity (prefer explicit within-window metric)
-            repeat_rate = l28.get('repeat_rate_within_window', l28.get('repeat_share'))
+            repeat_rate = l28.get('repeat_rate_within_window')
             if repeat_rate is not None:
                 if repeat_rate > 0.8:
                     warnings.append(f"Repeat rate {repeat_rate:.0%} unusually high - verify calculation")

@@ -937,21 +937,14 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             "repeat_rate_within_window": _rel_delta(rrw1, rrw0),
             "returning_customer_share":  _rel_delta(rcs1, rcs0),
             "new_customer_rate":         _rel_delta(ncr1, ncr0),
-            # Back-compat aliases
-            "repeat_share":  _rel_delta(rrw1, rrw0),
-            "repeat_rate":   _rel_delta(rrw1, rrw0),
-            "returning_rate": _rel_delta(rcs1, rcs0),
         }
 
         # significance testing on ACTUAL values
         p = {
             "aov": None, "discount_rate": None,
-            # New metric keys
             "repeat_rate_within_window": None,
             "returning_customer_share": None,
             "new_customer_rate": None,
-            # Back-compat aliases
-            "repeat_share": None, "repeat_rate": None, "returning_rate": None
         }
         
         # AOV: Welch t on per-order net values
@@ -1004,8 +997,6 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             pr_rep = two_proportion_test(x1,n1,x0,n0)
             pval_rep = float(pr_rep.p_value)
             p["repeat_rate_within_window"] = pval_rep
-            p["repeat_rate"] = pval_rep
-            p["repeat_share"] = pval_rep
         # Returning rate: two-proportion on identified customers
         if ret1 is not None and ret0 is not None and id1>=min_identified and id0>=min_identified:
             x1r = int(round(ret1*id1)); n1r = id1
@@ -1013,7 +1004,6 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             pr_ret = two_proportion_test(x1r,n1r,x0r,n0r)
             pval_ret = float(pr_ret.p_value)
             p["returning_customer_share"] = pval_ret
-            p["returning_rate"] = pval_ret
             # new_customer_rate is 1 - returning; mirror p-value
             p["new_customer_rate"] = pval_ret
 
@@ -1054,10 +1044,6 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             "repeat_rate_within_window": rrw1,
             "returning_customer_share": rcs1,
             "new_customer_rate": ncr1,
-            # Back-compat aliases
-            "repeat_share": rrw1,
-            "repeat_rate": rrw1,
-            "returning_rate": rcs1,
             "prior": {
                 "net_sales": None if np.isnan(ns0) else float(ns0),
                 "orders": o0,
@@ -1067,10 +1053,6 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
                 "repeat_rate_within_window": rrw0,
                 "returning_customer_share": rcs0,
                 "new_customer_rate": ncr0,
-                # Back-compat aliases
-                "repeat_share": rrw0,
-                "repeat_rate": rrw0,
-                "returning_rate": rcs0,
             },
             "delta": delta,
             "p": p,

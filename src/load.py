@@ -486,8 +486,14 @@ def compute_inventory_metrics(inventory_df: pd.DataFrame, orders_df: pd.DataFram
                             pd.to_numeric(inv['incoming'], errors='coerce').fillna(0) -
                             pd.to_numeric(inv['safety_stock'], errors='coerce').fillna(0))
     inv['available_net'] = inv['available_net'].clip(lower=0)
+    # Treat zero velocity as unknown coverage (NaN) rather than infinite cover
     inv['cover_days'] = inv['available_net'] / inv['daily_velocity'].replace(0, np.nan)
-    inv['cover_days'] = inv['cover_days'].fillna(np.inf)
+    # If velocity is zero/undefined, treat coverage as 0 days (unknown/at risk), not infinite
+    try:
+        mask_zero_vel = ~np.isfinite(inv['daily_velocity']) | (inv['daily_velocity'] <= 0)
+        inv.loc[mask_zero_vel, 'cover_days'] = 0.0
+    except Exception:
+        pass
     # trust factor by age
     inv['trust_factor'] = (1.0 - (inv['age_days'] / 14.0)).clip(lower=0.5, upper=1.0)
     # reorder warnings

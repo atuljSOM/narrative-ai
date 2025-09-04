@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import Dict, Any, List
 from pathlib import Path
 import numpy as np, pandas as pd, json
-from .policy import load_policy, is_eligible
 import datetime
 from enum import Enum
 
@@ -12,7 +11,6 @@ from .stats import (
     welch_t_test,            # p-value only
     benjamini_hochberg,      # returns q-values list
     required_n_for_proportion,
-    needed_n_for_proportion_delta,
 )
 from .scoring import (
     compute_score,
@@ -263,44 +261,7 @@ class ActionTracker:
         
         return pending
     
-    def generate_weekly_performance_report(self) -> str:
-        """Generate a markdown report of prediction performance."""
-        summary = self.get_performance_summary()
-        pending = self.get_pending_actions()
-        
-        report = f"""# Aura Prediction Performance Report
-Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}
-
-## Overall Accuracy
-- **Actions Completed**: {summary['n_completed']}
-- **Aggregate Accuracy**: {summary['aggregate_accuracy_pct']}%
-- **Median Accuracy**: {summary.get('median_accuracy_pct', 'N/A')}%
-
-## Revenue Impact
-- **Total Predicted**: ${summary['total_predicted_revenue']:,.2f}
-- **Total Actual**: ${summary['total_actual_revenue']:,.2f}
-- **Variance**: ${summary['total_actual_revenue'] - summary['total_predicted_revenue']:+,.2f}
-
-## Prediction Quality
-- **Over-performed (>110%)**: {summary['actions_over_performed']} actions
-- **On Target (90-110%)**: {summary['actions_on_target']} actions  
-- **Under-performed (<90%)**: {summary['actions_under_performed']} actions
-
-## Pending Actions
-"""
-        
-        if pending:
-            report += f"**{len(pending)} actions awaiting results:**\n\n"
-            for p in pending[:5]:  # Show top 5
-                status_emoji = "⏳" if p["status"] == ActionStatus.PENDING.value else "🚀"
-                overdue = " ⚠️ OVERDUE" if p.get("is_overdue") else ""
-                report += f"- {status_emoji} {p['play_id']} (Day {p['days_waiting']}){overdue}\n"
-        else:
-            report += "*No pending actions*\n"
-        
-        report += "\n---\n*Use these insights to calibrate future predictions*"
-        
-        return report
+    ## Removed weekly performance report generation (no longer used)
     
     def _load_outcomes(self) -> Dict[str, Dict[str, Any]]:
         """Load action outcomes from disk."""
@@ -525,8 +486,10 @@ def _select_actions_impl(
                         return [str(x) for x in rank.head(3).index.tolist()]
                 except Exception:
                     pass
-                col = 'sku' if 'sku' in inv_df.columns else 'lineitem_any'
-                return top_n_from(col, 3)
+                # Choose a column that exists in gg (orders frame)
+                if 'sku' in gg.columns:
+                    return top_n_from('sku', 3)
+                return top_n_from('lineitem_any', 3)
             if 'subscription_nudge' in play_id:
                 start90 = maxd - pd.Timedelta(days=90)
                 ww = g[g['Created at'] >= start90].copy()
@@ -570,6 +533,9 @@ def _select_actions_impl(
         if not skus:
             return
         rows = inv_df[inv_df['sku'].astype(str).isin([str(s) for s in skus])].copy()
+        if rows.empty and 'product' in inv_df.columns:
+            # Fallback: match by product title if SKUs are not available in orders
+            rows = inv_df[inv_df['product'].astype(str).isin([str(s) for s in skus])].copy()
         if rows.empty:
             return
         available_cap = float(rows.get('available_net', pd.Series(dtype=float)).sum())
@@ -835,6 +801,95 @@ def _select_actions_impl(
                     best_by_play[pid] = p
         out['pilot_actions'] = list(best_by_play.values())
 
+    # MVP Guardrails: Channel caps and hard conflicts (applied before overlap adjustment)
+    policy_notes: list[str] = []
+
+    def _parse_caps(val) -> dict:
+        if not val:
+            return {}
+        if isinstance(val, dict):
+            return {str(k).lower(): int(v) for k, v in val.items() if v is not None}
+        try:
+            data = json.loads(str(val))
+            if isinstance(data, dict):
+                return {str(k).lower(): int(v) for k, v in data.items() if v is not None}
+        except Exception:
+            pass
+        return {}
+
+    def _parse_conflicts(val) -> set[tuple[str, str]]:
+        pairs: set[tuple[str, str]] = set()
+        if not val:
+            return pairs
+        items = None
+        if isinstance(val, (list, tuple)):
+            items = val
+        else:
+            try:
+                data = json.loads(str(val))
+                if isinstance(data, list):
+                    items = data
+            except Exception:
+                pass
+        if items is None:
+            items = [x.strip() for x in str(val).split(',') if '->' in x]
+        for it in items:
+            try:
+                if isinstance(it, str) and '->' in it:
+                    a, b = it.split('->', 1)
+                    pairs.add((a.strip().lower(), b.strip().lower()))
+            except Exception:
+                continue
+        return pairs
+
+    channel_caps = _parse_caps(cfg.get('CHANNEL_CAPS'))
+    if channel_caps:
+        kept: list[dict] = []
+        demoted: list[dict] = []
+        used: dict[str, int] = {k: 0 for k in channel_caps.keys()}
+        for a in out.get("actions", []):
+            ch = a.get('channels') or []
+            if isinstance(ch, dict):
+                ch = [k for k, v in ch.items() if v]
+            ch = [str(x).lower() for x in ch] if isinstance(ch, (list, tuple)) else []
+            exceeds = any((used.get(c, 0) >= int(channel_caps.get(c, 999))) for c in ch)
+            if exceeds:
+                a.setdefault('notes', []).append('Demoted due to channel caps')
+                demoted.append(a)
+            else:
+                for c in ch:
+                    if c in channel_caps:
+                        used[c] = used.get(c, 0) + 1
+                kept.append(a)
+        if demoted:
+            policy_notes.append(f"Channel caps applied; demoted {len(demoted)} actions")
+        out["actions"] = kept
+        for a in demoted:
+            out["backlog"].append({**a, "reason": "channel_cap"})
+
+    conflict_pairs = _parse_conflicts(cfg.get('CONFLICT_PAIRS'))
+    if conflict_pairs:
+        by_pid: dict[str, dict] = {str(a.get('play_id')).lower(): a for a in out.get("actions", [])}
+        to_demote: set[str] = set()
+        for a, b in conflict_pairs:
+            if a in by_pid and b in by_pid:
+                x, y = by_pid[a], by_pid[b]
+                ax = float(x.get('score', 0) or 0.0)
+                ay = float(y.get('score', 0) or 0.0)
+                loser = a if ax < ay else b
+                to_demote.add(loser)
+        if to_demote:
+            new_actions = []
+            for act in out.get("actions", []):
+                pid = str(act.get('play_id')).lower()
+                if pid in to_demote:
+                    act.setdefault('notes', []).append('Demoted due to conflict pair')
+                    out["backlog"].append({**act, "reason": "conflict"})
+                else:
+                    new_actions.append(act)
+            policy_notes.append(f"Conflicts enforced; demoted {len(to_demote)} actions")
+            out["actions"] = new_actions
+
     # Audience overlap adjustment for Top Actions (conservative)
     try:
         segments_dir = Path(receipts_dir).parent / "segments"
@@ -858,11 +913,16 @@ def _select_actions_impl(
             except Exception:
                 return set()
 
-        for idx, a in enumerate(out["actions"]):
+        overlap_max_ratio = float(cfg.get('OVERLAP_MAX_RATIO', 0.6) or 0.6)
+        min_unique_audience = int(cfg.get('MIN_UNIQUE_AUDIENCE', 500) or 500)
+        demote_high_overlap: list[dict] = []
+        kept_actions: list[dict] = []
+        for idx, a in enumerate(out.get("actions", [])):
             att = a.get("attachment")
             aud = _load_segment_customers(att)
             total = len(aud)
             if total == 0:
+                kept_actions.append(a)
                 continue
             overlap_n = len(aud & seen_customers)
             overlap_ratio = (overlap_n / total) if total > 0 else 0.0
@@ -872,7 +932,17 @@ def _select_actions_impl(
                 a["expected_$"] = round(exp1, 2)
                 a["audience_size_effective"] = total - overlap_n
                 a["overlap_with_prior"] = round(overlap_ratio, 3)
-            seen_customers |= aud
+            if (overlap_ratio >= overlap_max_ratio) and ((total - overlap_n) < min_unique_audience):
+                a.setdefault('notes', []).append('Demoted due to high audience overlap')
+                demote_high_overlap.append(a)
+            else:
+                kept_actions.append(a)
+                seen_customers |= aud
+        if demote_high_overlap:
+            policy_notes.append(f"High-overlap demotions: {len(demote_high_overlap)}")
+            for a in demote_high_overlap:
+                out["watchlist"].append({**a, "reason": "high_overlap"})
+        out["actions"] = kept_actions
     except Exception:
         pass
 
@@ -909,6 +979,7 @@ def _select_actions_impl(
         debug = {
             "window_days": int(aligned.get("window_days") or 28),
             "confidence_mode": mode,
+            "policy_notes": policy_notes,
             "counts": {
                 "base_candidates": int(len(final)),
                 "variants": int(len(finals_for_selection)),
@@ -996,10 +1067,7 @@ def track_action_results(
         notes=notes
     )
 
-def get_weekly_performance_report(receipts_dir: str) -> str:
-    """Generate performance report for the weekly briefing."""
-    tracker = ActionTracker(receipts_dir)
-    return tracker.generate_weekly_performance_report()
+## Removed deprecated weekly performance report helper
 
 def _weeks_since_used(
     log: list[dict],
@@ -1839,8 +1907,15 @@ def _normalize_aligned(aligned: dict, cfg: dict) -> dict:
         'prior_end': str(pe.date()) if pe is not None else None,
         'recent_n': int(block.get('orders') or 0),
         'prior_n': int(prior.get('orders') or 0),
-        'recent_repeat_rate': float(block.get('repeat_rate') or 0.0) if block.get('repeat_rate') is not None else 0.0,
-        'prior_repeat_rate': float(prior.get('repeat_rate') or 0.0) if prior.get('repeat_rate') is not None else 0.0,
+        # Prefer new metric keys; fallback to legacy aliases for safety during migration
+        'recent_repeat_rate': float(
+            (block.get('repeat_rate_within_window') if block.get('repeat_rate_within_window') is not None else block.get('repeat_rate'))
+            or 0.0
+        ),
+        'prior_repeat_rate': float(
+            (prior.get('repeat_rate_within_window') if prior.get('repeat_rate_within_window') is not None else prior.get('repeat_rate'))
+            or 0.0
+        ),
         'recent_aov': float(block.get('aov') or 0.0) if block.get('aov') is not None else 0.0,
         'prior_aov': float(prior.get('aov') or 0.0) if prior.get('aov') is not None else 0.0,
         'recent_discount_rate': float(block.get('discount_rate') or 0.0) if block.get('discount_rate') is not None else 0.0,
@@ -1872,24 +1947,7 @@ def write_actions_log(receipts_dir: str, actions: list[dict]) -> None:
         })
     write_json(str(log_path), log)
 
-def tipover_for_financial(shortfall: float, segment_size: int, baseline_rate: float, gross_margin: float) -> dict:
-    """
-    Given a $ shortfall to the financial floor, estimate how many additional reachable
-    customers you need to clear the floor, using baseline conversion and GM.
-    Returns a dict with the missing dollars and an order-of-magnitude customer count.
-    """
-    br = max(float(baseline_rate), 1e-9)
-    gm = max(float(gross_margin),  1e-9)
-    add_customers = int(np.ceil(float(shortfall) / (br * gm)))
-    return {"needed_$": round(float(shortfall), 2), "add_customers≈": max(add_customers, 0)}
-
-def tipover_for_significance(p_base: float, current_n: int, alpha: float, power: float, target_delta: float) -> dict:
-    """
-    For a two-proportion test, compute additional per-group N needed to detect target_delta (absolute)
-    at the given alpha/power. Returns 0 if current_n already meets/exceeds the requirement.
-    """
-    need_n = int(needed_n_for_proportion_delta(float(p_base), float(target_delta), float(alpha), float(power)))
-    return {"needed_n_per_group": max(0, need_n - int(current_n))}
+## Removed unused tipover helpers (financial/significance) — never referenced
 
 # --- Evidence builder (drop-in) --- #
 def _pct(x, digits=1):
@@ -1936,12 +1994,11 @@ def _receipt_discount_hygiene(al, a):
     return " ".join(msg)
 
 def _receipt_winback(al, a):
-    # Prefer new explicit key, fallback to legacy alias
-    rr1 = _safe_get(al, ["L28","repeat_rate_within_window"]) or _safe_get(al, ["L28","repeat_share"])
-    rr0 = _safe_get(al, ["L28","prior","repeat_rate_within_window"]) or _safe_get(al, ["L28","prior","repeat_share"])
-    drr = _safe_get(al, ["L28","delta","repeat_rate_within_window"]) or _safe_get(al, ["L28","delta","repeat_share"])
-    p   = _safe_get(al, ["L28","p","repeat_rate_within_window"]) or _safe_get(al, ["L28","p","repeat_share"])
-    sig = _safe_get(al, ["L28","sig","repeat_rate_within_window"]) or _safe_get(al, ["L28","sig","repeat_share"])
+    rr1 = _safe_get(al, ["L28","repeat_rate_within_window"]) 
+    rr0 = _safe_get(al, ["L28","prior","repeat_rate_within_window"]) 
+    drr = _safe_get(al, ["L28","delta","repeat_rate_within_window"]) 
+    p   = _safe_get(al, ["L28","p","repeat_rate_within_window"]) 
+    sig = _safe_get(al, ["L28","sig","repeat_rate_within_window"]) 
     idn = _safe_get(al, ["L28","meta","identified_recent"], 0)
     est = _money(a.get("expected_$"))
     parts = []
@@ -1964,8 +2021,8 @@ def _receipt_bestseller(al, a):
     return " ".join(msg)
 
 def _receipt_dormant(al, a):
-    rr0 = _safe_get(al, ["L28","prior","repeat_rate_within_window"]) or _safe_get(al, ["L28","prior","repeat_share"])
-    rr1 = _safe_get(al, ["L28","repeat_rate_within_window"]) or _safe_get(al, ["L28","repeat_share"])
+    rr0 = _safe_get(al, ["L28","prior","repeat_rate_within_window"]) 
+    rr1 = _safe_get(al, ["L28","repeat_rate_within_window"]) 
     est = _money(a.get("expected_$"))
     msg = []
     if rr1 is not None and rr0 is not None:
