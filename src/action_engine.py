@@ -1807,12 +1807,55 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
 
     
 
+def _normalize_aligned(aligned: dict, cfg: dict) -> dict:
+    """Accept nested KPI snapshot {L7:{...}, L28:{...}} or flat aligned, return flat structure.
+    Chooses window from cfg['CHOSEN_WINDOW'] (default L28).
+    """
+    if aligned is None:
+        return {}
+    # If already flat, return as-is
+    if 'window_days' in aligned and 'recent_n' in aligned:
+        return aligned
+    # If nested, flatten according to chosen window
+    lbl = 'L7' if str((cfg or {}).get('CHOSEN_WINDOW', 'L28')).upper() == 'L7' else 'L28'
+    block = (aligned.get(lbl) or {})
+    prior = (block.get('prior') or {})
+    days = 7 if lbl == 'L7' else 28
+    anchor = aligned.get('anchor')
+    # Compute bounds from anchor for completeness
+    rs = re = ps = pe = None
+    try:
+        if anchor is not None:
+            anchor_ts = pd.Timestamp(anchor)
+            re = anchor_ts.normalize() + pd.Timedelta(hours=23, minutes=59, seconds=59)
+            rs = re.normalize() - pd.Timedelta(days=days - 1)
+            pe = rs - pd.Timedelta(seconds=1)
+            ps = pe.normalize() - pd.Timedelta(days=days - 1)
+    except Exception:
+        pass
+    return {
+        'window_days': days,
+        'recent_start': str(rs.date()) if rs is not None else None,
+        'recent_end': str(re.date()) if re is not None else None,
+        'prior_start': str(ps.date()) if ps is not None else None,
+        'prior_end': str(pe.date()) if pe is not None else None,
+        'recent_n': int(block.get('orders') or 0),
+        'prior_n': int(prior.get('orders') or 0),
+        'recent_repeat_rate': float(block.get('repeat_rate') or 0.0) if block.get('repeat_rate') is not None else 0.0,
+        'prior_repeat_rate': float(prior.get('repeat_rate') or 0.0) if prior.get('repeat_rate') is not None else 0.0,
+        'recent_aov': float(block.get('aov') or 0.0) if block.get('aov') is not None else 0.0,
+        'prior_aov': float(prior.get('aov') or 0.0) if prior.get('aov') is not None else 0.0,
+        'recent_discount_rate': float(block.get('discount_rate') or 0.0) if block.get('discount_rate') is not None else 0.0,
+        'prior_discount_rate': float(prior.get('discount_rate') or 0.0) if prior.get('discount_rate') is not None else 0.0,
+        'anchor': anchor,
+    }
+
+
 def select_actions(g, aligned, cfg, playbooks_path: str, receipts_dir: str, policy_path: str | None = None,
                    inventory_metrics: pd.DataFrame | None = None) -> Dict[str, Any]:
-    """Wrapper to maintain a single exported select_actions symbol.
-    Delegates to the primary implementation that supports inventory-aware logic.
-    """
-    return _select_actions_impl(g, aligned, cfg, playbooks_path, receipts_dir, policy_path, inventory_metrics)
+    """Public entry: normalize aligned input then delegate to core implementation."""
+    aligned_norm = _normalize_aligned(aligned, cfg or {})
+    return _select_actions_impl(g, aligned_norm, cfg, playbooks_path, receipts_dir, policy_path, inventory_metrics)
 
     # LTV signal (non-blocking): compute once
     ltv_info = compute_repeat_curve(g, horizon_days=[60, 90]) if g is not None else {"store": {}, "per_customer": []}

@@ -35,6 +35,186 @@ from .copykit import render_copy_for_actions
 from .validation import DataValidationEngine  # NEW IMPORT
 
 
+def debug_dataframe_consistency(df, g, aligned, df_for_charts=None, receipts_dir="receipts"):
+    """Debug dataframe inconsistencies that cause erroneous results"""
+    import json as _json
+    from pathlib import Path as _Path
+    import pandas as _pd
+    debug_report = {}
+
+    print("🔍 DATAFRAME CONSISTENCY DEBUG")
+    print("=" * 50)
+
+    # 1. Basic shape comparison
+    debug_report['shapes'] = {
+        'df_raw_rows': len(df),
+        'g_features_rows': len(g),
+        'df_charts_rows': len(df_for_charts) if df_for_charts is not None else None
+    }
+    print(f"📊 Shapes: df={len(df)}, g={len(g)}, charts={len(df_for_charts) if df_for_charts is not None else 'None'}")
+
+    # 2. Date range comparison
+    try:
+        df_dates = _pd.to_datetime(df['Created at'], errors='coerce')
+        g_dates = _pd.to_datetime(g['Created at'], errors='coerce') if 'Created at' in g.columns else _pd.Series([], dtype='datetime64[ns]')
+
+        debug_report['date_ranges'] = {
+            'df_min': df_dates.min(),
+            'df_max': df_dates.max(),
+            'g_min': g_dates.min() if len(g_dates) else None,
+            'g_max': g_dates.max() if len(g_dates) else None,
+            'anchor': aligned.get('anchor')
+        }
+
+        print(f"📅 Date ranges:")
+        print(f"   df: {df_dates.min()} to {df_dates.max()}")
+        print(f"   g:  {g_dates.min() if len(g_dates) else None} to {g_dates.max() if len(g_dates) else None}")
+        print(f"   anchor: {aligned.get('anchor')}")
+
+        # Check for date misalignment
+        try:
+            if len(g_dates) and abs((df_dates.max() - g_dates.max()).days) > 0:
+                print("⚠️  DATE MISMATCH between df and g!")
+        except Exception:
+            pass
+    except Exception as e:
+        print(f"❌ Date comparison failed: {e}")
+
+    # 3. Customer identity comparison
+    try:
+        from .utils import standardize_customer_key
+
+        df_customers = standardize_customer_key(df).dropna().unique()
+        g_customers = g['customer_id'].dropna().unique() if 'customer_id' in g.columns else []
+
+        debug_report['customers'] = {
+            'df_unique': int(len(df_customers)),
+            'g_unique': int(len(g_customers)),
+            'overlap': int(len(set(df_customers) & set(g_customers))) if len(g_customers) > 0 else 0
+        }
+
+        print(f"👥 Customer counts: df={len(df_customers)}, g={len(g_customers)}")
+        if len(g_customers) > 0 and len(df_customers) > 0:
+            overlap = len(set(df_customers) & set(g_customers))
+            print(f"   Overlap: {overlap} ({overlap/len(df_customers)*100:.1f}%)")
+
+            if overlap < len(df_customers) * 0.9:
+                print("⚠️  CUSTOMER MISMATCH: <90% overlap between df and g!")
+
+    except Exception as e:
+        print(f"❌ Customer comparison failed: {e}")
+
+    # 4. Revenue calculation comparison
+    try:
+        def _money(s):
+            return _pd.to_numeric(s, errors='coerce')
+
+        # Method 1: Subtotal - Discount (order level)
+        if all(c in df.columns for c in ['Subtotal', 'Total Discount', 'Name']):
+            df_dedup = df.drop_duplicates(subset=['Name'])
+            rev1 = (_money(df_dedup['Subtotal']) - _money(df_dedup['Total Discount'])).sum()
+        else:
+            rev1 = None
+
+        # Method 2: From g features
+        rev2 = g['net_sales'].sum() if 'net_sales' in g.columns else None
+
+        # Method 3: L28 from aligned
+        rev3 = (aligned.get('L28', {}) or {}).get('net_sales')
+
+        debug_report['revenue_methods'] = {
+            'subtotal_minus_discount': float(rev1) if rev1 is not None else None,
+            'g_net_sales': float(rev2) if rev2 is not None else None,
+            'aligned_l28': float(rev3) if rev3 is not None else None
+        }
+
+        print("💰 Revenue comparison:")
+        print(f"   Subtotal-Discount: ${rev1:,.0f}" if rev1 is not None else "   Subtotal-Discount: None")
+        print(f"   G net_sales: ${rev2:,.0f}" if rev2 is not None else "   G net_sales: None")
+        print(f"   Aligned L28: ${rev3:,.0f}" if rev3 is not None else "   Aligned L28: None")
+
+        # Check for major discrepancies
+        revenues = [r for r in [rev1, rev2, rev3] if r is not None]
+        if len(revenues) > 1:
+            max_rev, min_rev = max(revenues), min(revenues)
+            if max_rev > 0 and (max_rev - min_rev) / max_rev > 0.1:
+                print("⚠️  REVENUE MISMATCH: >10% difference between calculation methods!")
+
+    except Exception as e:
+        print(f"❌ Revenue comparison failed: {e}")
+
+    # 5. Order count comparison
+    try:
+        df_orders = df['Name'].nunique() if 'Name' in df.columns else len(df)
+        g_orders = g['Name'].nunique() if 'Name' in g.columns else len(g)
+        aligned_orders = (aligned.get('L28', {}) or {}).get('orders')
+
+        debug_report['order_counts'] = {
+            'df_unique_orders': int(df_orders),
+            'g_unique_orders': int(g_orders),
+            'aligned_l28_orders': int(aligned_orders) if aligned_orders is not None else None
+        }
+
+        print("📦 Order counts:")
+        print(f"   df unique: {df_orders}")
+        print(f"   g unique: {g_orders}")
+        print(f"   aligned L28: {aligned_orders}")
+
+        if abs(df_orders - g_orders) > df_orders * 0.05:
+            print("⚠️  ORDER COUNT MISMATCH: >5% difference between df and g!")
+
+    except Exception as e:
+        print(f"❌ Order count comparison failed: {e}")
+
+    # 6. Window alignment check
+    try:
+        anchor = aligned.get('anchor')
+        if anchor:
+            anchor = _pd.Timestamp(anchor)
+            l28_window_days = (aligned.get('L28', {}) or {}).get('window_days', 28)
+
+            # Expected L28 range
+            l28_end = anchor.normalize() + _pd.Timedelta(hours=23, minutes=59, seconds=59)
+            l28_start = l28_end.normalize() - _pd.Timedelta(days=l28_window_days - 1)
+
+            # Count orders in expected L28 window
+            df_in_window = df[
+                (_pd.to_datetime(df['Created at'], errors='coerce') >= l28_start) &
+                (_pd.to_datetime(df['Created at'], errors='coerce') <= l28_end)
+            ]
+            window_orders = df_in_window['Name'].nunique() if 'Name' in df_in_window.columns else len(df_in_window)
+
+            debug_report['window_check'] = {
+                'l28_start': str(l28_start),
+                'l28_end': str(l28_end),
+                'expected_orders': int(window_orders),
+                'aligned_orders': int(aligned.get('L28', {}).get('orders')) if (aligned.get('L28', {}) or {}).get('orders') is not None else None
+            }
+
+            print(f"🎯 L28 Window: {l28_start.date()} to {l28_end.date()}")
+            print(f"   Orders in window: {window_orders}")
+            print(f"   Aligned reports: {aligned.get('L28', {}).get('orders')}")
+
+            try:
+                ao = (aligned.get('L28', {}) or {}).get('orders')
+                if ao and abs(window_orders - ao) > max(window_orders, ao) * 0.1:
+                    print("⚠️  WINDOW MISMATCH: Aligned L28 doesn't match expected window!")
+            except Exception:
+                pass
+
+    except Exception as e:
+        print(f"❌ Window check failed: {e}")
+
+    # Save debug report
+    debug_path = _Path(receipts_dir) / "dataframe_debug.json"
+    with open(debug_path, 'w') as f:
+        _json.dump(debug_report, f, indent=2, default=str)
+
+    print(f"\n📋 Debug report saved to: {debug_path}")
+
+    return debug_report
+
+
 def run(csv_path: str, brand: str, out_dir: str, inventory_path: str | None = None, order_items_path: str | None = None) -> None:
     cfg = get_config()
 
@@ -110,8 +290,8 @@ def run(csv_path: str, brand: str, out_dir: str, inventory_path: str | None = No
         print(f"[warn] FeatureContract enrichment skipped: {e}")
     g = compute_features(df)
 
-    # summary used by charts
-    aligned = aligned_periods_summary(g, min_window_n=max(cfg.get("MIN_N_WINBACK", 150), 300))
+    # NOTE: We standardize on a single canonical orders frame (df) for KPIs and engine.
+    # Features (g) are derived 1:1 from df and should not change the row set.
 
     # segments
     seg_dir = Path(out_dir) / "segments"
@@ -119,7 +299,7 @@ def run(csv_path: str, brand: str, out_dir: str, inventory_path: str | None = No
 
     # (charts generation moved to after actions are selected)
 
-    # --- KPI snapshot with deltas (use RAW df)
+    # --- KPI snapshot with deltas (use canonical df)
     aligned_for_template = kpi_snapshot_with_deltas(
         df,
         seasonally_adjust=bool(cfg.get("SEASONAL_ADJUST", False)),
@@ -156,64 +336,28 @@ def run(csv_path: str, brand: str, out_dir: str, inventory_path: str | None = No
 
     # --- actions
     plays = str(Path(Path(__file__).resolve().parent.parent) / "templates" / "playbooks.yml")
-    actions = select_actions(g, aligned, cfg, plays, str(receipts_dir), inventory_metrics=inventory_metrics)
+    # Pass the nested KPI snapshot directly; the engine normalizes internally
+    actions = select_actions(g, aligned_for_template, cfg, plays, str(receipts_dir), inventory_metrics=inventory_metrics)
 
     receipts = build_receipts(aligned_for_template, actions)
 
     # --- Charts (new): generate with feature df and copy near the HTML ---
     chart_out_dir = Path(out_dir) / "charts"
 
-    # Choose data for product charts: prefer items_df when present
-    df_for_charts = None
+    # Charts should read from the same canonical orders frame for consistency
+    df_for_charts = df
+
+    # Run a consistency debug snapshot before charts for easier diagnosis
     try:
-        # Build df_for_charts more robustly
-        if items_df is not None and not items_df.empty:
-            # Start with items_df directly
-            tmp = pd.DataFrame()
-
-            # Use product_id as the primary product identifier
-            if 'product_id' in items_df.columns:
-                tmp['Lineitem name'] = items_df['product_id'].astype(str)
-            elif 'product_title' in items_df.columns:
-                tmp['Lineitem name'] = items_df['product_title'].astype(str)
-            elif 'sku' in items_df.columns:
-                tmp['Lineitem name'] = items_df['sku'].astype(str)
-            else:
-                tmp['Lineitem name'] = 'Unknown Product'
-
-            # Quantity
-            tmp['Lineitem quantity'] = pd.to_numeric(items_df.get('quantity', 1), errors='coerce').fillna(1)
-
-            # Order ID for joining
-            tmp['order_id'] = (items_df.get('order_id', items_df.index).astype(str)
-                               if 'order_id' in items_df.columns else items_df.index.astype(str))
-            # Also expose 'Name' for charts that expect it
-            tmp['Name'] = tmp['order_id']
-
-            # Get timestamps and customer info from orders (only select columns that exist)
-            id_col = 'Name' if 'Name' in orders_denorm.columns else ('order_id' if 'order_id' in orders_denorm.columns else None)
-            base_cols = [c for c in [id_col, 'Created at'] if c is not None and c in orders_denorm.columns]
-            opt_cols = [c for c in ['Customer Email', 'customer_id'] if c in orders_denorm.columns]
-            select_cols = base_cols + opt_cols
-            order_info = orders_denorm[select_cols].copy()
-            if id_col == 'Name':
-                order_info = order_info.rename(columns={'Name': 'order_id'})
-
-            # Merge order info
-            tmp = tmp.merge(order_info, on='order_id', how='left')
-
-            # Ensure Created at is datetime
-            tmp['Created at'] = pd.to_datetime(tmp['Created at'], errors='coerce')
-
-            # Clean up and filter
-            tmp = tmp[tmp['Lineitem name'].astype(str).str.strip() != '']
-            tmp = tmp[tmp['Created at'].notna()]
-
-            df_for_charts = tmp
-        else:
-            df_for_charts = df
-    except Exception:
-        df_for_charts = df
+        debug_dataframe_consistency(
+            df=df,
+            g=g,
+            aligned=aligned_for_template,
+            df_for_charts=df_for_charts,
+            receipts_dir=str(receipts_dir)
+        )
+    except Exception as e:
+        print(f"[warn] dataframe consistency debug failed: {e}")
 
     chart_data = generate_charts(
         g=g,
@@ -329,8 +473,8 @@ def run(csv_path: str, brand: str, out_dir: str, inventory_path: str | None = No
     write_json(str(summary_path), {
         # Use KPI snapshot (customer-based) as primary aligned for run_summary
         "aligned": aligned_for_template,
-        # Keep order-level aligned for reference/debug
-        "aligned_order": aligned,
+        # Keep same aligned structure for engine/briefing reference
+        "aligned_order": aligned_for_template,
         "data_quality": {
             **dq_orders,
             **dq_contract,  # contract’s assessment (superset, safe to merge)
