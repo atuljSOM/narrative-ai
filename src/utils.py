@@ -880,7 +880,7 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         aov1 = float(ns1/o1) if (o1 and not np.isnan(ns1)) else None
         aov0 = float(ns0/o0) if (o0 and not np.isnan(ns0)) else None
 
-        # discount rate: total discount / subtotal (when available)
+        # discount rate: total discount / subtotal (order-level); fallback to line-items (same window)
         def _disc_rate(frame_orders: pd.DataFrame) -> Optional[float]:
             if "Subtotal" in frame_orders.columns:
                 sub = _money(frame_orders["Subtotal"]).sum(skipna=True)
@@ -889,8 +889,34 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
                     return float(disc/(sub+1e-9))
             return None
 
-        dr1 = _disc_rate(rec)
-        dr0 = _disc_rate(pri)
+        def _disc_rate_window(start: pd.Timestamp, end: pd.Timestamp, rec_orders: pd.DataFrame) -> Optional[float]:
+            # Try order-level first
+            val = _disc_rate(rec_orders)
+            if val is not None:
+                return val
+            # Fallback: use line-items restricted to the same window/orders
+            try:
+                if all(c in d_kpi.columns for c in ["Lineitem price","Lineitem quantity"]):
+                    if "Name" in rec_orders.columns and "Name" in d_kpi.columns:
+                        order_names = set(rec_orders["Name"].astype(str))
+                        li = d_kpi[d_kpi["Name"].astype(str).isin(order_names)].copy()
+                    else:
+                        li = d_kpi[(d_kpi["Created at"] >= start) & (d_kpi["Created at"] <= end)].copy()
+                    if li.empty:
+                        return None
+                    li_price = _money(li["Lineitem price"]) if "Lineitem price" in li.columns else pd.Series(dtype=float)
+                    li_qty = pd.to_numeric(li["Lineitem quantity"], errors="coerce") if "Lineitem quantity" in li.columns else pd.Series(dtype=float)
+                    li_disc = _money(li["Lineitem discount"]) if "Lineitem discount" in li.columns else pd.Series(0.0, index=li.index)
+                    denom = (li_price * li_qty).sum(skipna=True)
+                    num = li_disc.sum(skipna=True)
+                    if pd.notna(denom) and denom > 0:
+                        return float(num / (denom + 1e-9))
+            except Exception:
+                return None
+            return None
+
+        dr1 = _disc_rate_window(rs, re, rec)
+        dr0 = _disc_rate_window(ps, pe, pri)
 
         # Customer metrics: repeat within window and returning before window
         def _customer_metrics(frame_orders: pd.DataFrame, window_start: pd.Timestamp) -> Tuple[Optional[float], Optional[float], int]:

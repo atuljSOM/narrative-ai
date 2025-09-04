@@ -494,8 +494,11 @@ def compute_inventory_metrics(inventory_df: pd.DataFrame, orders_df: pd.DataFram
         inv.loc[mask_zero_vel, 'cover_days'] = 0.0
     except Exception:
         pass
-    # trust factor by age
-    inv['trust_factor'] = (1.0 - (inv['age_days'] / 14.0)).clip(lower=0.5, upper=1.0)
+    # trust factor by age: 1.0 when fresh; linearly down to 0.5 at 14 days; floor at 0.5 thereafter
+    try:
+        inv['trust_factor'] = (1.0 - 0.5 * np.minimum(inv['age_days'] / 14.0, 1.0)).clip(lower=0.5, upper=1.0)
+    except Exception:
+        inv['trust_factor'] = 1.0
     # reorder warnings
     inv['below_reorder'] = (inv.get('reorder_point', np.nan) >= 0) & (inv['available'] <= inv.get('reorder_point', np.inf)) & (inv['incoming'] <= 0)
     return inv
