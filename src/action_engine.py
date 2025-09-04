@@ -2304,11 +2304,12 @@ def _receipt_discount_hygiene(al, a):
     return " ".join(msg)
 
 def _receipt_winback(al, a):
-    rr1 = _safe_get(al, ["L28","repeat_share"])
-    rr0 = _safe_get(al, ["L28","prior","repeat_share"])
-    drr = _safe_get(al, ["L28","delta","repeat_share"])
-    p   = _safe_get(al, ["L28","p","repeat_share"])
-    sig = _safe_get(al, ["L28","sig","repeat_share"])
+    # Prefer new explicit key, fallback to legacy alias
+    rr1 = _safe_get(al, ["L28","repeat_rate_within_window"]) or _safe_get(al, ["L28","repeat_share"])
+    rr0 = _safe_get(al, ["L28","prior","repeat_rate_within_window"]) or _safe_get(al, ["L28","prior","repeat_share"])
+    drr = _safe_get(al, ["L28","delta","repeat_rate_within_window"]) or _safe_get(al, ["L28","delta","repeat_share"])
+    p   = _safe_get(al, ["L28","p","repeat_rate_within_window"]) or _safe_get(al, ["L28","p","repeat_share"])
+    sig = _safe_get(al, ["L28","sig","repeat_rate_within_window"]) or _safe_get(al, ["L28","sig","repeat_share"])
     idn = _safe_get(al, ["L28","meta","identified_recent"], 0)
     est = _money(a.get("expected_$"))
     parts = []
@@ -2331,8 +2332,8 @@ def _receipt_bestseller(al, a):
     return " ".join(msg)
 
 def _receipt_dormant(al, a):
-    rr0 = _safe_get(al, ["L28","prior","repeat_share"])
-    rr1 = _safe_get(al, ["L28","repeat_share"])
+    rr0 = _safe_get(al, ["L28","prior","repeat_rate_within_window"]) or _safe_get(al, ["L28","prior","repeat_share"])
+    rr1 = _safe_get(al, ["L28","repeat_rate_within_window"]) or _safe_get(al, ["L28","repeat_share"])
     est = _money(a.get("expected_$"))
     msg = []
     if rr1 is not None and rr0 is not None:

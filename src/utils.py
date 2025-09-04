@@ -862,7 +862,9 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
     FIXED: Seasonal adjustments are now stored in metadata, never override actual metrics.
     
     Values:
-      aligned["L7"]["net_sales"|"orders"|"aov"|"discount_rate"|"repeat_share"]
+      aligned["L7"]["net_sales"|"orders"|"aov"|"discount_rate"|
+                    "repeat_rate_within_window"|"returning_customer_share"|"new_customer_rate"|
+                    "repeat_share" (alias) | "repeat_rate" (alias) | "returning_rate" (alias)]
       aligned["L7"]["prior"][same keys]
       aligned["L7"]["delta"][metric]  -> relative change (e.g., +0.062 = +6.2%)
       aligned["L7"]["p"][metric]      -> p-value where applicable (aov, discount_rate, repeat_share)
@@ -980,33 +982,86 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         o1_actual = int(rec["Name"].nunique()) if "Name" in rec.columns else int(len(rec))
         o0_actual = int(pri["Name"].nunique()) if "Name" in pri.columns else int(len(pri))
 
-        # order-level net sales (prefer order_net; else line items aggregate)
-        def _netsales(frame_orders: pd.DataFrame) -> float:
-            # Primary: per-order net already computed at order level
+        # Canonical net sales + debug of alternative methods
+        def _netsales_debug(frame_orders: pd.DataFrame) -> dict:
+            """
+            Always use the same canonical method for net sales and record which method was used:
+            - Primary: sum of per-order net ("_order_net") which is computed as Subtotal-Discount,
+              falling back to Total-Shipping-Taxes at the per-order level.
+            - Fallback: line-items aggregation restricted to the same orders/time window.
+
+            Returns a dict with keys: value, method, alt (dict of alternative computations).
+            """
+            out: dict = {"value": float("nan"), "method": None, "alt": {}}
+            # Canonical: per-order net if available
             if "_order_net" in frame_orders.columns and frame_orders["_order_net"].notna().any():
-                return float(frame_orders["_order_net"].dropna().sum())
-            # Fallback: aggregate line items per order, restricted to the same orders
-            if all(c in d_kpi.columns for c in ["Lineitem price", "Lineitem quantity"]):
-                if "Name" in frame_orders.columns and "Name" in d_kpi.columns:
-                    order_names = set(frame_orders["Name"].astype(str))
-                    li = d_kpi[d_kpi["Name"].astype(str).isin(order_names)].copy()
-                else:
-                    # last resort: time-range filter
-                    li = d_kpi[(d_kpi["Created at"] >= frame_orders["Created at"].min()) & (d_kpi["Created at"] <= frame_orders["Created at"].max())].copy()
-                li_price = _money(li["Lineitem price"]) if "Lineitem price" in li.columns else pd.Series(dtype=float)
-                li_qty = pd.to_numeric(li["Lineitem quantity"], errors="coerce") if "Lineitem quantity" in li.columns else pd.Series(dtype=float)
-                li_disc = _money(li["Lineitem discount"]) if "Lineitem discount" in li.columns else pd.Series(0.0, index=li.index)
-                li["_line_net"] = (li_price * li_qty) - li_disc
-                if "Name" in li.columns:
-                    per_order = li.groupby("Name")["_line_net"].sum()
-                    return float(per_order.dropna().sum())
-                else:
-                    return float(li["_line_net"].dropna().sum())
-            return float("nan")
+                val = float(frame_orders["_order_net"].dropna().sum())
+                out["value"] = val
+                out["method"] = "order_net"
+            else:
+                # Fallback: aggregate line items per order, restricted to the same orders
+                val = float("nan")
+                if all(c in d_kpi.columns for c in ["Lineitem price", "Lineitem quantity"]):
+                    if "Name" in frame_orders.columns and "Name" in d_kpi.columns:
+                        order_names = set(frame_orders["Name"].astype(str))
+                        li = d_kpi[d_kpi["Name"].astype(str).isin(order_names)].copy()
+                    else:
+                        # last resort: time-range filter
+                        li = d_kpi[(d_kpi["Created at"] >= frame_orders["Created at"].min()) & (d_kpi["Created at"] <= frame_orders["Created at"].max())].copy()
+                    li_price = _money(li["Lineitem price"]) if "Lineitem price" in li.columns else pd.Series(dtype=float)
+                    li_qty = pd.to_numeric(li["Lineitem quantity"], errors="coerce") if "Lineitem quantity" in li.columns else pd.Series(dtype=float)
+                    li_disc = _money(li["Lineitem discount"]) if "Lineitem discount" in li.columns else pd.Series(0.0, index=li.index)
+                    li["_line_net"] = (li_price * li_qty) - li_disc
+                    if "Name" in li.columns:
+                        per_order = li.groupby("Name")["_line_net"].sum()
+                        val = float(per_order.dropna().sum())
+                    else:
+                        val = float(li["_line_net"].dropna().sum())
+                out["value"] = val
+                out["method"] = "line_items"
+
+            # Alternatives for validation/debug
+            try:
+                if "Subtotal" in frame_orders.columns:
+                    sub = _money(frame_orders["Subtotal"]).sum(skipna=True)
+                    disc = _money(frame_orders["Total Discount"]).sum(skipna=True) if "Total Discount" in frame_orders.columns else 0.0
+                    out["alt"]["subtotal_minus_discount"] = float(sub - disc)
+            except Exception:
+                pass
+            try:
+                if "Total" in frame_orders.columns:
+                    tot = _money(frame_orders["Total"]).sum(skipna=True)
+                    ship = _money(frame_orders["Shipping"]).sum(skipna=True) if "Shipping" in frame_orders.columns else 0.0
+                    tax = _money(frame_orders["Taxes"]).sum(skipna=True) if "Taxes" in frame_orders.columns else 0.0
+                    out["alt"]["total_minus_shipping_taxes"] = float(tot - ship - tax)
+            except Exception:
+                pass
+            # Line-items aggregate as explicit alternative if canonical wasn't line_items
+            try:
+                if out.get("method") != "line_items" and all(c in d_kpi.columns for c in ["Lineitem price", "Lineitem quantity"]):
+                    if "Name" in frame_orders.columns and "Name" in d_kpi.columns:
+                        order_names = set(frame_orders["Name"].astype(str))
+                        li = d_kpi[d_kpi["Name"].astype(str).isin(order_names)].copy()
+                    else:
+                        li = d_kpi[(d_kpi["Created at"] >= frame_orders["Created at"].min()) & (d_kpi["Created at"] <= frame_orders["Created at"].max())].copy()
+                    li_price = _money(li["Lineitem price"]) if "Lineitem price" in li.columns else pd.Series(dtype=float)
+                    li_qty = pd.to_numeric(li["Lineitem quantity"], errors="coerce") if "Lineitem quantity" in li.columns else pd.Series(dtype=float)
+                    li_disc = _money(li["Lineitem discount"]) if "Lineitem discount" in li.columns else pd.Series(0.0, index=li.index)
+                    li["_line_net"] = (li_price * li_qty) - li_disc
+                    if "Name" in li.columns:
+                        per_order = li.groupby("Name")["_line_net"].sum()
+                        out["alt"]["line_items_aggregate"] = float(per_order.dropna().sum())
+                    else:
+                        out["alt"]["line_items_aggregate"] = float(li["_line_net"].dropna().sum())
+            except Exception:
+                pass
+            return out
 
         # ACTUAL net sales - what really happened
-        ns1_actual = _netsales(rec)
-        ns0_actual = _netsales(pri)
+        ns1_dbg = _netsales_debug(rec)
+        ns0_dbg = _netsales_debug(pri)
+        ns1_actual = ns1_dbg.get("value", float("nan"))
+        ns0_actual = ns0_dbg.get("value", float("nan"))
 
         # Use ACTUAL values for all calculations
         o1 = o1_actual
@@ -1086,6 +1141,13 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
 
         rep1, ret1, id1 = _customer_metrics(rec, rs)
         rep0, ret0, id0 = _customer_metrics(pri, ps)
+        # New explicit metrics
+        rrw1 = rep1  # repeat rate within window
+        rrw0 = rep0
+        rcs1 = ret1  # returning customer share (pre-window history)
+        rcs0 = ret0
+        ncr1 = (1.0 - rcs1) if (rcs1 is not None) else None
+        ncr0 = (1.0 - rcs0) if (rcs0 is not None) else None
 
         # deltas based on ACTUAL values
         def _rel_delta(x1, x0):
@@ -1099,14 +1161,26 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             "orders":    _rel_delta(o1, o0),
             "aov":       _rel_delta(aov1, aov0),
             "discount_rate": _rel_delta(dr1, dr0),
-            # Back-compat: repeat_share refers to repeat_rate
-            "repeat_share":  _rel_delta(rep1, rep0),
-            "repeat_rate":   _rel_delta(rep1, rep0),
-            "returning_rate": _rel_delta(ret1, ret0),
+            # New metrics
+            "repeat_rate_within_window": _rel_delta(rrw1, rrw0),
+            "returning_customer_share":  _rel_delta(rcs1, rcs0),
+            "new_customer_rate":         _rel_delta(ncr1, ncr0),
+            # Back-compat aliases
+            "repeat_share":  _rel_delta(rrw1, rrw0),
+            "repeat_rate":   _rel_delta(rrw1, rrw0),
+            "returning_rate": _rel_delta(rcs1, rcs0),
         }
 
         # significance testing on ACTUAL values
-        p = {"aov": None, "discount_rate": None, "repeat_share": None, "repeat_rate": None, "returning_rate": None}
+        p = {
+            "aov": None, "discount_rate": None,
+            # New metric keys
+            "repeat_rate_within_window": None,
+            "returning_customer_share": None,
+            "new_customer_rate": None,
+            # Back-compat aliases
+            "repeat_share": None, "repeat_rate": None, "returning_rate": None
+        }
         
         # AOV: Welch t on per-order net values
         a1 = rec["_order_net"].dropna().values if "_order_net" in rec.columns else np.array([])
@@ -1141,14 +1215,20 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             x1 = int(round(rep1*id1)); n1 = id1
             x0 = int(round(rep0*id0)); n0 = id0
             pr_rep = two_proportion_test(x1,n1,x0,n0)
-            p["repeat_rate"] = float(pr_rep.p_value)
-            p["repeat_share"] = float(pr_rep.p_value)  # back-compat alias
+            pval_rep = float(pr_rep.p_value)
+            p["repeat_rate_within_window"] = pval_rep
+            p["repeat_rate"] = pval_rep
+            p["repeat_share"] = pval_rep
         # Returning rate: two-proportion on identified customers
         if ret1 is not None and ret0 is not None and id1>=min_identified and id0>=min_identified:
             x1r = int(round(ret1*id1)); n1r = id1
             x0r = int(round(ret0*id0)); n0r = id0
             pr_ret = two_proportion_test(x1r,n1r,x0r,n0r)
-            p["returning_rate"] = float(pr_ret.p_value)
+            pval_ret = float(pr_ret.p_value)
+            p["returning_customer_share"] = pval_ret
+            p["returning_rate"] = pval_ret
+            # new_customer_rate is 1 - returning; mirror p-value
+            p["new_customer_rate"] = pval_ret
 
         # FDR on available p's
         p_list = []
@@ -1177,23 +1257,33 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             else:
                 sig[k] = (pk is not None and pk <= alpha)
 
+        # Build result body
         result = {
             "net_sales": None if np.isnan(ns1) else float(ns1),
             "orders": o1,
             "aov": aov1,
             "discount_rate": dr1,
-            # Back-compat: repeat_share now equals repeat_rate
-            "repeat_share": rep1,
-            "repeat_rate": rep1,
-            "returning_rate": ret1,
+            # New explicit metrics
+            "repeat_rate_within_window": rrw1,
+            "returning_customer_share": rcs1,
+            "new_customer_rate": ncr1,
+            # Back-compat aliases
+            "repeat_share": rrw1,
+            "repeat_rate": rrw1,
+            "returning_rate": rcs1,
             "prior": {
                 "net_sales": None if np.isnan(ns0) else float(ns0),
                 "orders": o0,
                 "aov": aov0,
                 "discount_rate": dr0,
-                "repeat_share": rep0,
-                "repeat_rate": rep0,
-                "returning_rate": ret0,
+                # New explicit metrics
+                "repeat_rate_within_window": rrw0,
+                "returning_customer_share": rcs0,
+                "new_customer_rate": ncr0,
+                # Back-compat aliases
+                "repeat_share": rrw0,
+                "repeat_rate": rrw0,
+                "returning_rate": rcs0,
             },
             "delta": delta,
             "p": p,
@@ -1204,6 +1294,32 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
                 "identified_prior": id0
             }
         }
+        # Record method used + debug comparisons for transparency
+        try:
+            def _consistency(meta_key_prefix: str, dbg: dict):
+                result.setdefault("meta", {})[f"{meta_key_prefix}_netsales_method"] = dbg.get("method")
+                # compute diffs vs alternatives
+                val = dbg.get("value")
+                alts = dbg.get("alt", {}) or {}
+                diffs = {}
+                for k, v in alts.items():
+                    try:
+                        if v is None or val is None or np.isnan(val):
+                            continue
+                        if val == 0:
+                            continue
+                        diffs[k] = float((val - float(v)) / abs(val))
+                    except Exception:
+                        continue
+                result["meta"][f"{meta_key_prefix}_netsales_alt_diffs"] = diffs
+                # flag if any alternative differs >10%
+                if any(abs(x) > 0.10 for x in diffs.values()):
+                    result["meta"][f"{meta_key_prefix}_netsales_consistency_flag"] = True
+            _consistency("recent", ns1_dbg)
+            _consistency("prior", ns0_dbg)
+        except Exception:
+            # keep snapshot robust even if debug calc fails
+            pass
         
         # Add seasonal expectations as metadata (never overrides actual)
         if seasonal_expected:
@@ -1216,11 +1332,18 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
         "seasonal_adjusted": bool(seasonally_adjust),
         "seasonal_period": int(seasonal_period) if seasonally_adjust else None,
         "seasonal_method": seasonal_method if seasonally_adjust else None,
+        "metric_version": "v2_repeat_metrics",
     }
     
     # convenience: top-level recent values for backward compatibility
     for label in ("L7","L28"):
-        for k in ("net_sales","orders","aov","discount_rate","repeat_share","repeat_rate","returning_rate"):
+        for k in (
+            "net_sales","orders","aov","discount_rate",
+            # New explicit metrics
+            "repeat_rate_within_window","returning_customer_share","new_customer_rate",
+            # Back-compat aliases
+            "repeat_share","repeat_rate","returning_rate"
+        ):
             out[label][k] = out[label].get(k)
     
     # include direction rule hint for UI

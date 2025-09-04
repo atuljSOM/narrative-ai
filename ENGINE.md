@@ -6,9 +6,10 @@
 - Produce explainable outputs (briefing HTML, segments, charts) and track outcomes for accuracy calibration.
 
 ## Data & Features
-- Inputs (order-level): `Created at`, `Name` (order id), `customer_id`, `net_sales`, `AOV`, `discount_rate`, `is_repeat`, `units_per_order`, `lineitem_any`, `days_since_last`.
+- Inputs (order-level): `Created at`, `Name` (order id), `customer_id`, `Subtotal`, `Total Discount`, `Shipping`, `Taxes`, `net_sales`, `AOV`, `discount_rate`, `is_repeat`, `units_per_order`, `lineitem_any`, `days_since_last`.
+- Canonical revenue: `net_sales` is computed per-order as `Subtotal - Total Discount`; if `Subtotal`/`Total Discount` are missing per row, we fallback per-order to `Total - Shipping - Taxes`. If orders-level fields are missing entirely, we fallback to line-items aggregation restricted to the same orders/time window. We always prefer the same method and record which method was used.
 - Feature pipelines:
-  - KPI windows and deltas with optional seasonal adjustment.
+  - KPI windows and deltas with optional seasonal adjustment (expectations stored in metadata; actuals never overridden).
   - Segment audiences per play (winback/dormant/sample/subscription/etc.).
   - LTV signal for light preference on no-discount variants.
 
@@ -18,6 +19,25 @@ Key code:
 - Engine and selection: `src/action_engine.py`
 - Charts: `src/charts.py`
 - Briefing rendering: `src/briefing.py`, `templates/briefing.html.j2`
+
+## Metrics Reference (v2)
+- net_sales: Sum of per-order `"_order_net"` where `"_order_net" = Subtotal - Total Discount` (fallback per order to `Total - Shipping - Taxes`). Line-items aggregate used only when order-level fields are absent. Metadata records method and consistency vs alternatives.
+- orders: Unique orders in window (by `Name`).
+- aov: `net_sales / orders` (computed from canonical values).
+- discount_rate: Sum(`Total Discount`) ÷ Sum(`Subtotal`) for the window when available.
+- repeat_rate_within_window: Share of identified customers in the window who placed 2+ orders inside the same window. Purpose: short-cycle engagement; used for performance comparisons and action triggers.
+- returning_customer_share: Share of identified customers in the window who have any order before the window start. Purpose: acquisition/mix understanding.
+- new_customer_rate: `1 − returning_customer_share`. Purpose: growth tracking.
+
+Back-compat aliases:
+- `repeat_share` → `repeat_rate_within_window`
+- `repeat_rate` → `repeat_rate_within_window`
+- `returning_rate` → `returning_customer_share`
+
+Snapshot metadata:
+- `meta.metric_version = "v2_repeat_metrics"`
+- Seasonal expectations under `seasonal_expected` (orders/net sales recent/prior, expected lifts, surprise vs expected).
+- Netsales transparency: `recent_netsales_method`, `prior_netsales_method`, `*_netsales_alt_diffs` (pct diffs vs `subtotal_minus_discount`, `total_minus_shipping_taxes`, `line_items_aggregate`), and `*_netsales_consistency_flag` if any alternative differs by >10%.
 
 ## Monthly Cadence & Scaling
 - Measurement window: 28 days by default for tracking and pilot evaluation.
@@ -32,8 +52,8 @@ Rationale: later-week attention/campaign fatigue, light month-within variability
 ## Candidate Actions (Math & Stats)
 Each candidate produces: metric, n, effect_abs, p-value, CI (when possible), expected_$, floors, and attachments.
 
-1) Repeat Rate Improve → `winback_21_45`
-- Construct x1/n1 (recent L28) and x2/n2 (prior L28) where x = repeat orders.
+1) Repeat (Within Window) Improve → `winback_21_45`
+- Construct x1/n1 (recent L28) and x2/n2 (prior L28) where x = count of customers with ≥2 orders inside each window; n = identified customers in-window.
 - Hypothesis: Δ = p1 − p2 > 0
   - Test: two-proportion z-test p-value (Fisher fallback in extremes)
   - CI: Wilson CI per period; conservative ΔCI = [lo1 − hi0, hi1 − lo0]
@@ -119,6 +139,11 @@ Notes
   - Reorder point alerts (below reorder with no incoming) highlighted.
   - Seasonal stockout risk (heuristic): in peak months (Nov/Dec), SKUs with cover < 14d and daily_velocity ≥ 1 are flagged.
 
+- Metric consistency:
+  - `new_customer_rate` ≈ `1 − returning_customer_share` (tolerance ~1–2pp, configurable).
+  - `orders × aov` close to `net_sales` within 10% tolerance.
+  - Netsales method consistency flags surfaced in debug snapshot for investigation.
+
 ## Configuration Reference (.env)
 - Thresholds: `MIN_N_WINBACK`, `MIN_N_SKU`, `AOV_EFFECT_FLOOR`, `REPEAT_PTS_FLOOR`, `DISCOUNT_PTS_FLOOR`.
 - Financials: `FINANCIAL_FLOOR_MODE` (auto|fixed), `FINANCIAL_FLOOR_FIXED`, `FINANCIAL_FLOOR`, `GROSS_MARGIN`.
@@ -142,7 +167,7 @@ Notes
 - Explainability: every selected action shows numeric evidence, steps, segments, and confidence.
 
 ## Examples
-- Repeat share rise: Δ=+2.5 pts; Wilson ΔCI includes 0 → may be Watchlist unless financials and min_n are strong.
+- Repeat (within window) rise: Δ=+2.5 pts; Wilson ΔCI includes 0 → may be Watchlist unless financials and min_n are strong.
 - Subscription nudge: audience 180 with baseline 15%; power requires ≈246 to detect +5 pts → min_n fails; rationale lists n_needed.
 - Combined plan: winback + discount_hygiene → winback expected_$ dampened by configured interaction factor (e.g., 0.90) and overlap deduction.
 

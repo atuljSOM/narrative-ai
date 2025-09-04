@@ -699,36 +699,36 @@
       </div>
     </div>
 
-    {# Repeat Share #}
-    {% set curr = aligned[label]['repeat_share'] %}
-    {% set dlt = aligned[label]['delta']['repeat_share'] %}
+    {# Repeat (within window) #}
+    {% set curr = aligned[label].get('repeat_rate_within_window', aligned[label].get('repeat_share')) %}
+    {% set dlt = aligned[label]['delta'].get('repeat_rate_within_window', aligned[label]['delta'].get('repeat_share')) %}
     {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
     <div class="row">
-      <div><strong>Repeat Share</strong></div>
+      <div><strong>Repeat (within window)</strong></div>
       <div>{{ fmt_pct(curr, 1) }}</div>
       <div>
-        {{ arrow(dlt, True, aligned[label]['sig']['repeat_share']) }} {{ fmt_delta_pct(dlt) }}
+        {{ arrow(dlt, True, aligned[label]['sig'].get('repeat_rate_within_window', aligned[label]['sig'].get('repeat_share'))) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ fmt_pct(prev, 1) }})</span>
       </div>
       <div class="small muted">
-        {% set p = aligned[label]['p']['repeat_share'] %}
+        {% set p = aligned[label]['p'].get('repeat_rate_within_window', aligned[label]['p'].get('repeat_share')) %}
         {% if p is not none %}p={{ '%.3f' % p }}{% else %}—{% endif %}
       </div>
     </div>
 
     {# Returning Customers % #}
-    {% set curr = aligned[label].get('returning_rate') %}
-    {% set dlt = aligned[label]['delta'].get('returning_rate') %}
+    {% set curr = aligned[label].get('returning_customer_share', aligned[label].get('returning_rate')) %}
+    {% set dlt = aligned[label]['delta'].get('returning_customer_share', aligned[label]['delta'].get('returning_rate')) %}
     {% set prev = (curr / (1 + dlt)) if (curr is not none and dlt is not none and (1 + dlt) != 0) else none %}
     <div class="row">
-      <div><strong>Returning Customers</strong></div>
+      <div><strong>Returning Customers (mix)</strong></div>
       <div>{{ fmt_pct(curr, 1) }}</div>
       <div>
-        {{ arrow(dlt, True, (aligned[label]['sig'].get('returning_rate') if aligned[label].get('sig') else True)) }} {{ fmt_delta_pct(dlt) }}
+        {{ arrow(dlt, True, (aligned[label]['sig'].get('returning_customer_share', aligned[label]['sig'].get('returning_rate')) if aligned[label].get('sig') else True)) }} {{ fmt_delta_pct(dlt) }}
         <span class="small prev">(prev {{ fmt_pct(prev, 1) }})</span>
       </div>
       <div class="small muted">
-        {% set p = aligned[label]['p'].get('returning_rate') if aligned[label].get('p') else none %}
+        {% set p = aligned[label]['p'].get('returning_customer_share', aligned[label]['p'].get('returning_rate')) if aligned[label].get('p') else none %}
         {% if p is not none %}p={{ '%.3f' % p }}{% else %}—{% endif %}
       </div>
     </div>
