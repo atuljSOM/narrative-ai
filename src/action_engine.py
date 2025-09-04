@@ -1315,39 +1315,37 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
         })
 
 
-    # Discount rate share (>=5% discounted orders)
-    # Discount rate share (>=5% discounted orders)
-    rec_disc = g[g["Created at"] >= start]["discount_rate"].fillna(0).astype(float).values
-    pri_disc = g[(g["Created at"] < start) & (g["Created at"] >= start - pd.Timedelta(days=aligned["window_days"]))]["discount_rate"].fillna(0).astype(float).values
+    # Discount rate depth (average discount per order): Welch t-test on per-order discount rates
+    rec_dr = g[g["Created at"] >= start]["discount_rate"].astype(float).replace([np.inf, -np.inf], np.nan).dropna().values
+    pri_dr = g[(g["Created at"] < start) & (g["Created at"] >= start - pd.Timedelta(days=aligned["window_days"]))]["discount_rate"].astype(float).replace([np.inf, -np.inf], np.nan).dropna().values
 
-    x1, n1 = int(np.sum(rec_disc >= 0.05)), int(rec_disc.size)
-    x2, n2 = int(np.sum(pri_disc >= 0.05)), int(pri_disc.size)
+    n1, n2 = int(rec_dr.size), int(pri_dr.size)
     if n1 > 0 and n2 > 0:
-        pval2 = two_proportion_z_test(x1, n1, x2, n2)
+        m1, m2 = float(np.mean(rec_dr)), float(np.mean(pri_dr))
+        # Positive effect means reduction in discount depth (prior - recent)
+        effect_pts = m2 - m1
+        # p-value via Welch t-test where possible
         try:
-            from .stats import wilson_ci
-            d1_lo, d1_hi = wilson_ci(x1, n1, alpha=0.05)
-            d0_lo, d0_hi = wilson_ci(x2, n2, alpha=0.05)
-            ci2_lo, ci2_hi = d1_lo - d0_hi, d1_hi - d0_lo
+            pval_dr = welch_t_test(rec_dr, pri_dr) if (n1 > 1 and n2 > 1) else np.nan
         except Exception:
-            ci2_lo = None; ci2_hi = None
-        # effect is negative if discount share increased (we want *reduction*)
-        effect_pts2 = (x2 / n2) - (x1 / n1)  # reduction is positive if recent < prior
-        expected2 = max(0.0, effect_pts2) * n1 * 0.5 * gross_margin * (float(np.nanmean(g["AOV"])) if not np.isnan(np.nanmean(g["AOV"])) else 0.0)
+            pval_dr = np.nan
+        # Conservative expected value heuristic (recovering margin leakage)
+        avg_aov = float(np.nanmean(g["AOV"])) if not np.isnan(np.nanmean(g["AOV"])) else 0.0
+        expected_dr = max(0.0, effect_pts) * n1 * 0.5 * gross_margin * avg_aov
 
         cands.append({
             "id": "discount_hygiene",
             "play_id": "discount_hygiene",
             "metric": "discount_rate",
             "n": n1 + n2,
-            "effect_abs": effect_pts2,
-            "p": pval2,
+            "effect_abs": effect_pts,
+            "p": pval_dr,
             "q": np.nan,
-            "ci_low": ci2_lo, "ci_high": ci2_hi,
-            "expected_$": expected2,
+            "ci_low": None, "ci_high": None,
+            "expected_$": expected_dr,
             "min_n": cfg["MIN_N_SKU"],
             "effect_floor": cfg["DISCOUNT_PTS_FLOOR"],
-            "rationale": f"Discount share {x1/(n1 or 1):.1%} vs {x2/(n2 or 1):.1%} (Δ {effect_pts2:+.1%} reduction).",
+            "rationale": f"Avg discount depth {m1:.1%} vs {m2:.1%} (Δ reduction {effect_pts:+.1%}).",
             "audience_size": n1,
             "attachment": "segment_discount_hygiene.csv",
             "baseline_rate": aligned["prior_repeat_rate"] or 0.15,

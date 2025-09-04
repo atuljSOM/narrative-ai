@@ -1202,13 +1202,28 @@ def kpi_snapshot_with_deltas(df: pd.DataFrame, anchor_ts: datetime | None = None
             p_aov = _extract_p(mt)
             p["aov"] = p_aov
 
-        # Discount: treat as proportion of orders with any discount > 0
-        if "Total Discount" in rec.columns and "Total Discount" in pri.columns:
-            x1 = int((_money(rec["Total Discount"])>0).sum()); n1 = int(len(rec))
-            x0 = int((_money(pri["Total Discount"])>0).sum()); n0 = int(len(pri))
-            if n1>0 and n0>0:
-                pr = two_proportion_test(x1,n1,x0,n0)
-                p["discount_rate"] = float(pr.p_value)
+        # Discount rate: Welch t-test on per-order discount rates
+        # Aligns test with the metric reported (average discount depth), not just share of discounted orders.
+        def _per_order_discount_rates(frame_orders: pd.DataFrame) -> np.ndarray:
+            if ("Total Discount" not in frame_orders.columns) or ("Subtotal" not in frame_orders.columns):
+                return np.array([])
+            sub = _money(frame_orders["Subtotal"]).astype(float)
+            disc = _money(frame_orders["Total Discount"]).astype(float)
+            valid = sub.notna() & disc.notna() & (sub > 0)
+            if not valid.any():
+                return np.array([])
+            rates = (disc[valid] / sub[valid]).clip(lower=0.0, upper=1.0)
+            return rates.astype(float).values
+
+        try:
+            r1 = _per_order_discount_rates(rec)
+            r0 = _per_order_discount_rates(pri)
+            if (r1.size > 1) and (r0.size > 1):
+                mt_dr = welch_t_test(r1, r0)
+                p_dr = _extract_p(mt_dr)
+                p["discount_rate"] = p_dr
+        except Exception:
+            pass
 
         # Repeat rate: two-proportion on identified customers within window
         if rep1 is not None and rep0 is not None and id1>=min_identified and id0>=min_identified:
