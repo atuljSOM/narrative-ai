@@ -408,7 +408,7 @@ def run(csv_path: str, brand: str, out_dir: str, inventory_path: str | None = No
         except Exception as e:
             print(f"[warn] failed to copy chart {src} -> {dst_path}: {e}")
     
-     # --- DATA VALIDATION (NEW) ---
+    # --- DATA VALIDATION (NEW) ---
     validator = DataValidationEngine()
     validation_results = validator.run_all_checks(
         df=df,
@@ -421,6 +421,28 @@ def run(csv_path: str, brand: str, out_dir: str, inventory_path: str | None = No
         orders_df=orders_denorm,
         items_df=items_df
     )
+
+    # Gate downstream action lists on critical validation failures (e.g., AOV inconsistency)
+    try:
+        checks = (validation_results or {}).get('checks', {})
+        aov_check = checks.get('AOV Consistency', {})
+        overall = (validation_results or {}).get('overall_status')
+        should_gate = (aov_check.get('status') == 'red') or (overall == 'red')
+        if should_gate:
+            reason = aov_check.get('message') or 'Critical data validation issues'
+            # Demote actions to watchlist; annotate with blocking reason
+            blocked = []
+            for key in ['actions', 'pilot_actions']:
+                lst = actions.get(key, []) or []
+                for a in lst:
+                    a.setdefault('notes', []).append(f"Blocked by validation: {reason}")
+                    a['__blocked_by_validation__'] = True
+                blocked.extend(lst)
+                actions[key] = []
+            actions['watchlist'] = (actions.get('watchlist', []) or []) + blocked
+    except Exception:
+        # Never fail the run due to gating logic; surfaces via validation report anyway
+        pass
     
     # Save validation report
     validation_path = receipts_dir / "validation_report.json"

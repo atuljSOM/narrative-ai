@@ -149,7 +149,10 @@ def preprocess(df: pd.DataFrame):
         df['customer_id'] = df.get('Customer Email', pd.Series('', index=df.index)).astype(str).str.strip().str.lower()
     for c in MONETARY:
         df[c] = winsorize_series(df[c])
-    df["net_sales"] = df["Subtotal"] - df["Total Discount"]
+    # Canonical net revenue per order: Subtotal - Total Discount; strict fallback to Total - Shipping - Taxes
+    net_from_sub = df["Subtotal"] - df["Total Discount"]
+    net_from_tot = df["Total"] - df["Shipping"] - df["Taxes"]
+    df["net_sales"] = net_from_sub.where(net_from_sub.notna(), net_from_tot)
     df["discount_rate"] = (df["Total Discount"] / df["Subtotal"]).replace([np.inf,-np.inf], np.nan)
     df["units_per_order"] = df["Lineitem quantity"]
     mask_refund = df["Financial Status"].astype(str).str.lower().str.contains("refunded|chargeback")

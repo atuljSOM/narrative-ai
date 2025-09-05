@@ -7,14 +7,16 @@ from .utils import aligned_windows, estimate_expected_orders, normalize_product_
 def compute_features(df: pd.DataFrame) -> pd.DataFrame:
     d = df.copy()
     d["Created at"] = pd.to_datetime(d["Created at"], errors="coerce")
+    # Aggregate to one row per order/customer.
+    # Important: net_sales is an order-level value; do NOT sum across duplicated line-item rows.
     g = d.groupby(["Name","customer_id"], dropna=False).agg({
-        "Created at":"max",
-        "net_sales":"sum",
-        "discount_rate":"mean",
-        "units_per_order":"sum",
-        "Lineitem name":"first",
-        "category":"first",
-        "Currency":"first"
+        "Created at": "max",
+        "net_sales": "first",
+        "discount_rate": "first",
+        "units_per_order": "sum",
+        "Lineitem name": "first",
+        "category": "first",
+        "Currency": "first",
     }).reset_index().rename(columns={"Lineitem name":"lineitem_any"})
     g = g.sort_values("Created at")
     # convenient alias for product-dependent utilities
@@ -32,7 +34,8 @@ def compute_features(df: pd.DataFrame) -> pd.DataFrame:
     f_counts = g.groupby("customer_id")["Name"].transform("count"); f_rank = f_counts.rank(pct=True)
     f_quint = pd.cut(f_rank, bins=[0,.2,.4,.6,.8,1], labels=[1,2,3,4,5], include_lowest=True)
     m_rank = g["net_sales"].rank(pct=True); m_quint = pd.cut(m_rank, bins=[0,.2,.4,.6,.8,1], labels=[1,2,3,4,5], include_lowest=True)
-    g["R"], g["F"], g["M"] = r_quint.astype(int), f_quint.astype(int), m_quint.astype(int)
+    # Use nullable integers to tolerate missing values without crashing
+    g["R"], g["F"], g["M"] = r_quint.astype("Int64"), f_quint.astype("Int64"), m_quint.astype("Int64")
     return g
 
 def aligned_periods_summary(g: pd.DataFrame, min_window_n: int = 300) -> Dict[str,Any]:
