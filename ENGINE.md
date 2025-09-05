@@ -29,10 +29,8 @@ Key code:
 - returning_customer_share: Share of identified customers in the window who have any order before the window start. Purpose: acquisition/mix understanding.
 - new_customer_rate: `1 − returning_customer_share`. Purpose: growth tracking.
 
-Back-compat aliases:
-- `repeat_share` → `repeat_rate_within_window`
-- `repeat_rate` → `repeat_rate_within_window`
-- `returning_rate` → `returning_customer_share`
+Notes:
+- Legacy aliases like `repeat_share`/`repeat_rate`/`returning_rate` are deprecated. Use the explicit keys above.
 
 Snapshot metadata:
 - `meta.metric_version = "v2_repeat_metrics"`
@@ -145,14 +143,57 @@ Notes
   - Netsales method consistency flags surfaced in debug snapshot for investigation.
 
 ## Configuration Reference (.env)
-- Thresholds: `MIN_N_WINBACK`, `MIN_N_SKU`, `AOV_EFFECT_FLOOR`, `REPEAT_PTS_FLOOR`, `DISCOUNT_PTS_FLOOR`.
-- Financials: `FINANCIAL_FLOOR_MODE` (auto|fixed), `FINANCIAL_FLOOR_FIXED`, `FINANCIAL_FLOOR`, `GROSS_MARGIN`.
-- Windows & display: `WINDOW_POLICY` (auto|l7|l28|l56), `L7_MIN_ORDERS`, `L28_MIN_ORDERS`, `SHOW_L7`.
-- Pilot: `PILOT_AUDIENCE_FRACTION`, `PILOT_BUDGET_CAP`.
-- Seasonality: `SEASONAL_ADJUST`, `SEASONAL_PERIOD`.
-- Vertical: `VERTICAL_MODE` (beauty|supplements|mixed).
-- Interactions: `INTERACTION_FACTORS` (JSON or CSV for pairwise dampening), e.g.
-  - `{"discount_hygiene->winback_21_45":0.9, "winback_21_45->dormant_multibuyers_60_120":0.92}`
+Core thresholds:
+- `MIN_N_WINBACK` (default 75), `MIN_N_SKU` (30)
+- Floors: `AOV_EFFECT_FLOOR` (0.02), `REPEAT_PTS_FLOOR` (0.02), `DISCOUNT_PTS_FLOOR` (0.02)
+- FDR: `FDR_ALPHA` (0.15)
+
+Financials:
+- `FINANCIAL_FLOOR_MODE` (auto|fixed), `FINANCIAL_FLOOR_FIXED`, `FINANCIAL_FLOOR`, `GROSS_MARGIN`
+
+Windows & display:
+- `WINDOW_POLICY` (auto|l7|l28|l56), `L7_MIN_ORDERS`, `L28_MIN_ORDERS`, `SHOW_L7`
+
+Pilot & confidence:
+- `CONFIDENCE_MODE` (learning|conservative|aggressive) — default learning for concierge
+- `PILOT_AUDIENCE_FRACTION` (0.3), `PILOT_BUDGET_CAP` (150)
+
+Interactions:
+- `INTERACTION_FACTORS` (JSON/CSV for dampening), e.g. `{ "discount_hygiene->winback_21_45":0.9 }`
+
+Concierge guardrails (MVP):
+- `CHANNEL_CAPS` (JSON dict), e.g. `{ "email":2, "sms":1 }`
+- `CONFLICT_PAIRS` (JSON list), e.g. `["discount_hygiene->winback_21_45"]`
+- `OVERLAP_MAX_RATIO` (0.6), `MIN_UNIQUE_AUDIENCE` (400)
+
+Inventory:
+- `INVENTORY_ENFORCEMENT_MODE` (soft|hard) — default soft; trust scales with age; in‑stock ratios apply
+- `INVENTORY_MAX_AGE_DAYS`, `INVENTORY_MIN_COVER_DAYS_MAP`
+
+Concierge flags (optional, informational):
+- `CONCIERGE_MODE` (true), `MANUAL_VALIDATION_THRESHOLD` (5), `CUSTOMER_FEEDBACK_REQUIRED` (true), `VALIDATION_ALERT_CRITICAL` (true)
+
+Recommended concierge block:
+```
+MIN_N_WINBACK=75
+MIN_N_SKU=30
+FDR_ALPHA=0.15
+AOV_EFFECT_FLOOR=0.02
+DISCOUNT_PTS_FLOOR=0.02
+FINANCIAL_FLOOR_MODE=auto
+CONFIDENCE_MODE=learning
+PILOT_AUDIENCE_FRACTION=0.3
+PILOT_BUDGET_CAP=150
+CHANNEL_CAPS={"email":2,"sms":1}
+CONFLICT_PAIRS=["discount_hygiene->winback_21_45","winback_21_45->discount_hygiene"]
+OVERLAP_MAX_RATIO=0.6
+MIN_UNIQUE_AUDIENCE=400
+INVENTORY_ENFORCEMENT_MODE=soft
+CONCIERGE_MODE=true
+MANUAL_VALIDATION_THRESHOLD=5
+CUSTOMER_FEEDBACK_REQUIRED=true
+VALIDATION_ALERT_CRITICAL=true
+```
 
 ## Edge Cases & Guards
 - Small n: Fisher’s exact fallback; Wilson CI spans [0,1] if n=0; directional watchlist if promising but underpowered.

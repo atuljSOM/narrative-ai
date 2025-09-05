@@ -96,12 +96,12 @@ def subscription_threshold_for_product(product_name: str, cfg: Dict[str, Any] | 
 
 DEFAULTS: Dict[str, Any] = {
     # thresholds & knobs (sane defaults; .env can override)
-    "MIN_N_WINBACK": 150,
-    "MIN_N_SKU": 60,
-    "AOV_EFFECT_FLOOR": 0.03,
+    "MIN_N_WINBACK": 75,
+    "MIN_N_SKU": 30,
+    "AOV_EFFECT_FLOOR": 0.02,
     "REPEAT_PTS_FLOOR": 0.02,
-    "DISCOUNT_PTS_FLOOR": 0.03,
-    "FDR_ALPHA": 0.10,
+    "DISCOUNT_PTS_FLOOR": 0.02,
+    "FDR_ALPHA": 0.15,
     "FINANCIAL_FLOOR": 300.0,           # used when FINANCIAL_FLOOR_MODE=fixed
     "FINANCIAL_FLOOR_MODE": "auto",     # auto|fixed
     "FINANCIAL_FLOOR_FIXED": 300.0,
@@ -112,8 +112,8 @@ DEFAULTS: Dict[str, Any] = {
     "L7_MIN_ORDERS": 150,
     "L28_MIN_ORDERS": 250,
     # pilot knobs
-    "PILOT_AUDIENCE_FRACTION": 0.2,
-    "PILOT_BUDGET_CAP": 200.0,
+    "PILOT_AUDIENCE_FRACTION": 0.3,
+    "PILOT_BUDGET_CAP": 150.0,
     # seasonality knobs
     "SEASONAL_ADJUST": True,
     "SEASONAL_PERIOD": 7,
@@ -122,11 +122,17 @@ DEFAULTS: Dict[str, Any] = {
     "CHARTS_MODE": "detailed",    # detailed|compact
     "SHOW_L7": True,               # show L7 KPI card
     # confidence selection mode for actions: conservative|aggressive|learning
-    "CONFIDENCE_MODE": "conservative",
+    "CONFIDENCE_MODE": "learning",
     # interactions (env-driven). Example formats:
     #  - JSON: {"discount_hygiene->winback_21_45":0.9, "winback_21_45->dormant_multibuyers_60_120":0.92}
     #  - CSV:  discount_hygiene->winback_21_45:0.9, bestseller_amplify->winback_21_45:0.95
     "INTERACTION_FACTORS": "",
+    # Channel caps & conflicts for concierge MVP (parsed in engine)
+    "CHANNEL_CAPS": {"email": 2, "sms": 1},
+    "CONFLICT_PAIRS": ["discount_hygiene->winback_21_45", "winback_21_45->discount_hygiene"],
+    # Overlap demotion thresholds
+    "OVERLAP_MAX_RATIO": 0.6,
+    "MIN_UNIQUE_AUDIENCE": 400,
     # Inventory knobs
     "INVENTORY_ENFORCEMENT_MODE": "soft",   # soft|hard
     "INVENTORY_MAX_AGE_DAYS": 7,
@@ -136,6 +142,11 @@ DEFAULTS: Dict[str, Any] = {
     # JSON/CSV map: {"subscription_nudge":60,"sample_to_full":45,"default":21}
     "INVENTORY_MIN_COVER_DAYS_MAP": "",
     "INVENTORY_ALLOW_BACKORDER": True,
+    # Concierge mode flags (informational by default)
+    "CONCIERGE_MODE": True,
+    "MANUAL_VALIDATION_THRESHOLD": 5,
+    "CUSTOMER_FEEDBACK_REQUIRED": True,
+    "VALIDATION_ALERT_CRITICAL": True,
     # Feature flags (Phase 1 shims)
     "FEATURES_DYNAMIC_PRODUCTS": False,
     # Product normalization (base + size parsing)
@@ -206,12 +217,12 @@ def _coerce(k: str, v: str) -> Any:
     if isinstance(v, str):
         v = v.split('#', 1)[0].strip().strip('"').strip("'")
 
-    if k in {"MIN_N_WINBACK", "MIN_N_SKU", "EFFORT_BUDGET", "L7_MIN_ORDERS", "L28_MIN_ORDERS"}:
+    if k in {"MIN_N_WINBACK", "MIN_N_SKU", "EFFORT_BUDGET", "L7_MIN_ORDERS", "L28_MIN_ORDERS", "MANUAL_VALIDATION_THRESHOLD", "MIN_UNIQUE_AUDIENCE"}:
         return int(float(v))
     if k in {"AOV_EFFECT_FLOOR", "REPEAT_PTS_FLOOR", "DISCOUNT_PTS_FLOOR", "FDR_ALPHA", "GROSS_MARGIN",
              "FINANCIAL_FLOOR", "FINANCIAL_FLOOR_FIXED", "PILOT_AUDIENCE_FRACTION", "PILOT_BUDGET_CAP"}:
         return float(v)
-    if k in {"SEASONAL_ADJUST", "SHOW_L7", "INVENTORY_ALLOW_BACKORDER"}:
+    if k in {"SEASONAL_ADJUST", "SHOW_L7", "INVENTORY_ALLOW_BACKORDER", "CONCIERGE_MODE", "CUSTOMER_FEEDBACK_REQUIRED", "VALIDATION_ALERT_CRITICAL"}:
         return _parse_bool(v)
     if k in {"WINDOW_POLICY", "FINANCIAL_FLOOR_MODE", "CHARTS_MODE", "VERTICAL_MODE",
              "INVENTORY_ENFORCEMENT_MODE", "CONFIDENCE_MODE"}:

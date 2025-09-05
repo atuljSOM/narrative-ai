@@ -1327,10 +1327,13 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
         ci_lo_diff = None; ci_hi_diff = None
     effect_pts  = rate_recent - rate_prior  # absolute delta in points (e.g., +0.024)
 
-    # Heuristic expected value: convert repeat rate delta into revenue proxy.
-    # Use recent customer count (n1) and prior repeat as a baseline scaler.
-    prior_repeat_baseline = rate_prior if rate_prior > 0 else 0.15
-    expected = max(0.0, effect_pts) * n1 * prior_repeat_baseline * gross_margin
+    # Expected value (MVP): incremental repeat orders × revenue/order × GM
+    # incremental_orders = max(0, effect_pts) × recent_identified_customers
+    # revenue_per_order = prior_aov (fallback to recent)
+    prior_repeat_baseline = rate_prior if rate_prior > 0 else 0.15  # retained for receipts/backward compat
+    revenue_per_order = float(aligned.get("prior_aov") or aligned.get("recent_aov") or 0.0)
+    incremental_orders = max(0.0, effect_pts) * float(n1)
+    expected = incremental_orders * revenue_per_order * float(gross_margin)
 
     cands.append({
         "id": "repeat_rate_improve",
@@ -1362,7 +1365,10 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
         pval = welch_t_test(rec, pri)
         m1, m2 = float(np.mean(rec)), float(np.mean(pri))
         effect_pct = (m1 - m2) / m2 if m2 else 0.0
-        expected = max(0.0, effect_pct) * (aligned["recent_n"] or 0) * (aligned["prior_repeat_rate"] or 0.15) * (aligned["prior_aov"] or m2 or 0.0) * gross_margin
+        # Expected value (MVP): ΔAOV × recent_orders × GM
+        recent_orders = float(aligned.get("recent_n") or 0.0)
+        delta_aov = float(m1 - m2)
+        expected = max(0.0, delta_aov) * recent_orders * float(gross_margin)
 
         cands.append({
             "id": "aov_increase",
@@ -1397,9 +1403,14 @@ def _compute_candidates(g: pd.DataFrame, aligned: Dict[str, Any], cfg: Dict[str,
             pval_dr = welch_t_test(rec_dr, pri_dr) if (n1 > 1 and n2 > 1) else np.nan
         except Exception:
             pval_dr = np.nan
-        # Conservative expected value heuristic (recovering margin leakage)
-        avg_aov = float(np.nanmean(g["AOV"])) if not np.isnan(np.nanmean(g["AOV"])) else 0.0
-        expected_dr = max(0.0, effect_pts) * n1 * 0.5 * gross_margin * avg_aov
+        # Expected value (MVP): depth_reduction × recent_subtotal × GM
+        recent_depth = float(m1)
+        recent_orders = float(aligned.get("recent_n") or 0.0)
+        recent_aov = float(aligned.get("recent_aov") or 0.0)
+        # Approximate recent subtotal from AOV and depth: Subtotal ≈ (AOV × orders) / (1 - depth)
+        denom = max(1e-9, 1.0 - recent_depth)
+        recent_subtotal = (recent_aov * recent_orders) / denom if denom > 0 else 0.0
+        expected_dr = max(0.0, effect_pts) * recent_subtotal * float(gross_margin)
 
         cands.append({
             "id": "discount_hygiene",
