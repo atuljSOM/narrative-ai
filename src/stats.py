@@ -193,6 +193,22 @@ def required_n_for_proportion(p_base: float, delta_abs: float, alpha: float = 0.
     return needed_n_for_proportion_delta(p_base, delta_abs, alpha, power)
 
 
+def mde_proportion(p_base: float, n_per_group: int, alpha: float = 0.05, power: float = 0.8) -> float:
+    """
+    Minimal detectable absolute delta in a two-sample proportion test
+    for a given baseline proportion and per-group sample size.
+
+    Mirrors the sample-size formula used in required_n_for_proportion.
+    """
+    p = float(max(min(p_base, 1 - 1e-9), 1e-9))
+    n = int(max(n_per_group, 1))
+    z_alpha = norm.ppf(1 - alpha / 2)
+    z_beta = norm.ppf(power)
+    se = math.sqrt(2.0 * p * (1.0 - p) / n)
+    d = (z_alpha + z_beta) * se
+    return float(d)
+
+
 # ----------------- Seasonality Adjustment -----------------
 
 def seasonal_adjustment(df: pd.DataFrame, metric: str = 'orders', seasonal: int = 7) -> Tuple[pd.Series, str]:

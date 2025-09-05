@@ -7,6 +7,9 @@ from .utils import aligned_windows, estimate_expected_orders, normalize_product_
 def compute_features(df: pd.DataFrame) -> pd.DataFrame:
     d = df.copy()
     d["Created at"] = pd.to_datetime(d["Created at"], errors="coerce")
+    # Ensure required columns exist for aggregation
+    if "category" not in d.columns:
+        d["category"] = "unknown"
     # Aggregate to one row per order/customer.
     # Important: net_sales is an order-level value; do NOT sum across duplicated line-item rows.
     g = d.groupby(["Name","customer_id"], dropna=False).agg({

@@ -533,6 +533,9 @@ class TransactionVolumeCheck(ValidationCheck):
             }
         
         issues = []
+        # Track worst severity seen: info < warning < critical
+        severity_rank = {'info': 0, 'warning': 1, 'critical': 2}
+        worst_sev = 'info'
         
         # Check for reasonable order volume
         total_orders = len(df['Name'].unique()) if 'Name' in df.columns else len(df)
@@ -540,10 +543,10 @@ class TransactionVolumeCheck(ValidationCheck):
         # Business logic checks
         if total_orders < 10:
             issues.append(f"Only {total_orders} orders - insufficient for analysis")
-            severity = 'critical'
+            worst_sev = 'critical'
         elif total_orders < 100:
             issues.append(f"Low order volume ({total_orders}) - recommendations may be unreliable")
-            severity = 'warning'
+            worst_sev = 'warning' if severity_rank['warning'] > severity_rank[worst_sev] else worst_sev
         
         # Check for duplicate orders
         if 'Name' in df.columns:
@@ -551,25 +554,34 @@ class TransactionVolumeCheck(ValidationCheck):
             true_duplicates = order_counts[order_counts > 10]  # Same order appearing >10 times is suspicious
             if len(true_duplicates) > 0:
                 issues.append(f"{len(true_duplicates)} orders appear 10+ times (likely duplicates)")
+                worst_sev = 'warning' if severity_rank['warning'] > severity_rank[worst_sev] else worst_sev
         
         # Financial completeness check
         if 'Financial Status' in df.columns:
             financial_complete = df['Financial Status'].notna().mean()
             if financial_complete < 0.95:
-                missing = int((1 - financial_complete) * total_orders)
+                missing_frac = 1 - financial_complete
+                missing = int(missing_frac * total_orders)
                 issues.append(f"{missing} orders missing financial status")
+                # Escalate severity when many statuses are missing
+                if missing_frac >= 0.30:
+                    worst_sev = 'critical'
+                else:
+                    worst_sev = 'warning' if severity_rank['warning'] > severity_rank[worst_sev] else worst_sev
         
         # Check for refund rate
         if 'Financial Status' in df.columns:
             refunded = df['Financial Status'].astype(str).str.contains('refunded', case=False, na=False).mean()
             if refunded > 0.15:
                 issues.append(f"High refund rate: {refunded:.0%}")
+                worst_sev = 'warning' if severity_rank['warning'] > severity_rank[worst_sev] else worst_sev
         
         # Cancelled orders check
         if 'Cancelled at' in df.columns:
             cancelled = pd.to_datetime(df['Cancelled at'], errors='coerce').notna().mean()
             if cancelled > 0.1:
                 issues.append(f"High cancellation rate: {cancelled:.0%}")
+                worst_sev = 'warning' if severity_rank['warning'] > severity_rank[worst_sev] else worst_sev
         
         # Currency consistency
         if 'Currency' in df.columns:
@@ -577,19 +589,18 @@ class TransactionVolumeCheck(ValidationCheck):
             if currencies > 1:
                 currency_mix = df['Currency'].value_counts().to_dict()
                 issues.append(f"Mixed currencies detected: {currency_mix}")
+                worst_sev = 'warning' if severity_rank['warning'] > severity_rank[worst_sev] else worst_sev
         
         if len(issues) == 0:
             status = 'green'
             severity = 'info'
             message = f"✓ Transaction volume verified: {total_orders} clean orders"
-        elif len(issues) <= 2:
-            status = 'amber'
-            severity = 'warning'
-            message = f"⚠️ Minor issues: {' | '.join(issues[:2])}"
         else:
-            status = 'red'
-            severity = 'critical'
-            message = f"❌ Critical issues: {' | '.join(issues[:3])}"
+            # Derive status from worst severity, not just issue count
+            status = 'red' if worst_sev == 'critical' else 'amber'
+            severity = worst_sev
+            prefix = '❌ Critical issues' if status == 'red' else '⚠️ Issues'
+            message = f"{prefix}: {' | '.join(issues[:3])}"
         
         return {
             'status': status,
